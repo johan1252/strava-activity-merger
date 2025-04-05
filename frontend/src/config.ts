@@ -1,0 +1,1 @@
+export const STRAVA_CLIENT_ID = '144311';

@@ -1,0 +1,36 @@
+{
+	"compilerOptions": {
+		"lib": ["ES2022"],
+		"moduleResolution": "node",
+		"module": "ESNext",
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"removeComments": true,
+		"sourceMap": true,
+		"target": "ES2022",
+		"outDir": "lib",
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+		"noImplicitAny": false,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+        "allowImportingTsExtensions": true,
+        "rewriteRelativeImportExtensions": true,
+        "verbatimModuleSyntax": true
+	},
+	"include": ["./**/*.ts", "lib/handlers/getAccessToken.ts"],
+	"exclude": [
+		"node_modules/**/*",
+		"dist/**/*",
+		".serverless/**/*",
+		"_warmup/**/*",
+		".vscode/**/*",
+		".idea/**/*",
+		"runners/**/*",
+	],
+	"ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
+	}
+}
