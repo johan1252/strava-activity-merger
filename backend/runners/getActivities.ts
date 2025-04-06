@@ -1,16 +1,17 @@
-import { handler } from "#handlers/getAccessToken.ts";
+import { handler } from "#handlers/getActivities.ts";
 import { Logger } from '@aws-lambda-powertools/logger';
+import 'dotenv/config';
 
 const logger = new Logger();
 
 (async () => {
 	const event = {
-		body: JSON.stringify({
-			authorizationCode: "your_authorization_code_here",
-		}),
-		headers: {},
+		body: null,
+		headers: {
+			Authorization: `Bearer ${process.env.TEMP_ACCESS_TOKEN}`
+		},
 		multiValueHeaders: {},
-		httpMethod: "POST",
+		httpMethod: "GET",
 		isBase64Encoded: false,
 		path: "/",
 		queryStringParameters: null,
@@ -20,6 +21,7 @@ const logger = new Logger();
 		requestContext: {} as any,
 		resource: "/"
 	};
+	console.log({ message: "event", event });
 	const result = await handler(event);
-	logger.info({ message: "result", result });
+	console.log(JSON.stringify(JSON.parse(result.body), null, 2));
 })();

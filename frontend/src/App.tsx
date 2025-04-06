@@ -31,6 +31,31 @@ const Home: React.FC = () => {
     const [athlete, setAthlete] = useState<any>(null);
     const [activities, setActivities] = useState<any[]>([]);
 
+    const reloadActivities = () => {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+            const parsedToken = JSON.parse(token);
+            fetch('https://98qduh9l95.execute-api.us-east-1.amazonaws.com/prod/activities', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${parsedToken.accessToken}`,
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch activities');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    setActivities(data.activities);
+                })
+                .catch((error) => {
+                    console.error('Error fetching activities:', error);
+                });
+        }
+    };
+
     useEffect(() => {
         const token = sessionStorage.getItem('token');
         const athleteInfo = sessionStorage.getItem('athlete');
@@ -51,28 +76,7 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         if (athlete) {
-            const token = sessionStorage.getItem('token');
-            if (token) {
-                const parsedToken = JSON.parse(token);
-                fetch('https://sa1sx89h1i.execute-api.us-east-1.amazonaws.com/prod/activities', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${parsedToken.accessToken}`,
-                    },
-                })
-                    .then((response) => {
-                        if (!response.ok) {
-                            throw new Error('Failed to fetch activities');
-                        }
-                        return response.json();
-                    })
-                    .then((data) => {
-                        setActivities(data.activities);
-                    })
-                    .catch((error) => {
-                        console.error('Error fetching activities:', error);
-                    });
-            }
+            reloadActivities();
         }
     }, [athlete]);
 
@@ -112,7 +116,7 @@ const Home: React.FC = () => {
                         <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '100px', height: '100px' }} />
                         <p>Strava ID: {athlete.id}</p>
                         {activities.length > 0 ? (
-                            <ActivityList activities={activities} />
+                            <ActivityList activities={activities} reloadActivities={reloadActivities} />
                         ) : athlete ? (
                             <p>Loading activities...</p>
                         ) : (
@@ -145,7 +149,7 @@ const Home: React.FC = () => {
 
 const fetchAccessToken = async (code: string) => {
     try {
-        const response = await fetch('https://sa1sx89h1i.execute-api.us-east-1.amazonaws.com/prod/access-token', {
+        const response = await fetch('https://98qduh9l95.execute-api.us-east-1.amazonaws.com/prod/access-token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
