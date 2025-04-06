@@ -4,7 +4,6 @@ import { Construct } from 'constructs';
 import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as path from 'path';
 import 'dotenv/config';
 
 export class CdkAccessTokenApiStack extends cdk.Stack {
@@ -13,7 +12,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         // Define the Lambda function
         const getAccessTokenLambda = new lambdaNodeJs.NodejsFunction(this, 'GetAccessTokenHandler', {
-            runtime: lambda.Runtime.NODEJS_18_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             //code: lambda.Code.fromAsset(path.join(__dirname, './handlers')),
             entry: './lib/handlers/getAccessToken.ts',
             environment: {
@@ -27,10 +26,16 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         // Define the Lambda function for fetching activities
         const getActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'GetActivitiesHandler', {
-            runtime: lambda.Runtime.NODEJS_18_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             entry: './lib/handlers/getActivities.ts', // Path to the handler file
             timeout: cdk.Duration.seconds(30),
         });
+
+        const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
+          runtime: lambda.Runtime.NODEJS_22_X,
+          entry: './lib/handlers/combineActivities.ts', // Path to the handler file
+          timeout: cdk.Duration.seconds(240),
+      });
 
         // Define the API Gateway
         const api = new apigateway.RestApi(this, 'AccessTokenApi', {
@@ -50,5 +55,9 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /activities endpoint
         const activitiesResource = api.root.addResource('activities');
         activitiesResource.addMethod('GET', new apigateway.LambdaIntegration(getActivitiesLambda));
+
+        // Create the /activities/combine endpoint
+        const combineActivitiesResource = activitiesResource.addResource('combine');
+        combineActivitiesResource.addMethod('POST', new apigateway.LambdaIntegration(combineActivitiesLambda));
     }
 }

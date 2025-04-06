@@ -39,14 +39,6 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const payload = await strava.oauth.getToken(authorizationCode)
         logger.info({ message: "payload", payload });
 
-        // const stravaClient = new strava.client(payload.access_token);
-        // const atheleteInfo = await stravaClient.athlete.get({})
-        // logger.info({ message: "payload", atheleteInfo });
-
-
-        // const payload = await strava.athlete.get({})
-        // console.log(payload)
-
         return {
             statusCode: 200,
             body: JSON.stringify({
