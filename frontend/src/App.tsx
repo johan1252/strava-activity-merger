@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import querystring from 'querystring';
-import { STRAVA_CLIENT_ID } from './config';
+import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 
 const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
@@ -22,7 +22,11 @@ const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
 
 const handleAuthorizeClick = () => {
     const clientId = STRAVA_CLIENT_ID;
-    const redirectURI = 'http://localhost:3000/strava-callback'; // Replace with your redirect URI
+    // Use either localhost or your production URL (https://streventools.com/strava-callback)
+    // Make sure to set the redirect URI (authorization callback domain) in your Strava app settings to match this URL
+    const redirectURI = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/strava-callback'
+        : 'https://streventools.com/strava-callback';
     const url = getStraveAuthorizeUrl(clientId, redirectURI);
     window.location.href = url;
 };
@@ -35,7 +39,7 @@ const Home: React.FC = () => {
         const token = sessionStorage.getItem('token');
         if (token) {
             const parsedToken = JSON.parse(token);
-            fetch('https://98qduh9l95.execute-api.us-east-1.amazonaws.com/prod/activities', {
+            fetch(`${API_BASE_URL}/activities`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${parsedToken.accessToken}`,
@@ -149,7 +153,7 @@ const Home: React.FC = () => {
 
 const fetchAccessToken = async (code: string) => {
     try {
-        const response = await fetch('https://98qduh9l95.execute-api.us-east-1.amazonaws.com/prod/access-token', {
+        const response = await fetch(`${API_BASE_URL}/access-token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

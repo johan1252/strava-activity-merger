@@ -47,6 +47,41 @@ frontend
 - A simple React application structure with TypeScript.
 - Example component included for demonstration.
 
+## Deployment Instructions
+
+### Simple
+
+Run `npm run deploy`
+
+### Advanced
+
+1. **Build the React App**:
+   ```bash
+   npm run build
+   ```
+   This will generate a `build` folder containing the production-ready React app.
+
+2. **Deploy the CDK Stack**:
+   ```bash
+   cdk deploy
+   ```
+   This command will:
+   - Update S3 bucket with React web app
+
+3. **Invalidate CloudFront Cache**:
+   ```bash
+   aws cloudfront create-invalidation --distribution-id EE079INK46INE --paths '/*'
+   ```
+   This will invalidate Cloudfront caches to ensure all users see latest content.
+
+4. **Verify Deployment**:
+   - Visit `https://streventools.com` to ensure the app is live.
+
+### Notes
+
+- If you make changes to the React app, rebuild it using `npm run build` and redeploy using `cdk deploy`.
+- Ensure your AWS account has the necessary permissions to create S3 buckets, Route 53 records, and other resources.
+
 ## License
 
 This project is licensed under the MIT License.
