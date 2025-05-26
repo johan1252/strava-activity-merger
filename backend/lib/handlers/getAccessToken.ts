@@ -50,12 +50,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 athlete: payload.athlete,
                 scope: payload.scope,
                 expiresIn: payload.expires_in,
-            }),
-            headers: {
-                'Access-Control-Allow-Origin': '*', // Allow all origins
-                'Access-Control-Allow-Credentials': true, // Allow credentials
-                'Content-Type': 'application/json',
-            }
+            })
         };
     } catch (error) {
         logger.error({ message: "Error in handler", error });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import polyline from '@mapbox/polyline'; // Install this package for decoding polylines
 import { MapContainer, TileLayer, Polyline } from 'react-leaflet'; // Install react-leaflet for map rendering
 import 'leaflet/dist/leaflet.css'; // Import Leaflet styles
+import { API_BASE_URL } from '../config';
 
 const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }> = ({ activities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
@@ -29,7 +30,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 const parsedToken = JSON.parse(token);
                 setIsLoading(true); // Show loading modal
                 try {
-                    const response = await fetch('https://98qduh9l95.execute-api.us-east-1.amazonaws.com/prod/activities/combine', {
+                    const response = await fetch(`${API_BASE_URL}/activities/combine`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
