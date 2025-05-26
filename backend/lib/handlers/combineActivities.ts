@@ -131,11 +131,11 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const firstResp = await strava.uploads.post({
             activity_type: 'run',
             data_type: 'gpx',
-            name: activities[0].name + " (FixMyStrava)",
-            description: `Created by FixMyStrava.com`,
+            name: activities[0].name + " (Streven)",
+            description: `Created by streventools.com`,
             // @ts-ignore
             file: '/tmp/activity.gpx',
-            external_id: `fixmystrava-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
+            external_id: `streven-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
 
             //private: true, Not supported :(
         }, function () {
@@ -181,12 +181,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             statusCode: 200,
             body: JSON.stringify({
                 activityId: response.activity_id
-            }),
-            headers: {
-                'Access-Control-Allow-Origin': '*', // Allow all origins
-                'Access-Control-Allow-Credentials': true, // Allow credentials
-                'Content-Type': 'application/json',
-            }
+            })
         };
     } catch (error) {
         logger.error({ message: "Error in handler", error });

@@ -21,12 +21,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             statusCode: 200,
             body: JSON.stringify({
                 activities
-            }),
-            headers: {
-                'Access-Control-Allow-Origin': '*', // Allow all origins
-                'Access-Control-Allow-Credentials': true, // Allow credentials
-                'Content-Type': 'application/json',
-            }
+            })
         };
     } catch (error) {
         logger.error({ message: "Error in handler", error });
