@@ -86,7 +86,8 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 overflowY: 'auto',
                 width: '100vw', // Full screen width
                 padding: '10px',
-                border: '1px solid #ddd',
+                borderTop: '1px solid #ddd',
+                borderBottom: '1px solid #ddd',
                 borderRadius: '8px',
                 boxSizing: 'border-box', // Ensures padding is included in width
             }}

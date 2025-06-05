@@ -12,6 +12,7 @@
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
     "leaflet": "^1.9.4",
+    "mobile-detect": "^1.4.5",
     "querystring": "^0.2.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
