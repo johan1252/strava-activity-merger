@@ -22,7 +22,7 @@ const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
 
 const handleAuthorizeClick = () => {
     const clientId = STRAVA_CLIENT_ID;
-    // Use either localhost or your production URL (https://streventools.com/strava-callback)
+    // Use either localhost or your production URL (https://streventools.com/strava-callback)   
     // Make sure to set the redirect URI (authorization callback domain) in your Strava app settings to match this URL
     const redirectURI = window.location.hostname === 'localhost'
         ? 'http://localhost:3000/strava-callback'
@@ -93,10 +93,14 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="App" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <header className="App-header" style={{ textAlign: 'center' }}>
-                {athlete ? (
+        <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '85vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
+            <header className="App-header" style={{ textAlign: 'center', padding: '20px', backgroundColor: '#FC4C02', color: 'white' }}>
+                <h1 style={{ margin: '0', fontSize: '2.5rem' }}>Streven</h1>
+                <p style={{ margin: '0', fontSize: '1.2rem' }}>Collection of tools to correct your Strava activities</p>
+            </header>
 
+            <main style={{ padding: '20px', textAlign: 'center' }}>
+                {athlete ? (
                     <div>
                         <button
                             onClick={handleLogout}
@@ -104,7 +108,7 @@ const Home: React.FC = () => {
                                 position: 'absolute',
                                 top: '10px',
                                 right: '10px',
-                                backgroundColor: 'red',
+                                backgroundColor: '#FC4C02',
                                 color: 'white',
                                 border: 'none',
                                 padding: '10px 20px',
@@ -127,26 +131,41 @@ const Home: React.FC = () => {
                             <p>No activities found.</p>
                         )}
                     </div>
-
                 ) : (
-                    <button
-                        style={{
-                            backgroundColor: 'orange',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            borderRadius: '5px',
-                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                        }}
-                        onClick={handleAuthorizeClick}
-                    >
-                        Authorize Strava
-                    </button>
+                    <section style={{ marginTop: '50px' }}>
+                        <h2>Getting Started</h2>
+                        <button
+                            style={{
+                                padding: '10px 20px',
+                                cursor: 'pointer',
+                                transition: 'color 0.3s ease',
+                                border: 'none',
+                            }}
+                            onClick={handleAuthorizeClick}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.opacity = '0.8';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.opacity = '1';
+                            }}
+                        >
+                            <img
+                                src="/connect-with-strava.svg"
+                                alt="Connect with Strava"
+                                style={{ width: '200px', height: 'auto' }}
+                            />
+                        </button>
+                    </section>
                 )}
+            </main>
 
-            </header>
+            <footer style={{ textAlign: 'center', padding: '20px', backgroundColor: '#FC4C02', color: 'white', marginTop: 'auto' }}>
+                <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                    <a href="/faq" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>FAQ</a>
+                    <a href="/privacy-policy" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Privacy Policy</a>
+                    <a href="/terms-of-service" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Terms of Service</a>
+                </p>
+            </footer>
         </div>
     );
 };
@@ -193,30 +212,86 @@ const fetchAccessToken = async (code: string) => {
 
 const StravaCallback: React.FC = () => {
     const location = useLocation();
+    const [error, setError] = useState<string | null>(null);
 
     React.useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const code = queryParams.get('code');
+        const errorParam = queryParams.get('error');
+
+        if (errorParam) {
+            setError('Failed to authenticate with Strava. Please try again.');
+            return;
+        }
+
         if (code) {
             console.log('Authorization code:', code);
-            // You can now use the `code` to exchange for an access token
+            const response = fetchAccessToken(code);
+            console.log('Response:', response);
         } else {
             console.error('Authorization code not found in query parameters.');
         }
-
-        if (code) {
-            const response = fetchAccessToken(code);
-            console.log('Response:', response);
-        }
-
     }, [location]);
 
+    const handleCloseError = () => {
+        setError(null);
+        window.location.href = '/';
+    };
+
     return (
-        <div className="App">
+        <div className="App" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            {error && (
+                <div className="modal" style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                }}>
+                    <div className="modal-content" style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                        textAlign: 'center',
+                    }}>
+                        <p>{error}</p>
+                        <button onClick={handleCloseError} style={{
+                            backgroundColor: '#FC4C02',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            cursor: 'pointer',
+                            borderRadius: '5px',
+                            marginTop: '10px',
+                        }}>Close</button>
+                    </div>
+                </div>
+            )}
             <header className="App-header">
-                <h1>Strava Callback</h1>
-                <p>Processing authorization...</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div className="spinner" style={{
+                        width: '50px',
+                        height: '50px',
+                        border: '5px solid rgba(0, 0, 0, 0.1)',
+                        borderTop: '5px solid #FC4C02',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                    }}></div>
+                    <p style={{ marginTop: '20px', fontSize: '1.2rem', color: '#333' }}>Authorizing with Strava...</p>
+                </div>
             </header>
+            <style>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };
@@ -224,10 +299,11 @@ const StravaCallback: React.FC = () => {
 const App: React.FC = () => {
     return (
         <Router>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/strava-callback" element={<StravaCallback />} />
-            </Routes>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/strava-callback" element={<StravaCallback />} />
+                </Routes>
+            
         </Router>
     );
 };
