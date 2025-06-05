@@ -4,9 +4,13 @@ import './App.css';
 import querystring from 'querystring';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
+import MobileDetect from 'mobile-detect';
 
 const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
-    var url = 'https://www.strava.com/oauth/authorize?';
+    const md = new MobileDetect(window.navigator.userAgent);
+    var url = md.mobile() 
+        ? 'https://www.strava.com/oauth/mobile/authorize?' 
+        : 'https://www.strava.com/oauth/authorize?';
     var oauthArgs = {
         client_id: clientId,
         redirect_uri: redirectURI,
@@ -99,7 +103,7 @@ const Home: React.FC = () => {
                 <p style={{ margin: '0', fontSize: '1.2rem' }}>Collection of tools to correct your Strava activities</p>
             </header>
 
-            <main style={{ padding: '20px', textAlign: 'center' }}>
+            <main style={{ paddingTop: '20px', paddingBottom: '20px', textAlign: 'center' }}>
                 {athlete ? (
                     <div>
                         <button
