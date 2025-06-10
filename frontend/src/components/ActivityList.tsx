@@ -82,14 +82,14 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
     return (
         <div
             style={{
-                maxHeight: '70vh',
+                maxHeight: '66vh',
                 overflowY: 'auto',
-                width: '100vw', // Full screen width
+                width: '100vw',
                 padding: '10px',
                 borderTop: '1px solid #ddd',
                 borderBottom: '1px solid #ddd',
                 borderRadius: '8px',
-                boxSizing: 'border-box', // Ensures padding is included in width
+                boxSizing: 'border-box',
             }}
         >
             <h2 style={{ textAlign: 'center' }}>Your Activities:</h2>
@@ -118,8 +118,8 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                             backgroundColor: '#fff', // Add a white background for better contrast
                         }}
                     >
-                        {activity.name?.includes('FixMyStrava') && (
-                            // activity.external_id?.startsWith('fixmystrava-')
+                        {activity.name?.includes('Streven') && (
+                            // activity.external_id?.startsWith('streven-')
                             <div
                                 style={{
                                     position: 'absolute',
@@ -181,10 +181,10 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
             </ul>
             <div
                 style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    position: 'sticky',
+                    bottom: '50px',
+                    display: 'flex',
+                    justifyContent: 'center',
                     zIndex: 1000,
                 }}
             >

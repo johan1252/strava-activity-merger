@@ -48,14 +48,10 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         this.s3Bucket = new s3.Bucket(this, 'ReactAppBucket', {
             websiteIndexDocument: 'index.html',
             websiteErrorDocument: 'index.html',
-            publicReadAccess: true,
-            blockPublicAccess: {
-                blockPublicAcls: false,
-                ignorePublicAcls: false,
-                blockPublicPolicy: false,
-                restrictPublicBuckets: false,
-            },
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
             removalPolicy: cdk.RemovalPolicy.DESTROY, // Change to RETAIN for production
+            objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
         });
 
         // Export the S3 bucket name
@@ -67,7 +63,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         const securityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeadersPolicy', {
             securityHeadersBehavior: {
                 contentSecurityPolicy: {
-                    contentSecurityPolicy: "default-src 'self'; script-src 'self'; img-src 'self' data: https://www.strava.com https://*.facebook.com https://platform-lookaside.fbsbx.com https://*.openstreetmap.org ; style-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+                    contentSecurityPolicy: "default-src 'self'; script-src 'self'; img-src 'self' data: https://www.strava.com https://*.facebook.com https://platform-lookaside.fbsbx.com https://*.openstreetmap.org ; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
                     override: true,
                 },
                 strictTransportSecurity: {
@@ -96,12 +92,21 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create a CloudFront distribution
         this.cloudFrontDistribution = new cloudfront.Distribution(this, 'ReactAppDistribution', {
             defaultBehavior: {
-                origin: new cloudfrontOrigins.S3Origin(this.s3Bucket),
+                origin: cloudfrontOrigins.S3BucketOrigin.withOriginAccessControl(this.s3Bucket, { originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST]}),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 responseHeadersPolicy: securityHeadersPolicy,
             },
             domainNames: ['streventools.com'],
             certificate: this.certificate,
+            defaultRootObject: 'index.html',
+            errorResponses: [
+                {
+                    httpStatus: 404,
+                    responseHttpStatus: 200,
+                    responsePagePath: '/index.html',
+                    ttl: cdk.Duration.minutes(5),
+                }
+            ]
         });
 
         // Export the CloudFront distribution domain name

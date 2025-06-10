@@ -5,6 +5,7 @@ import querystring from 'querystring';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 import MobileDetect from 'mobile-detect';
+import Footer from './components/Footer';
 
 const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
     const md = new MobileDetect(window.navigator.userAgent);
@@ -112,8 +113,8 @@ const Home: React.FC = () => {
                                 position: 'absolute',
                                 top: '10px',
                                 right: '10px',
-                                backgroundColor: '#FC4C02',
-                                color: 'white',
+                                backgroundColor: 'white',
+                                color: '#FC4C02',
                                 border: 'none',
                                 padding: '10px 20px',
                                 fontSize: '14px',
@@ -124,9 +125,9 @@ const Home: React.FC = () => {
                         >
                             Log Out
                         </button>
-                        <h1>Welcome, {athlete.firstname} {athlete.lastname}!</h1>
-                        <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '100px', height: '100px' }} />
-                        <p>Strava ID: {athlete.id}</p>
+                        <h2>Welcome, {athlete.firstname} {athlete.lastname}!</h2>
+                        <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '80px', height: '80px' }} />
+                        {/* <p>Strava ID: {athlete.id}</p> */}
                         {activities.length > 0 ? (
                             <ActivityList activities={activities} reloadActivities={reloadActivities} />
                         ) : athlete ? (
@@ -159,17 +160,21 @@ const Home: React.FC = () => {
                                 style={{ width: '200px', height: 'auto' }}
                             />
                         </button>
+                        <section style={{ marginTop: '40px', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', background: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '24px' }}>
+                            <h3 style={{ color: '#FC4C02', marginBottom: '16px' }}>Features</h3>
+                            <ul style={{ fontSize: '1.1rem', lineHeight: '1.7', paddingLeft: '20px' }}>
+                                <li>
+                                    <strong>Combine Strava Activities</strong><br />
+                                    Accidentally stopped your activity too soon, or had a long break before continuing? This tool allows you to select two different Strava activities and will combine them for you, so your stats and records stay accurate.
+                                </li>
+                            </ul>
+                        </section>
                     </section>
                 )}
             </main>
 
-            <footer style={{ textAlign: 'center', padding: '20px', backgroundColor: '#FC4C02', color: 'white', marginTop: 'auto' }}>
-                <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                    <a href="/faq" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>FAQ</a>
-                    <a href="/privacy-policy" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Privacy Policy</a>
-                    <a href="/terms-of-service" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Terms of Service</a>
-                </p>
-            </footer>
+            <footer style={{ display: 'none' }} /> {/* Remove old footer visually, replaced by Footer component */}
+            <Footer />
         </div>
     );
 };
