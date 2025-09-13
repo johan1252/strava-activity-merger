@@ -63,7 +63,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         const securityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeadersPolicy', {
             securityHeadersBehavior: {
                 contentSecurityPolicy: {
-                    contentSecurityPolicy: "default-src 'self'; script-src 'self'; img-src 'self' data: https://www.strava.com https://*.facebook.com https://platform-lookaside.fbsbx.com https://*.openstreetmap.org ; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+                    contentSecurityPolicy: "default-src 'self'; script-src 'self'; img-src 'self' data: https://www.strava.com https://*.facebook.com https://platform-lookaside.fbsbx.com https://*.openstreetmap.org https://*.cloudfront.net/pictures/athletes/ ; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
                     override: true,
                 },
                 strictTransportSecurity: {
