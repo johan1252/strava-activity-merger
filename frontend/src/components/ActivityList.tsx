@@ -176,25 +176,22 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                 />
                             </MapContainer>
                         </div>
-                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                        <div style={{ marginTop: '10px', textAlign: 'left' }}>
                             <a
                                 href={`https://www.strava.com/activities/${activity.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
-                                    display: 'inline-block',
-                                    backgroundColor: '#FC5200',
-                                    color: 'white',
-                                    padding: '7.5px 15px', // 25% smaller than 10px 20px
-                                    borderRadius: '5px',
-                                    textDecoration: 'none',
+                                    color: '#FC4C02',
+                                    textDecoration: 'underline',
                                     fontWeight: 'bold',
-                                    fontSize: '0.75em', // 25% smaller font size
-                                    boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
-                                    transition: 'background-color 0.2s',
+                                    fontSize: '0.75em',
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    boxShadow: 'none',
+                                    cursor: 'pointer',
                                 }}
-                                onMouseOver={e => (e.currentTarget.style.backgroundColor = '#d84315')}
-                                onMouseOut={e => (e.currentTarget.style.backgroundColor = '#FC5200')}
                             >
                                 View on Strava
                             </a>
