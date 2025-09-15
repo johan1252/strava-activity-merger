@@ -15,7 +15,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
         await strava.client(accessToken);
 
-        const activities = await strava.athlete.listActivities({ page: 1, per_page: 10 });
+        const activities = await strava.athlete.listActivities({ page: 1, per_page: 25 });
 
         return {
             statusCode: 200,

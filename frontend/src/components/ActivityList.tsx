@@ -152,7 +152,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                             <strong>Type:</strong> {activity.type}
                         </p>
                         <p>
-                            <strong>Start Date:</strong> {new Date(activity.start_date_local).toLocaleString()}
+                            <strong>Start Date:</strong> {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
                         </p>
                         <div style={{ height: '300px', marginTop: '10px' }}>
                             <MapContainer
@@ -206,6 +206,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     display: 'flex',
                     justifyContent: 'center',
                     zIndex: 1000,
+                    pointerEvents: 'none', // Prevents blocking mouse actions in the same area
                 }}
             >
                 <button
@@ -221,6 +222,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                         borderRadius: '8px',
                         boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
                         transition: 'background-color 0.3s ease',
+                        pointerEvents: 'auto', // Allows the button itself to be clickable
                     }}
                     onMouseOver={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? 'darkblue' : 'grey')}
                     onMouseOut={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? 'blue' : 'grey')}
