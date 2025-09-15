@@ -6,6 +6,9 @@ import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 import MobileDetect from 'mobile-detect';
 import Footer from './components/Footer';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Header from './components/Header';
+import TermsOfService from './pages/TermsOfService';
 
 const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
     const md = new MobileDetect(window.navigator.userAgent);
@@ -99,11 +102,7 @@ const Home: React.FC = () => {
 
     return (
         <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '85vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
-            <header className="App-header" style={{ textAlign: 'center', padding: '20px', backgroundColor: '#FC4C02', color: 'white' }}>
-                <h1 style={{ margin: '0', fontSize: '2.5rem' }}>Streven</h1>
-                <p style={{ margin: '0', fontSize: '1.2rem' }}>Collection of tools to correct your Strava activities</p>
-            </header>
-
+            <Header />
             <main style={{ paddingTop: '20px', paddingBottom: '20px', textAlign: 'center' }}>
                 {athlete ? (
                     <div>
@@ -172,8 +171,6 @@ const Home: React.FC = () => {
                     </section>
                 )}
             </main>
-
-            <footer style={{ display: 'none' }} /> {/* Remove old footer visually, replaced by Footer component */}
             <Footer />
         </div>
     );
@@ -308,11 +305,12 @@ const StravaCallback: React.FC = () => {
 const App: React.FC = () => {
     return (
         <Router>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/strava-callback" element={<StravaCallback />} />
-                </Routes>
-            
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/strava-callback" element={<StravaCallback />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+            </Routes>
         </Router>
     );
 };
