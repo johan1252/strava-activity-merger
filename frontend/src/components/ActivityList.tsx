@@ -142,40 +142,50 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                 checked={selectedActivities.includes(activity)}
                                 onChange={() => handleCheckboxChange(activity)}
                                 style={{ marginRight: '10px' }}
+                                disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
+                                title={
+                                    !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
+                                        ? 'This activity has no GPS data and cannot be combined.'
+                                        : undefined
+                                }
                             />
                             <h3 style={{ margin: 0 }}>{activity.name}</h3>
                         </div>
-                        <p>
-                            <strong>Distance:</strong> {(activity.distance / 1000).toFixed(2)} km
-                        </p>
+                        { activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
+                            <p>
+                                <strong>Distance:</strong> {(activity.distance / 1000).toFixed(2)} km
+                            </p>
+                        )}
                         <p>
                             <strong>Type:</strong> {activity.type}
                         </p>
                         <p>
                             <strong>Start Date:</strong> {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
                         </p>
-                        <div style={{ height: '300px', marginTop: '10px' }}>
-                            <MapContainer
-                                // @ts-ignore
-                                center={[
-                                    activity.start_latlng[0],
-                                    activity.start_latlng[1],
-                                ]}
-                                zoom={13}
-                                style={{ height: '100%', width: '100%', borderRadius: '8px' }}
-                            >
-                                <TileLayer
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        {activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
+                            <div style={{ height: '300px', marginTop: '10px' }}>
+                                <MapContainer
                                     // @ts-ignore
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                />
-                                <Polyline
-                                    positions={polyline.decode(activity.map.summary_polyline).map(([lat, lng]) => [lat, lng])}
-                                    // @ts-ignore
-                                    color="blue"
-                                />
-                            </MapContainer>
-                        </div>
+                                    center={[
+                                        activity.start_latlng[0],
+                                        activity.start_latlng[1],
+                                    ]}
+                                    zoom={13}
+                                    style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+                                >
+                                    <TileLayer
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        // @ts-ignore
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    />
+                                    <Polyline
+                                        positions={polyline.decode(activity.map.summary_polyline).map(([lat, lng]) => [lat, lng])}
+                                        // @ts-ignore
+                                        color="blue"
+                                    />
+                                </MapContainer>
+                            </div>
+                        )}
                         <div style={{ marginTop: '10px', textAlign: 'left' }}>
                             <a
                                 href={`https://www.strava.com/activities/${activity.id}`}
