@@ -36,6 +36,9 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         if (!activities[0].name || !activities[1].name) {
             throw new Error("Activity names are missing");
         }
+        if (activities[0].sport_type !== activities[1].sport_type) {
+            throw new Error("Activities must be of the same type");
+        }
 
         // Order the activities by start date (earliest first)
         activities.sort((a: any, b: any) => {
@@ -114,7 +117,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
                 //console.log(point);
             }
-            console.log("Completed activity: ", activities[i].name);
+            console.log("Completed activity: ", activities[i].name, activities[i].id);
         }
         const gpxData = new StravaBuilder();
 

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import polyline from '@mapbox/polyline'; // Install this package for decoding polylines
-import { MapContainer, TileLayer, Polyline } from 'react-leaflet'; // Install react-leaflet for map rendering
-import 'leaflet/dist/leaflet.css'; // Import Leaflet styles
+import polyline from '@mapbox/polyline';
+import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { API_BASE_URL } from '../config';
+import { sportTypeToIcon } from '../utils/sportTypeToIcon';
 
 const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }> = ({ activities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
@@ -103,111 +104,149 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     alignItems: 'center', // Center the activity cards
                 }}
             >
-                {activities.map((activity) => (
-                    <li
-                        key={activity.id}
-                        style={{
-                            position: 'relative', // Add relative positioning for badge placement
-                            marginBottom: '20px',
-                            padding: '10px',
-                            border: '1px solid #ddd',
-                            borderRadius: '8px',
-                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                            width: '90%', // Make the activity cards take up 90% of the screen width
-                            maxWidth: '600px', // Limit the maximum width of the cards
-                            backgroundColor: '#fff', // Add a white background for better contrast
-                        }}
-                    >
-                        {activity.name?.includes('Streven') && (
-                            // activity.external_id?.startsWith('streven-')
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    backgroundColor: 'blue',
-                                    color: 'white',
-                                    padding: '5px 10px',
-                                    borderRadius: '5px',
-                                    fontSize: '12px',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Combined
-                            </div>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <input
-                                type="checkbox"
-                                checked={selectedActivities.includes(activity)}
-                                onChange={() => handleCheckboxChange(activity)}
-                                style={{ marginRight: '10px' }}
-                                disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
-                                title={
-                                    !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
-                                        ? 'This activity has no GPS data and cannot be combined.'
-                                        : undefined
-                                }
-                            />
-                            <h3 style={{ margin: 0 }}>{activity.name}</h3>
-                        </div>
-                        { activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
-                            <p>
-                                <strong>Distance:</strong> {(activity.distance / 1000).toFixed(2)} km
-                            </p>
-                        )}
-                        <p>
-                            <strong>Type:</strong> {activity.type}
-                        </p>
-                        <p>
-                            <strong>Start Date:</strong> {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
-                        </p>
-                        {activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
-                            <div style={{ height: '300px', marginTop: '10px' }}>
-                                <MapContainer
-                                    // @ts-ignore
-                                    center={[
-                                        activity.start_latlng[0],
-                                        activity.start_latlng[1],
-                                    ]}
-                                    zoom={13}
-                                    style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+                {activities.map((activity) => {
+                    let distanceKm = '-';
+                    let durationStr = '-';
+                    let paceStr = '-';
+                    if (activity.distance && activity.elapsed_time) {
+                        distanceKm = (activity.distance / 1000).toFixed(2);
+                        const durationSec = activity.moving_time || activity.elapsed_time || 0;
+                        const durationMin = Math.floor(durationSec / 60);
+                        const durationSecRemainder = durationSec % 60;
+                        durationStr = `${durationMin}m ${durationSecRemainder.toString().padStart(2, '0')}s`;
+
+                        // Calculate pace (min/km)
+                        if (activity.distance > 0 && durationSec > 0) {
+                            const pace = durationSec / (activity.distance / 1000); // seconds per km
+                            const paceMin = Math.floor(pace / 60);
+                            const paceSec = Math.round(pace % 60);
+                            paceStr = `${paceMin}:${paceSec.toString().padStart(2, '0')} /km`;
+                        }
+                    }
+                    return (
+
+                        <li
+                            key={activity.id}
+                            style={{
+                                position: 'relative', // Add relative positioning for badge placement
+                                marginBottom: '20px',
+                                padding: '10px',
+                                border: '1px solid #ddd',
+                                borderRadius: '8px',
+                                boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                                width: '90%', // Make the activity cards take up 90% of the screen width
+                                maxWidth: '600px', // Limit the maximum width of the cards
+                                backgroundColor: '#fff', // Add a white background for better contrast
+                            }}
+                        >
+                            {activity.name?.includes('Streven') && (
+                                // activity.external_id?.startsWith('streven-')
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        backgroundColor: 'blue',
+                                        color: 'white',
+                                        padding: '5px 10px',
+                                        borderRadius: '5px',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                    }}
                                 >
-                                    <TileLayer
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                        // @ts-ignore
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                    />
-                                    <Polyline
-                                        positions={polyline.decode(activity.map.summary_polyline).map(([lat, lng]) => [lat, lng])}
-                                        // @ts-ignore
-                                        color="blue"
-                                    />
-                                </MapContainer>
+                                    Combined
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedActivities.includes(activity)}
+                                    onChange={() => handleCheckboxChange(activity)}
+                                    style={{ marginRight: '10px', height: '20px', width: '20px' }}
+                                    disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
+                                    title={
+                                        !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
+                                            ? 'This activity has no GPS data and cannot be combined.'
+                                            : undefined
+                                    }
+                                />
+                                
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0', paddingRight: '5px' }}>
+                                    {sportTypeToIcon(activity.sport_type)}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingBottom: '10px' }}>
+                                    <h3 style={{ margin: 0 }}>{activity.name}</h3>
+                                    <div style={{ fontSize: '0.95em', color: '#555', marginTop: 2 }}>
+                                        {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                        <div style={{ marginTop: '10px', textAlign: 'left' }}>
-                            <a
-                                href={`https://www.strava.com/activities/${activity.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    color: '#FC4C02',
-                                    textDecoration: 'underline',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.75em',
-                                    background: 'none',
-                                    border: 'none',
-                                    padding: 0,
-                                    boxShadow: 'none',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                View on Strava
-                            </a>
-                        </div>
-                    </li>
-                ))}
+                            {activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
+                                <>
+                                    {/* Stats row */}
+                                    <div style={{
+                                        display: 'flex', gap: 32, marginBottom: 12, justifyContent: 'center', // Center the stats row horizontally
+                                        width: '100%',
+                                    }}>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.3em' }}>{distanceKm} <span style={{ fontWeight: 400, fontSize: '0.8em' }}>km</span></div>
+                                            <div style={{ color: '#888', fontSize: '0.9em' }}>Distance</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.3em' }}>{paceStr}</div>
+                                            <div style={{ color: '#888', fontSize: '0.9em' }}>Pace</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.3em' }}>{durationStr}</div>
+                                            <div style={{ color: '#888', fontSize: '0.9em' }}>Time</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ height: '300px', marginTop: '10px' }}>
+                                        <MapContainer
+                                            // @ts-ignore
+                                            center={[
+                                                activity.start_latlng[0],
+                                                activity.start_latlng[1],
+                                            ]}
+                                            zoom={13}
+                                            style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+                                        >
+                                            <TileLayer
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                // @ts-ignore
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
+                                            <Polyline
+                                                positions={polyline.decode(activity.map.summary_polyline).map(([lat, lng]) => [lat, lng])}
+                                                // @ts-ignore
+                                                color="blue" />
+                                        </MapContainer>
+                                    </div>
+                                </>
+                            )}
+                            <div style={{ marginTop: '10px', textAlign: 'left' }}>
+                                <a
+                                    href={`https://www.strava.com/activities/${activity.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: '#FC4C02',
+                                        textDecoration: 'underline',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.75em',
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        boxShadow: 'none',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    View on Strava
+                                </a>
+                            </div>
+                        </li>
+                    )
+                }
+                )}
             </ul>
             <div
                 style={{
