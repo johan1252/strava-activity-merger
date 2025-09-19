@@ -93,7 +93,6 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 boxSizing: 'border-box',
             }}
         >
-            <h2 style={{ textAlign: 'center' }}>Your Activities:</h2>
             <ul
                 style={{
                     listStyleType: 'none',
