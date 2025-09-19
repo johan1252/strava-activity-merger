@@ -103,7 +103,7 @@ const Home: React.FC = () => {
     return (
         <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '85vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
             <Header />
-            <main style={{ paddingTop: '20px', paddingBottom: '20px', textAlign: 'center' }}>
+            <main style={{ paddingTop: '5px', paddingBottom: '5px', textAlign: 'center' }}>
                 {athlete ? (
                     <div>
                         <button
@@ -124,9 +124,14 @@ const Home: React.FC = () => {
                         >
                             Log Out
                         </button>
-                        <h2>Welcome, {athlete.firstname} {athlete.lastname}!</h2>
-                        <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '80px', height: '80px' }} />
-                        {/* <p>Strava ID: {athlete.id}</p> */}
+                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '5px' }}>
+                            <div style={{ flex: 1 }} /> { /* Center activities text */ }
+                            <h2>Your Activities</h2>
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
+                                <h3 style={{ margin: 0 }}>{athlete.firstname} {athlete.lastname}</h3>
+                                <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
+                            </div>
+                        </div>
                         {activities.length > 0 ? (
                             <ActivityList activities={activities} reloadActivities={reloadActivities} />
                         ) : athlete ? (
