@@ -66,8 +66,9 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             let power: any[] = [];
             let distance: any[] = [];
             let cad: any[] = [];
-            const startTime = new Date(activities[i].startDate);
-            console.log(startTime, activities[i].startDate);
+            const origStartTime = new Date(activities[i].startDate);
+            const startTime = new Date(origStartTime.getTime() - -90000); // Subtract 90 seconds to ensure Strava doesn't consider duplicate
+            console.log("Set start time", startTime, "Original:", activities[i].startDate);
 
 
             // Assign all the above
@@ -117,7 +118,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
                 //console.log(point);
             }
-            console.log("Completed activity: ", activities[i].name, activities[i].id);
+            console.log("Completed activity: ", activities[i].name, "Id: ", activities[i].id);
         }
         const gpxData = new StravaBuilder();
 
@@ -135,7 +136,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             activity_type: 'run',
             data_type: 'gpx',
             name: activities[0].name + " (Streven)",
-            description: `Created by streventools.com`,
+            description: `Activities combined by streventools.com`,
             // @ts-ignore
             file: '/tmp/activity.gpx',
             external_id: `streven-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
