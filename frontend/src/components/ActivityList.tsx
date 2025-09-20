@@ -169,12 +169,13 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                             : undefined
                                     }
                                 />
-                                
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0', paddingRight: '5px' }}>
                                     {sportTypeToIcon(activity.sport_type)}
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingBottom: '10px' }}>
-                                    <h3 style={{ margin: 0 }}>{activity.name}</h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingBottom: '10px', width: '100%' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                        <h3 style={{ margin: 0 }}>{activity.name}</h3>
+                                    </div>
                                     <div style={{ fontSize: '0.95em', color: '#555', marginTop: 2 }}>
                                         {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
                                     </div>
@@ -222,7 +223,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                     </div>
                                 </>
                             )}
-                            <div style={{ marginTop: '10px', textAlign: 'left' }}>
+                            <div style={{ marginTop: '10px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <a
                                     href={`https://www.strava.com/activities/${activity.id}`}
                                     target="_blank"
@@ -241,6 +242,30 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                 >
                                     View on Strava
                                 </a>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.95em', color: '#555', fontWeight: 500 }}>
+                                    {activity.visibility === 'everyone' && (
+                                        <>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" >
+                                                <circle cx="12" cy="12" r="10" stroke="#888" strokeWidth="2" fill="none"/>
+                                                <ellipse cx="12" cy="12" rx="6" ry="10" stroke="#888" strokeWidth="2" fill="none"/>
+                                                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#888" strokeWidth="2" fill="none"/>
+                                            </svg>
+                                            Everyone
+                                        </>
+                                    )}
+                                    {activity.visibility === 'only_me' && (
+                                        <>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><rect x="5" y="11" width="14" height="8" rx="2" stroke="#888" strokeWidth="2" fill="none"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#888" strokeWidth="2" fill="none"/></svg>
+                                            Only me
+                                        </>
+                                    )}
+                                    {activity.visibility === 'followers_only' && (
+                                        <>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><circle cx="8" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none"/><circle cx="16" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none"/><path d="M2 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="#888" strokeWidth="2" fill="none"/><path d="M14 20c0-2.2091 2.239-4 5-4s5 1.7909 5 4" stroke="#888" strokeWidth="2" fill="none"/></svg>
+                                            Followers Only
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </li>
                     )
