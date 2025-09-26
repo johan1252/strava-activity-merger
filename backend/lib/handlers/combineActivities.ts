@@ -8,7 +8,7 @@ const logger = new Logger({ serviceName: 'authorize' });
 
 const debug = false;
 
-const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info("Entered handler");
     try {
         if (!event?.headers?.Authorization) {
@@ -67,7 +67,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             let distance: any[] = [];
             let cad: any[] = [];
             const origStartTime = new Date(activities[i].startDate);
-            const startTime = new Date(origStartTime.getTime() - -90000); // Subtract 90 seconds to ensure Strava doesn't consider duplicate
+            const startTime = new Date(origStartTime.getTime() + 90000); // Add 90 seconds to ensure Strava doesn't consider duplicate
             console.log("Set start time", startTime, "Original:", activities[i].startDate);
 
 
@@ -200,6 +200,6 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 };
 
-const handler = getAccessToken;
+const handler = combineActivities;
 
 export { handler };

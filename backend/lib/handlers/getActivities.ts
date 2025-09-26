@@ -5,7 +5,7 @@ import strava from 'strava-v3';
 const logger = new Logger({ serviceName: 'authorize' });
 
 
-const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info("Entered handler");
     try {
         if (!event?.headers?.Authorization) {
@@ -36,6 +36,6 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 };
 
-const handler = getAccessToken;
+const handler = getActivities;
 
 export { handler };
