@@ -148,6 +148,18 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(240),
         });
 
+        const roundUpLambda = new lambdaNodeJs.NodejsFunction(this, 'RoundUpHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            entry: './lib/handlers/roundUp.ts', // Path to the new handler file
+            timeout: cdk.Duration.seconds(240),
+        });
+
+        const roundDownLambda = new lambdaNodeJs.NodejsFunction(this, 'RoundDownHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            entry: './lib/handlers/roundDown.ts', // Path to the new handler file
+            timeout: cdk.Duration.seconds(240),
+        });
+
         // Define the API Gateway
         const api = new apigateway.RestApi(this, 'AccessTokenApi', {
             restApiName: 'Access Token Service',
@@ -186,5 +198,13 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /activities/combine endpoint
         const combineActivitiesResource = activitiesResource.addResource('combine');
         combineActivitiesResource.addMethod('POST', new apigateway.LambdaIntegration(combineActivitiesLambda));
+
+        // Create the /activities/roundup endpoint
+        const roundUpResource = activitiesResource.addResource('roundup');
+        roundUpResource.addMethod('POST', new apigateway.LambdaIntegration(roundUpLambda));
+
+        // Create the /activities/rounddown endpoint
+        const roundDownResource = activitiesResource.addResource('rounddown');
+        roundDownResource.addMethod('POST', new apigateway.LambdaIntegration(roundDownLambda));
     }
 }
