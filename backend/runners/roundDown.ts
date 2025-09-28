@@ -8,10 +8,10 @@ const logger = new Logger();
 	const event = {
 		body: JSON.stringify({
 			activity: {
-                    id: 15858215927,
-                    startDate: "2025-09-18T19:47:16Z",
-                    name: "Afternoon Run",
-					distance: 6502, // in meters
+                    id: 15937324087,
+                    startDate: "2025-09-25T22:52:51Z",
+                    name: "Hi Bondi 👋",
+					distance: 6013.9, // in meters
 					sport_type: "Run"
             }
 		}),

@@ -8,7 +8,7 @@ import { sportTypeToIcon } from '../utils/sportTypeToIcon';
 const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }> = ({ activities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
-    const [modalMessage, setModalMessage] = useState<string | null>(null); // State for modal message
+    const [modalContent, setModalContent] = useState<React.ReactNode>(null); // State for modal message
     const [activePopoverId, setActivePopoverId] = useState<string | null>(null); // Track which activity popover is open
     const [popoverButtonPressedId, setPopoverButtonPressedId] = useState<string | null>(null); // Track pressed state for button
     const [showCombineMode, setShowCombineMode] = useState(false); // Track if combine mode is active
@@ -21,7 +21,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
             // Add activity if less than 2 are selected
             setSelectedActivities([...selectedActivities, activity]);
         } else {
-            setModalMessage('You can only select up to 2 activities.');
+            setModalContent(<p>You can only select up to 2 activities.</p>);
         }
     };
 
@@ -61,32 +61,246 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     console.log('Combine activities response:', data);
                     if (data.activityId) {
                         setSelectedActivities([]); // Clear selected activities after combining
-                        setModalMessage(`Activities combined successfully! New activity ID: ${data.activityId}`);
+                        setModalContent(
+                            <>
+                                <div>
+                                    <strong>Activities combined successfully!</strong>
+                                </div>
+                                <div style={{ margin: '12px 0' }}>
+                                    <a
+                                        href={`https://www.strava.com/activities/${data.activityId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            backgroundColor: '#FC4C02',
+                                            color: 'white',
+                                            padding: '10px 20px',
+                                            borderRadius: '6px',
+                                            textDecoration: 'none',
+                                            fontWeight: 600,
+                                            marginRight: '8px',
+                                            display: 'inline-block'
+                                        }}
+                                    >
+                                        View New Activity
+                                    </a>
+                                </div>
+                                <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
+                                    <span>Consider deleting the original activities:</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                    {selectedActivities.map(act => (
+                                        <a
+                                            key={act.id}
+                                            href={`https://www.strava.com/activities/${act.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                backgroundColor: 'white',
+                                                color: '#FC4C02',
+                                                border: '2px solid #FC4C02',
+                                                padding: '8px 16px',
+                                                borderRadius: '6px',
+                                                textDecoration: 'none',
+                                                fontWeight: 600,
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            {act.name || `Activity ${act.id}`}
+                                        </a>
+                                    ))}
+                                </div>
+                            </>
+                        );
                         reloadActivities(); // Reload the activity list
                     } else {
-                        setModalMessage('Failed to combine activities.');
+                        setModalContent(<p>Failed to combine activities.</p>);
                     }
                 } catch (error) {
                     console.error('Error combining activities:', error);
-                    setModalMessage('An error occurred while combining activities.');
+                    setModalContent(<p>An error occurred while combining activities.</p>);
                 } finally {
                     setIsLoading(false); // Hide loading modal
                 }
             }
 
         } else {
-            setModalMessage('Please select exactly 2 activities to combine.');
+            setModalContent(<p>Please select exactly 2 activities to combine.</p>);
+        }
+    };
+
+    const handleRoundUp = async (activity: any) => {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+            const parsedToken = JSON.parse(token);
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/activities/roundup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${parsedToken.accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        activity: {
+                            id: activity.id,
+                            startDate: activity.start_date,
+                            name: activity.name,
+                            distance: activity.distance,
+                            sport_type: activity.sport_type
+                        }
+                    }),
+                });
+                const data = await response.json();
+                setModalContent(
+                    <>
+                        <div>
+                            <strong>Activity with updated distance created!</strong>
+                        </div>
+                        <div style={{ margin: '12px 0' }}>
+                            <a
+                                href={`https://www.strava.com/activities/${data.activityId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    backgroundColor: '#FC4C02',
+                                    color: 'white',
+                                    padding: '10px 20px',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    marginRight: '8px',
+                                    display: 'inline-block'
+                                }}
+                            >
+                                View New Activity
+                            </a>
+                        </div>
+                        <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
+                            <span>Consider deleting the original activity:</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <a
+                                key={activity.id}
+                                href={`https://www.strava.com/activities/${activity.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: '#FC4C02',
+                                    border: '2px solid #FC4C02',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '14px'
+                                }}
+                            >
+                                {activity.name || `Activity ${activity.id}`}
+                            </a>
+                        </div>
+                    </>
+                );
+                reloadActivities();
+            } catch (error) {
+                console.error('Error rounding up activity:', error);
+                setModalContent(<p>An error occurred while rounding up.</p>);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    const handleRoundDown = async (activity: any) => {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+            const parsedToken = JSON.parse(token);
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/activities/rounddown`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${parsedToken.accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        activity: {
+                            id: activity.id,
+                            startDate: activity.start_date,
+                            name: activity.name,
+                            distance: activity.distance,
+                            sport_type: activity.sport_type
+                        }
+                    }),
+                });
+                const data = await response.json();
+                setModalContent(
+                    <>
+                        <div>
+                            <strong>Activity with updated distance created!</strong>
+                        </div>
+                        <div style={{ margin: '12px 0' }}>
+                            <a
+                                href={`https://www.strava.com/activities/${data.activityId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    backgroundColor: '#FC4C02',
+                                    color: 'white',
+                                    padding: '10px 20px',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    marginRight: '8px',
+                                    display: 'inline-block'
+                                }}
+                            >
+                                View New Activity
+                            </a>
+                        </div>
+                        <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
+                            <span>Consider deleting the original activity:</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <a
+                                key={activity.id}
+                                href={`https://www.strava.com/activities/${activity.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: '#FC4C02',
+                                    border: '2px solid #FC4C02',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '14px'
+                                }}
+                            >
+                                {activity.name || `Activity ${activity.id}`}
+                            </a>
+                        </div>
+                    </>
+                );
+                reloadActivities();
+            } catch (error) {
+                console.error('Error rounding down activity:', error);
+                setModalContent(<p>An error occurred while rounding down.</p>);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
     const closeModal = () => {
-        setModalMessage(null); // Close the modal
+        setModalContent(null); // Close the modal
     };
 
     return (
         <div
             style={{
-                maxHeight: '66vh',
+                maxHeight: '75vh',
                 overflowY: 'auto',
                 width: '100vw',
                 padding: '10px',
@@ -178,8 +392,18 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                     >
                                         Combine
                                     </button>
-                                    {/* <button style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Round Up</button>
-                                    <button style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Round Down</button> */}
+                                    <button
+                                        style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                        onClick={() => { handleRoundUp(activity); setActivePopoverId(null); }}
+                                    >
+                                        Round Up
+                                    </button>
+                                    <button
+                                        style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                        onClick={() => { handleRoundDown(activity); setActivePopoverId(null); }}
+                                    >
+                                        Round Down
+                                    </button>
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -403,7 +627,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     </button>
                 </div>
             )}
-            {(isLoading || modalMessage) && (
+            {(isLoading || modalContent) && (
                 <div
                     style={{
                         position: 'fixed',
@@ -428,10 +652,10 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                         }}
                     >
                         {isLoading ? (
-                            <p style={{ fontSize: '18px', margin: 0 }}>Combining activities, please wait...</p>
+                            <p style={{ fontSize: '18px', margin: 0 }}>Creating updated activity, please wait...</p>
                         ) : (
                             <>
-                                <p style={{ fontSize: '18px', margin: 0 }}>{modalMessage}</p>
+                                {modalContent}
                                 <button
                                     onClick={closeModal}
                                     style={{

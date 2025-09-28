@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const TermsOfService: React.FC = () => (
-    <>
+    <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
         <Header />
         <div style={{ maxWidth: '700px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
             <h1>Terms of Service</h1>
@@ -34,7 +34,7 @@ const TermsOfService: React.FC = () => (
             <p>We reserve the right to update these terms at any time. Continued use of the service after changes constitutes acceptance of those changes.</p>
         </div>
         <Footer />
-    </>
+    </div>
 );
 
 export default TermsOfService;
