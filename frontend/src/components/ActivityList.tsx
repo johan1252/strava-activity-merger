@@ -9,6 +9,9 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
     const [modalMessage, setModalMessage] = useState<string | null>(null); // State for modal message
+    const [activePopoverId, setActivePopoverId] = useState<string | null>(null); // Track which activity popover is open
+    const [popoverButtonPressedId, setPopoverButtonPressedId] = useState<string | null>(null); // Track pressed state for button
+    const [showCombineMode, setShowCombineMode] = useState(false); // Track if combine mode is active
 
     const handleCheckboxChange = (activity: any) => {
         if (selectedActivities.includes(activity)) {
@@ -92,6 +95,10 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 borderRadius: '8px',
                 boxSizing: 'border-box',
             }}
+            onClick={() => {
+                setActivePopoverId(null);
+                setPopoverButtonPressedId(null);
+            }} // Close popover and button pressed when clicking outside
         >
             <ul
                 style={{
@@ -138,37 +145,59 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                 backgroundColor: '#fff', // Add a white background for better contrast
                             }}
                         >
-                            {activity.name?.includes('Streven') && (
-                                // activity.external_id?.startsWith('streven-')
+                            {/* Popover for this activity */}
+                            {activePopoverId === activity.id && (
                                 <div
                                     style={{
                                         position: 'absolute',
-                                        top: '10px',
+                                        top: '50px',
                                         right: '10px',
-                                        backgroundColor: 'blue',
-                                        color: 'white',
-                                        padding: '5px 10px',
-                                        borderRadius: '5px',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
+                                        background: 'white',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        zIndex: 3000,
+                                        padding: '20px 16px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '12px',
+                                        minWidth: '120px',
+                                        alignItems: 'stretch',
                                     }}
+                                    onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
                                 >
-                                    Combined
+                                    <button
+                                        style={{ padding: '10px', borderRadius: '6px', border: 'none', background: '#FC4C02', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                        onClick={() => {
+                                            setShowCombineMode(true);
+                                            setActivePopoverId(null);
+                                            if (!selectedActivities.includes(activity)) {
+                                                setSelectedActivities([activity]);
+                                            }
+                                        }}
+                                    >
+                                        Combine
+                                    </button>
+                                    {/* <button style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Round Up</button>
+                                    <button style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Round Down</button> */}
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedActivities.includes(activity)}
-                                    onChange={() => handleCheckboxChange(activity)}
-                                    style={{ marginRight: '10px', height: '20px', width: '20px' }}
-                                    disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
-                                    title={
-                                        !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
-                                            ? 'This activity has no GPS data and cannot be combined.'
-                                            : undefined
-                                    }
-                                />
+                                {/* Only show checkboxes in combine mode */}
+                                {showCombineMode && !activity.name?.includes('Streven') && (
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedActivities.includes(activity)}
+                                        onChange={() => handleCheckboxChange(activity)}
+                                        style={{ marginRight: '10px', height: '20px', width: '20px' }}
+                                        disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
+                                        title={
+                                            !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
+                                                ? 'This activity has no GPS data and cannot be combined.'
+                                                : undefined
+                                        }
+                                    />
+                                )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0', paddingRight: '5px' }}>
                                     {sportTypeToIcon(activity.sport_type)}
                                 </div>
@@ -180,6 +209,52 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                         {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
                                     </div>
                                 </div>
+                                {activity.name?.includes('Streven') && (
+                                    <div
+                                        style={{
+                                            width: '80px',
+                                            backgroundColor: 'blue',
+                                            color: 'white',
+                                            padding: '5px 10px',
+                                            borderRadius: '5px',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            marginRight: '5px', // Add gap between Combined and button
+                                        }}
+                                    >
+                                        Combined
+                                    </div>
+                                )}
+                                {/* Popover trigger button in top right */}
+                                <button
+                                    style={{
+                                        background: activePopoverId === activity.id ? '#ddd' : '#eee',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        width: '32px',
+                                        height: '32px',
+                                        cursor: 'pointer',
+                                        zIndex: 10,
+                                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                        transition: 'background 0.2s',
+                                    }}
+                                    aria-label="Show activity actions"
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        if (activePopoverId === activity.id) {
+                                            setActivePopoverId(null);
+                                            setPopoverButtonPressedId(null);
+                                        } else {
+                                            setActivePopoverId(activity.id);
+                                            setPopoverButtonPressedId(activity.id);
+                                        }
+                                    }}
+                                    onMouseDown={() => setPopoverButtonPressedId(activity.id)}
+                                    onMouseUp={() => setPopoverButtonPressedId(null)}
+                                >
+                                    <span style={{ fontSize: '20px', color: '#555' }}>⋮</span>
+                                </button>
+
                             </div>
                             {activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length > 1 && (
                                 <>
@@ -246,22 +321,22 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                     {activity.visibility === 'everyone' && (
                                         <>
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" >
-                                                <circle cx="12" cy="12" r="10" stroke="#888" strokeWidth="2" fill="none"/>
-                                                <ellipse cx="12" cy="12" rx="6" ry="10" stroke="#888" strokeWidth="2" fill="none"/>
-                                                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#888" strokeWidth="2" fill="none"/>
+                                                <circle cx="12" cy="12" r="10" stroke="#888" strokeWidth="2" fill="none" />
+                                                <ellipse cx="12" cy="12" rx="6" ry="10" stroke="#888" strokeWidth="2" fill="none" />
+                                                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#888" strokeWidth="2" fill="none" />
                                             </svg>
                                             Everyone
                                         </>
                                     )}
                                     {activity.visibility === 'only_me' && (
                                         <>
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><rect x="5" y="11" width="14" height="8" rx="2" stroke="#888" strokeWidth="2" fill="none"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#888" strokeWidth="2" fill="none"/></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><rect x="5" y="11" width="14" height="8" rx="2" stroke="#888" strokeWidth="2" fill="none" /><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#888" strokeWidth="2" fill="none" /></svg>
                                             Only me
                                         </>
                                     )}
                                     {activity.visibility === 'followers_only' && (
                                         <>
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><circle cx="8" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none"/><circle cx="16" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none"/><path d="M2 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="#888" strokeWidth="2" fill="none"/><path d="M14 20c0-2.2091 2.239-4 5-4s5 1.7909 5 4" stroke="#888" strokeWidth="2" fill="none"/></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" ><circle cx="8" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none" /><circle cx="16" cy="10" r="3" stroke="#888" strokeWidth="2" fill="none" /><path d="M2 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="#888" strokeWidth="2" fill="none" /><path d="M14 20c0-2.2091 2.239-4 5-4s5 1.7909 5 4" stroke="#888" strokeWidth="2" fill="none" /></svg>
                                             Followers Only
                                         </>
                                     )}
@@ -272,37 +347,62 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 }
                 )}
             </ul>
-            <div
-                style={{
-                    position: 'sticky',
-                    bottom: '50px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    pointerEvents: 'none', // Prevents blocking mouse actions in the same area
-                }}
-            >
-                <button
-                    onClick={handleCombineClick}
-                    disabled={selectedActivities.length !== 2}
+            {/* Show combine button only in combine mode */}
+            {showCombineMode && (
+                <div
                     style={{
-                        backgroundColor: selectedActivities.length === 2 ? 'blue' : 'grey',
-                        color: 'white',
-                        border: 'none',
-                        padding: '15px 30px',
-                        fontSize: '18px',
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
-                        transition: 'background-color 0.3s ease',
-                        pointerEvents: 'auto', // Allows the button itself to be clickable
+                        position: 'sticky',
+                        bottom: '50px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        gap: '16px', // Add gap between buttons
+                        pointerEvents: 'none', // Prevents blocking mouse actions in the same area
                     }}
-                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? 'darkblue' : 'grey')}
-                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? 'blue' : 'grey')}
                 >
-                    Combine Activities
-                </button>
-            </div>
+                    <button
+                        onClick={handleCombineClick}
+                        disabled={selectedActivities.length !== 2}
+                        style={{
+                            backgroundColor: selectedActivities.length === 2 ? '#FC4C02' : 'grey', // Orange when active
+                            color: 'white',
+                            border: 'none',
+                            padding: '15px 30px',
+                            fontSize: '18px',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+                            transition: 'background-color 0.3s ease',
+                            pointerEvents: 'auto', // Allows the button itself to be clickable
+                            fontWeight: 600,
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? '#e04a02' : 'grey')}
+                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? '#FC4C02' : 'grey')}
+                    >
+                        Combine Activities
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowCombineMode(false);
+                            setSelectedActivities([]);
+                        }}
+                        style={{
+                            backgroundColor: 'white',
+                            color: 'blue',
+                            border: '2px solid blue',
+                            padding: '15px 30px',
+                            fontSize: '18px',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.08)',
+                            pointerEvents: 'auto',
+                            fontWeight: 600,
+                        }}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
             {(isLoading || modalMessage) && (
                 <div
                     style={{
