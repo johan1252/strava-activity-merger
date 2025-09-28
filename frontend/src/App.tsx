@@ -101,7 +101,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '85vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
+        <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
             <Header />
             <main style={{ paddingTop: '5px', paddingBottom: '5px', textAlign: 'center' }}>
                 {athlete ? (
@@ -141,7 +141,7 @@ const Home: React.FC = () => {
                         )}
                     </div>
                 ) : (
-                    <section style={{ marginTop: '50px' }}>
+                    <section style={{ marginTop: '30px' }}>
                         <h2>Getting Started</h2>
                         <button
                             style={{
@@ -164,12 +164,20 @@ const Home: React.FC = () => {
                                 style={{ width: '200px', height: 'auto' }}
                             />
                         </button>
-                        <section style={{ marginTop: '40px', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', background: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '24px' }}>
+                        <section style={{ marginTop: '30px', marginBottom: '30px', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', background: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '24px' }}>
                             <h3 style={{ color: '#FC4C02', marginBottom: '16px' }}>Features</h3>
-                            <ul style={{ fontSize: '1.1rem', lineHeight: '1.7', paddingLeft: '20px' }}>
+                            <ul style={{ fontSize: '1.0rem', lineHeight: '1.7', paddingLeft: '20px' }}>
                                 <li>
                                     <strong>Combine Strava Activities</strong><br />
                                     Accidentally stopped your activity too soon, or had a long break before continuing? This tool allows you to select two different Strava activities and will combine them for you, so your stats and records stay accurate.
+                                </li>
+                                <li>
+                                    <strong>Round Up Activity Distance</strong><br />
+                                    Ran a 10km race and Strava shows 9.98km? This tool allows you to recreate an activity while "rounding up" the distance, so your stats and records stay accurate. For example, if you ran 9.98km, it will create a new activity with exactly 10.0km.
+                                </li>
+                                <li>
+                                    <strong>Round Down Activity Distance</strong><br />
+                                    Accidentally stopped your activity too late, or Strava added a 0.1km Strava tax? This tool allows you to recreate an activity while "rounding down" the distance, so your stats and records stay accurate. For example, if you ran 10.3km, it will create a new activity with exactly 10.0km.
                                 </li>
                             </ul>
                         </section>

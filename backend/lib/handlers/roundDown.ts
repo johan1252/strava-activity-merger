@@ -116,6 +116,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         // If we didn't reach the roundedDistance, add points using avg speed from last 1km
         // This can happen since GPX points are not always exactly 1m apart in distance
         let lastDistanceVal = distance[lastIndex];
+        console.log("lastDistanceVal", lastDistanceVal, "roundedDistance", roundedDistance);
         if (lastDistanceVal < roundedDistance && distance.length > 1) {
             // Find the start index of the last 1km
             const lastKmStart = distance[distance.length - 1] - 1000;
@@ -145,6 +146,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             const step = toAdd / pointsToAdd;
             const timeStep = step / avgSpeed;
             let runningDistance = lastDistanceVal;
+            console.log("Adding", pointsToAdd, "points of approx", step, "meters each to reach", roundedDistance, "m total");
             for (let i = 1; i <= pointsToAdd; i++) {
                 runningDistance += step;
                 lastTimeAbs += timeStep;

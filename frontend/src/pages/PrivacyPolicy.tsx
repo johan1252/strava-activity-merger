@@ -3,9 +3,9 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const PrivacyPolicy: React.FC = () => (
-    <>
+    <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', maxWidth: '100vw', justifyContent: 'space-between' }}>
         <Header />
-        <div style={{ maxWidth: '700px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+        <div style={{ maxHeight: '100vh', maxWidth: '700px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
             <h1>Privacy Policy</h1>
             <p>Your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your information when you use Streven.</p>
             <h2>Information We Collect</h2>
@@ -23,7 +23,7 @@ const PrivacyPolicy: React.FC = () => (
             </ul>
         </div>
         <Footer />
-    </>
+    </div>
 );
 
 export default PrivacyPolicy;
