@@ -133,7 +133,8 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
         // Upload the GPX file to Strava
 
         const firstResp = await strava.uploads.post({
-            activity_type: 'run',
+            activity_type: activities[0].sport_type,
+            sport_type: activities[0].sport_type,
             data_type: 'gpx',
             name: activities[0].name + " (Streven)",
             description: `Activities combined by streventools.com`,

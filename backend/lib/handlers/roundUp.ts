@@ -36,6 +36,9 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         if (!activity.distance) {
             throw new Error("Activity distance missing");
         }
+        if (!activity.sport_type) {
+            throw new Error("Activity sport_type missing");
+        }
 
         await strava.client(accessToken);
 
@@ -170,7 +173,8 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         // Upload the GPX file to Strava
 
         const firstResp = await strava.uploads.post({
-            activity_type: 'run',
+            activity_type: activity.sport_type,
+            sport_type: activity.sport_type,
             data_type: 'gpx',
             name: activity.name + " (Streven)",
             description: `Activity rounded up by streventools.com`,
