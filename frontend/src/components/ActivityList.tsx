@@ -509,6 +509,14 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                             ]}
                                             zoom={13}
                                             style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+                                            // Disable map interactions for better UX on mobile, in future we can allow map interactions when viewing activity details
+                                            zoomControl={false}
+                                            dragging={false}
+                                            touchZoom={false}
+                                            scrollWheelZoom={false}
+                                            doubleClickZoom={false}
+                                            boxZoom={false}
+                                            keyboard={false}
                                         >
                                             <TileLayer
                                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
