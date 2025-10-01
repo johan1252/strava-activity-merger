@@ -13,6 +13,17 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
     const [popoverButtonPressedId, setPopoverButtonPressedId] = useState<string | null>(null); // Track pressed state for button
     const [showCombineMode, setShowCombineMode] = useState(false); // Track if combine mode is active
 
+    const supportsCombineMode = (activity: any) => {
+        return (
+            !(activity.external_id?.startsWith('streven-cb'))
+            && (
+                activity.start_latlng &&
+                Array.isArray(activity.start_latlng) &&
+                activity.start_latlng.length > 0
+            )
+        );
+    }
+
     const handleCheckboxChange = (activity: any) => {
         if (selectedActivities.includes(activity)) {
             // Remove activity if already selected
@@ -380,18 +391,18 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                     }}
                                     onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
                                 >
-                                    <button
+                                    {supportsCombineMode(activity) && (<button
                                         style={{ padding: '10px', borderRadius: '6px', border: 'none', background: '#FC4C02', color: 'white', fontWeight: 600, cursor: 'pointer' }}
                                         onClick={() => {
                                             setShowCombineMode(true);
                                             setActivePopoverId(null);
-                                            if (!selectedActivities.includes(activity)) {
+                                            if (!selectedActivities.includes(activity) && supportsCombineMode(activity)) {
                                                 setSelectedActivities([activity]);
                                             }
                                         }}
                                     >
                                         Combine
-                                    </button>
+                                    </button>)}
                                     <button
                                         style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}
                                         onClick={() => { handleRoundUp(activity); setActivePopoverId(null); }}
@@ -408,18 +419,12 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                             )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 {/* Only show checkboxes in combine mode */}
-                                {showCombineMode && !activity.name?.includes('Streven') && (
+                                {showCombineMode && supportsCombineMode(activity) && (
                                     <input
                                         type="checkbox"
                                         checked={selectedActivities.includes(activity)}
                                         onChange={() => handleCheckboxChange(activity)}
                                         style={{ marginRight: '10px', height: '20px', width: '20px' }}
-                                        disabled={activity.start_latlng && Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0}
-                                        title={
-                                            !activity.start_latlng || (Array.isArray(activity.start_latlng) && activity.start_latlng.length === 0)
-                                                ? 'This activity has no GPS data and cannot be combined.'
-                                                : undefined
-                                        }
                                     />
                                 )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0', paddingRight: '5px' }}>
@@ -433,20 +438,23 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                                         {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
                                     </div>
                                 </div>
-                                {activity.name?.includes('Streven') && (
+                                {(activity.external_id?.startsWith('streven-')) && (
                                     <div
                                         style={{
-                                            width: '80px',
+                                            width: '130px',
                                             backgroundColor: 'blue',
                                             color: 'white',
                                             padding: '5px 10px',
                                             borderRadius: '5px',
                                             fontSize: '12px',
                                             fontWeight: 'bold',
-                                            marginRight: '5px', // Add gap between Combined and button
+                                            marginRight: '5px',
+                                            textAlign: 'center',
                                         }}
                                     >
-                                        Combined
+                                        {activity.external_id?.startsWith('streven-cb-') && 'Combined'}
+                                        {activity.external_id?.startsWith('streven-ru') && 'Rounded Up'}
+                                        {activity.external_id?.startsWith('streven-rd') && 'Rounded Down'}
                                     </div>
                                 )}
                                 {/* Popover trigger button in top right */}

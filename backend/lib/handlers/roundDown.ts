@@ -174,16 +174,17 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             activity_type: activity.sport_type,
             sport_type: activity.sport_type,
             data_type: 'gpx',
-            name: activity.name + " (Streven)",
+            name: activity.names,
             description: `Activity rounded down by streventools.com`,
             // @ts-ignore
             file: '/tmp/activity.gpx',
-            external_id: `streven-${activity.id}`,
+            external_id: `streven-rd-${activity.id}`,
         }, function () {
             console.log('First part of upload complete');
         });
-        // @ts-ignore
-        const { id: uploadId } = JSON.parse(firstResp);
+        
+        const { id: uploadId } = firstResp;
+
         let response: any = {}
         // @ts-ignore
         await strava.uploads._check({

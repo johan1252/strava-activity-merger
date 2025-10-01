@@ -129,7 +129,7 @@ const Home: React.FC = () => {
                             <h2>Your Activities</h2>
                             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
                                 <h3 style={{ margin: 0 }}>{athlete.firstname} {athlete.lastname}</h3>
-                                <img src={athlete.profile} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
+                                <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                             </div>
                         </div>
                         {activities.length > 0 ? (

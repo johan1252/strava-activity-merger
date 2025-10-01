@@ -40,6 +40,6 @@
     "constructs": "^10.0.0",
     "dotenv": "^16.4.7",
     "gpx-builder": "^5.4.0",
-    "strava-v3": "^2.2.1"
+    "strava-v3": "git+https://github.com/node-strava/node-strava-v3.git#edda7ea0926a4a789a46a67956db123c6501906b"
   }
 }
