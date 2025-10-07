@@ -5,13 +5,35 @@ import 'leaflet/dist/leaflet.css';
 import { API_BASE_URL } from '../config';
 import { sportTypeToIcon } from '../utils/sportTypeToIcon';
 
-const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }> = ({ activities, reloadActivities }) => {
+const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, setActivities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
     const [modalContent, setModalContent] = useState<React.ReactNode>(null); // State for modal message
     const [activePopoverId, setActivePopoverId] = useState<string | null>(null); // Track which activity popover is open
     const [popoverButtonPressedId, setPopoverButtonPressedId] = useState<string | null>(null); // Track pressed state for button
     const [showCombineMode, setShowCombineMode] = useState(false); // Track if combine mode is active
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingNextPage, setIsLoadingNextPage] = useState(false);
+
+    const loadNextPage = async () => {
+        setIsLoadingNextPage(true);
+        const token = sessionStorage.getItem('token');
+        if (!token) return;
+        const parsedToken = JSON.parse(token);
+        const nextPage = page + 1;
+        const response = await fetch(`${API_BASE_URL}/activities?page=${nextPage}`, {
+            headers: { Authorization: `Bearer ${parsedToken.accessToken}` }
+        });
+        const data = await response.json();
+        if (data.activities && data.activities.length > 0) {
+            setActivities((prev: any) => [...prev, ...data.activities]);
+            setPage(nextPage);
+        } else {
+            setHasMore(false);
+        }
+        setIsLoadingNextPage(false);
+    };
 
     const supportsCombineMode = (activity: any) => {
         return (
@@ -599,6 +621,15 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 }
                 )}
             </ul>
+            {hasMore && (isLoadingNextPage ? (
+                <span style={{ color: '#888', textDecoration: 'none', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0', cursor: 'default' }}>
+                    Loading...
+                </span>
+            ) : (
+                <a onClick={loadNextPage} style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0' }}>
+                    Load More...
+                </a>
+            ))}
             {/* Show combine button only in combine mode */}
             {showCombineMode && (
                 <div
