@@ -136,11 +136,11 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             activity_type: activities[0].sport_type,
             sport_type: activities[0].sport_type,
             data_type: 'gpx',
-            name: activities[0].name + " (Streven)",
+            name: activities[0].name,
             description: `Activities combined by streventools.com`,
             // @ts-ignore
             file: '/tmp/activity.gpx',
-            external_id: `streven-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
+            external_id: `streven-cb-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
 
             //private: true, Not supported :(
         }, function () {
@@ -148,9 +148,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
         }
         );
 
-        // @ts-ignore
-        const { id: uploadId } = JSON.parse(firstResp);
-
+        const { id: uploadId } = firstResp;
         
         let response: any = {}
         // @ts-ignore
