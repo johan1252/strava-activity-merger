@@ -133,7 +133,7 @@ const Home: React.FC = () => {
                             </div>
                         </div>
                         {activities.length > 0 ? (
-                            <ActivityList activities={activities} reloadActivities={reloadActivities} />
+                            <ActivityList activities={activities} setActivities={setActivities} reloadActivities={reloadActivities} />
                         ) : athlete ? (
                             <p>Loading activities...</p>
                         ) : (
