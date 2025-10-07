@@ -70,7 +70,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     });
                     const data = await response.json();
                     console.log('Combine activities response:', data);
-                    if (data.activityId) {
+                    if (response.ok && data.activityId) {
                         setSelectedActivities([]); // Clear selected activities after combining
                         setModalContent(
                             <>
@@ -125,8 +125,9 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                         );
                         reloadActivities(); // Reload the activity list
                     } else {
-                        setModalContent(<p>Failed to combine activities.</p>);
-                    }
+                        console.error('Error combining activities:', await response.json());
+                        setModalContent(<p>Failed to combine activities.<br></br>Please try again, if error persists contact us for assistance.</p>);
+                    };
                 } catch (error) {
                     console.error('Error combining activities:', error);
                     setModalContent(<p>An error occurred while combining activities.</p>);
@@ -162,60 +163,65 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                         }
                     }),
                 });
-                const data = await response.json();
-                setModalContent(
-                    <>
-                        <div>
-                            <strong>Activity with updated distance created!</strong>
-                        </div>
-                        <div style={{ margin: '12px 0' }}>
-                            <a
-                                href={`https://www.strava.com/activities/${data.activityId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    backgroundColor: '#FC4C02',
-                                    color: 'white',
-                                    padding: '10px 20px',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    marginRight: '8px',
-                                    display: 'inline-block'
-                                }}
-                            >
-                                View New Activity
-                            </a>
-                        </div>
-                        <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
-                            <span>Consider deleting the original activity:</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <a
-                                key={activity.id}
-                                href={`https://www.strava.com/activities/${activity.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    backgroundColor: 'white',
-                                    color: '#FC4C02',
-                                    border: '2px solid #FC4C02',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    fontSize: '14px'
-                                }}
-                            >
-                                {activity.name || `Activity ${activity.id}`}
-                            </a>
-                        </div>
-                    </>
-                );
-                reloadActivities();
+                if (response.ok) {
+                    const data = await response.json();
+                    setModalContent(
+                        <>
+                            <div>
+                                <strong>Activity with updated distance created!</strong>
+                            </div>
+                            <div style={{ margin: '12px 0' }}>
+                                <a
+                                    href={`https://www.strava.com/activities/${data.activityId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        backgroundColor: '#FC4C02',
+                                        color: 'white',
+                                        padding: '10px 20px',
+                                        borderRadius: '6px',
+                                        textDecoration: 'none',
+                                        fontWeight: 600,
+                                        marginRight: '8px',
+                                        display: 'inline-block'
+                                    }}
+                                >
+                                    View New Activity
+                                </a>
+                            </div>
+                            <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
+                                <span>Consider deleting the original activity:</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                <a
+                                    key={activity.id}
+                                    href={`https://www.strava.com/activities/${activity.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        backgroundColor: 'white',
+                                        color: '#FC4C02',
+                                        border: '2px solid #FC4C02',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        textDecoration: 'none',
+                                        fontWeight: 600,
+                                        fontSize: '14px'
+                                    }}
+                                >
+                                    {activity.name || `Activity ${activity.id}`}
+                                </a>
+                            </div>
+                        </>
+                    );
+                    reloadActivities();
+                } else {
+                    console.error('Error rounding up activity:', await response.json());
+                    setModalContent(<p>Failed to round up activity.<br></br>Please try again, if error persists contact us for assistance.</p>);
+                };
             } catch (error) {
                 console.error('Error rounding up activity:', error);
-                setModalContent(<p>An error occurred while rounding up.</p>);
+                setModalContent(<p>An error occurred while rounding up.<br></br>Please try again, if error persists contact us for assistance.</p>);
             } finally {
                 setIsLoading(false);
             }
@@ -244,60 +250,65 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                         }
                     }),
                 });
-                const data = await response.json();
-                setModalContent(
-                    <>
-                        <div>
-                            <strong>Activity with updated distance created!</strong>
-                        </div>
-                        <div style={{ margin: '12px 0' }}>
-                            <a
-                                href={`https://www.strava.com/activities/${data.activityId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    backgroundColor: '#FC4C02',
-                                    color: 'white',
-                                    padding: '10px 20px',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    marginRight: '8px',
-                                    display: 'inline-block'
-                                }}
-                            >
-                                View New Activity
-                            </a>
-                        </div>
-                        <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
-                            <span>Consider deleting the original activity:</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <a
-                                key={activity.id}
-                                href={`https://www.strava.com/activities/${activity.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    backgroundColor: 'white',
-                                    color: '#FC4C02',
-                                    border: '2px solid #FC4C02',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    fontSize: '14px'
-                                }}
-                            >
-                                {activity.name || `Activity ${activity.id}`}
-                            </a>
-                        </div>
-                    </>
-                );
-                reloadActivities();
+                if (response.ok) {
+                    const data = await response.json();
+                    setModalContent(
+                        <>
+                            <div>
+                                <strong>Activity with updated distance created!</strong>
+                            </div>
+                            <div style={{ margin: '12px 0' }}>
+                                <a
+                                    href={`https://www.strava.com/activities/${data.activityId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        backgroundColor: '#FC4C02',
+                                        color: 'white',
+                                        padding: '10px 20px',
+                                        borderRadius: '6px',
+                                        textDecoration: 'none',
+                                        fontWeight: 600,
+                                        marginRight: '8px',
+                                        display: 'inline-block'
+                                    }}
+                                >
+                                    View New Activity
+                                </a>
+                            </div>
+                            <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
+                                <span>Consider deleting the original activity:</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                <a
+                                    key={activity.id}
+                                    href={`https://www.strava.com/activities/${activity.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        backgroundColor: 'white',
+                                        color: '#FC4C02',
+                                        border: '2px solid #FC4C02',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        textDecoration: 'none',
+                                        fontWeight: 600,
+                                        fontSize: '14px'
+                                    }}
+                                >
+                                    {activity.name || `Activity ${activity.id}`}
+                                </a>
+                            </div>
+                        </>
+                    );
+                    reloadActivities();
+                } else {
+                    console.error('Error rounding down activity:', await response.json());
+                    setModalContent(<p>Failed to round down activity.<br></br>Please try again, if error persists contact us for assistance.</p>);
+                };
             } catch (error) {
                 console.error('Error rounding down activity:', error);
-                setModalContent(<p>An error occurred while rounding down.</p>);
+                setModalContent(<p>An error occurred while rounding down.<br></br>Please try again, if error persists contact us for assistance.</p>);
             } finally {
                 setIsLoading(false);
             }
