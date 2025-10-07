@@ -124,10 +124,10 @@ const Home: React.FC = () => {
                         >
                             Log Out
                         </button>
-                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '5px' }}>
-                            <div style={{ flex: 1 }} /> { /* Center activities text */ }
-                            <h2>Your Activities</h2>
-                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
+                        <div className="activities-header-row" style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '5px' }}>
+                            <div className="activities-header-spacer" style={{ flex: 1 }} /> {/* Center activities text */}
+                            <h2 className="activities-header-title">Your Activities</h2>
+                            <div className="activities-header-user" style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
                                 <h3 style={{ margin: 0 }}>{athlete.firstname} {athlete.lastname}</h3>
                                 <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                             </div>

@@ -72,6 +72,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                     console.log('Combine activities response:', data);
                     if (response.ok && data.activityId) {
                         setSelectedActivities([]); // Clear selected activities after combining
+                        setShowCombineMode(false); // Exit combine mode
                         setModalContent(
                             <>
                                 <div>
@@ -322,7 +323,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
     return (
         <div
             style={{
-                maxHeight: '75vh',
+                maxHeight: '100svh',
                 overflowY: 'auto',
                 width: '100vw',
                 padding: '10px',
@@ -603,12 +604,15 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                 <div
                     style={{
                         position: 'sticky',
-                        bottom: '50px',
+                        // Use env(safe-area-inset-bottom) for iOS safe area, and fallback to 0 if not supported, plus extra space for Android bottom bar
+                        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
                         display: 'flex',
                         justifyContent: 'center',
                         zIndex: 1000,
                         gap: '16px', // Add gap between buttons
                         pointerEvents: 'none', // Prevents blocking mouse actions in the same area
+                        // Add padding for safe area on iOS Safari (so we don't get hidden by bottom bar) and extra for Android bottom bar
+                        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
                     }}
                 >
                     <button
@@ -624,7 +628,7 @@ const ActivityList: React.FC<{ activities: any[]; reloadActivities: () => void }
                             borderRadius: '8px',
                             boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
                             transition: 'background-color 0.3s ease',
-                            pointerEvents: 'auto', // Allows the button itself to be clickable
+                            pointerEvents: 'auto',  // Allows the button itself to be clickable
                             fontWeight: 600,
                         }}
                         onMouseOver={(e) => (e.currentTarget.style.backgroundColor = selectedActivities.length === 2 ? '#e04a02' : 'grey')}
