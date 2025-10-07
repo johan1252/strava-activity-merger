@@ -6,8 +6,6 @@ import * as fs from 'fs';
 
 const logger = new Logger({ serviceName: 'authorize' });
 
-const debug = false;
-
 const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info("Entered handler");
     try {
@@ -62,7 +60,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         let distance: any[] = [];
         let cad: any[] = [];
         const origStartTime = new Date(activity.startDate);
-        const startTime = new Date(origStartTime.getTime() + 90000); // Add 90 seconds to ensure Strava doesn't consider duplicate
+        const startTime = new Date(origStartTime.getTime() + 120000); // Add 120 seconds to ensure Strava doesn't consider duplicate
         console.log("Set start time", startTime, "Original:", activity.startDate);
 
 
@@ -210,14 +208,11 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
 
         console.log('Second part of upload complete');
 
-        if (debug) {
-            const newActivityId = response.activity_id;
-            const updateRespone = await strava.activities.update({
-                id: newActivityId,
-                hide_from_home: true // Doesn't work right now because of https://github.com/node-strava/node-strava-v3/blob/main/lib/activities.js#L25
-            });
-            console.log(updateRespone);
-            console.log('Activity updated to hide_from_home: true');
+        if (response?.error) {
+            throw new Error(`Error uploading activity: ${response.error}`);
+        }
+        if (!response?.activity_id) {
+            throw new Error("No activity_id returned from Strava");
         }
 
         return {
