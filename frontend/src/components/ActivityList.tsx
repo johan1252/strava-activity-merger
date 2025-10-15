@@ -18,7 +18,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
 
     const loadNextPage = async () => {
         setIsLoadingNextPage(true);
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (!token) return;
         const parsedToken = JSON.parse(token);
         const nextPage = page + 1;
@@ -62,7 +62,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
         if (selectedActivities.length === 2) {
             console.log('Selected activities:', selectedActivities);
 
-            const token = sessionStorage.getItem('token');
+            const token = localStorage.getItem('token');
             if (token) {
                 const parsedToken = JSON.parse(token);
                 setIsLoading(true); // Show loading modal
@@ -165,7 +165,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
     };
 
     const handleRoundUp = async (activity: any) => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (token) {
             const parsedToken = JSON.parse(token);
             setIsLoading(true);
@@ -252,7 +252,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
     };
 
     const handleRoundDown = async (activity: any) => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (token) {
             const parsedToken = JSON.parse(token);
             setIsLoading(true);

@@ -44,7 +44,7 @@ const Home: React.FC = () => {
     const [activities, setActivities] = useState<any[]>([]);
 
     const reloadActivities = () => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (token) {
             const parsedToken = JSON.parse(token);
             fetch(`${API_BASE_URL}/activities`, {
@@ -69,8 +69,8 @@ const Home: React.FC = () => {
     };
 
     useEffect(() => {
-        const token = sessionStorage.getItem('token');
-        const athleteInfo = sessionStorage.getItem('athlete');
+        const token = localStorage.getItem('token');
+        const athleteInfo = localStorage.getItem('athlete');
 
         if (token) {
             const parsedToken = JSON.parse(token);
@@ -80,8 +80,8 @@ const Home: React.FC = () => {
                     setAthlete(JSON.parse(athleteInfo));
                 }
             } else {
-                sessionStorage.removeItem('token');
-                sessionStorage.removeItem('athlete');
+                localStorage.removeItem('token');
+                localStorage.removeItem('athlete');
             }
         }
     }, []);
@@ -93,8 +93,8 @@ const Home: React.FC = () => {
     }, [athlete]);
 
     const handleLogout = () => {
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('athlete');
+        localStorage.removeItem('token');
+        localStorage.removeItem('athlete');
         setAthlete(null);
         setActivities([]);
         window.location.reload(); // Reload the page to reset the state
@@ -211,14 +211,14 @@ const fetchAccessToken = async (code: string) => {
                 scope: data.scope,
                 expiresIn: data.expiresIn,
             }
-            sessionStorage.setItem('token', JSON.stringify(tokenInfo)); // Store access token securely in session storage
+            localStorage.setItem('token', JSON.stringify(tokenInfo)); // Store temporary access token in local storage
             console.log('Access token stored in session storage.');
         } else {
             console.error('Access token not found in response.');
         }
         if (data.athlete) {
             console.log('Athlete info:', data.athlete);
-            sessionStorage.setItem('athlete', JSON.stringify(data.athlete)); // Store athlete info securely in session storage
+            localStorage.setItem('athlete', JSON.stringify(data.athlete)); // Store athlete info in local storage
             console.log('Athlete info stored in session storage.');
         }
 
