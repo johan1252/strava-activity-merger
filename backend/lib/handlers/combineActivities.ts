@@ -160,7 +160,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             description: `Activities combined by streventools.com`,
             // @ts-ignore
             file: '/tmp/activity.gpx',
-            external_id: `streven-cb-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
+            external_id: `streven-cb-${activities[0].id}-${activities[1].id}`,
 
             //private: true, Not supported :(
         }, function () {
