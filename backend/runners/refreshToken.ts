@@ -1,4 +1,4 @@
-import { handler } from "#handlers/getAccessToken.ts";
+import { handler } from "#handlers/refreshToken.ts";
 import { Logger } from '@aws-lambda-powertools/logger';
 import 'dotenv/config';
 
@@ -7,7 +7,7 @@ const logger = new Logger();
 (async () => {
 	const event = {
 		body: JSON.stringify({
-			authorizationCode: "your_authorization_code_here",
+			refreshToken: "your_valid_refresh_token_here",
 		}),
 		headers: {},
 		multiValueHeaders: {},

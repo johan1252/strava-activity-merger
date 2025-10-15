@@ -135,6 +135,18 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             },
         });
 
+        const refreshTokenLambda = new lambdaNodeJs.NodejsFunction(this, 'RefreshTokenHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            entry: './lib/handlers/refreshToken.ts',
+            environment: {
+                STRAVA_CLIENT_ID: process.env.STRAVA_CLIENT_ID || '',
+                STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET || '',
+                STRAVA_ACCESS_TOKEN: process.env.STRAVA_ACCESS_TOKEN || '',
+                STRAVA_REFRESH_TOKEN: process.env.STRAVA_REFRESH_TOKEN || '',
+                STRAVA_REDIRECT_URI: process.env.STRAVA_REDIRECT_URI || '',
+            },
+        });
+
         // Define the Lambda function for fetching activities
         const getActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'GetActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -190,6 +202,10 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /access-token endpoint
         const accessTokenResource = apiResource.addResource('access-token');
         accessTokenResource.addMethod('POST', new apigateway.LambdaIntegration(getAccessTokenLambda));
+
+        // Create the /refresh-token endpoint
+        const refreshTokenResource = apiResource.addResource('refresh-token');
+        refreshTokenResource.addMethod('POST', new apigateway.LambdaIntegration(refreshTokenLambda));
 
         // Create the /activities endpoint
         const activitiesResource = apiResource.addResource('activities');
