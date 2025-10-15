@@ -634,7 +634,9 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
             {showCombineMode && (
                 <div
                     style={{
-                        position: 'sticky',
+                        position: 'fixed',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         // Use env(safe-area-inset-bottom) for iOS safe area, and fallback to 0 if not supported, plus extra space for Android bottom bar
                         bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
                         display: 'flex',
@@ -644,6 +646,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
                         pointerEvents: 'none', // Prevents blocking mouse actions in the same area
                         // Add padding for safe area on iOS Safari (so we don't get hidden by bottom bar) and extra for Android bottom bar
                         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+                        width: 'auto',
                     }}
                 >
                     <button
