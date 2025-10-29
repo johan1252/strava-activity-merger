@@ -425,7 +425,7 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
                                         <h3 style={{ margin: 0 }}>{activity.name}</h3>
                                     </div>
                                     <div style={{ fontSize: '0.95em', color: '#555', marginTop: 2 }}>
-                                        {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()}
+                                        {new Date(activity.start_date_local.replace(/Z$/, '')).toLocaleString()} · {activity.device_name || 'Unknown Device'}
                                     </div>
                                 </div>
                                 {(activity.external_id?.startsWith('streven-')) && (
