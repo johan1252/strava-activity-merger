@@ -3,8 +3,9 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import strava from 'strava-v3';
 import { buildGPX, StravaBuilder } from "gpx-builder";
 import * as fs from 'fs';
+import { saveToS3 } from "../utils/saveToS3";
 
-const logger = new Logger({ serviceName: 'authorize' });
+const logger = new Logger({ serviceName: 'combineActivities' });
 
 const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info("Entered handler");
@@ -18,7 +19,8 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             throw new Error("Request body is null or undefined");
         }
         const body = JSON.parse(event.body);
-        const { activities } = body
+        const { activities, athlete } = body
+        const { id: athleteId, firstName: athleteFirstName } = athlete
         if (!activities || !Array.isArray(activities)) {
             throw new Error("Activities are missing or not an array");
         }
@@ -127,53 +129,65 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
         // Create a GPX file
         const gpx = buildGPX(gpxData.toObject());
         // Save the GPX file locally
-        await fs.writeFileSync('/tmp/activity.gpx', gpx);
-        // Upload the GPX file to Strava
+        const fileName = `/tmp/activity.gpx`;
+        await fs.writeFileSync(fileName, gpx);
 
-        const firstResp = await strava.uploads.post({
-            activity_type: activities[0].sport_type,
-            sport_type: activities[0].sport_type,
-            data_type: 'gpx',
-            name: activities[0].name,
-            description: `Activities combined by streventools.com`,
-            // @ts-ignore
-            file: '/tmp/activity.gpx',
-            external_id: `streven-cb-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
+        // Backup file to S3 bucket for debugging
+        const dateNow = new Date();
+        const s3Key = `${athleteFirstName}-${athleteId}/${dateNow.toISOString()}/combined-${activities[0].id}-${activities[1].id}.gpx`;
+        const saveToS3Promise = saveToS3(s3Key, fileName);
 
-            //private: true, Not supported :(
-        }, function () {
-            console.log('First part of upload complete');
-        }
-        );
-
-        const { id: uploadId } = firstResp;
-        
         let response: any = {}
-        // @ts-ignore
-        await strava.uploads._check({
-            id: uploadId
-        }, function (err: any, res: any) {
-            response = res;
-            console.log(err, res);
+        const uploadToStravaPromise = new Promise<void>(async (resolve, reject) => {
+            // Upload the GPX file to Strava
+            const firstResp = await strava.uploads.post({
+                activity_type: activities[0].sport_type,
+                sport_type: activities[0].sport_type,
+                data_type: 'gpx',
+                name: activities[0].name,
+                description: `Activities combined by streventools.com`,
+                // @ts-ignore
+                file: '/tmp/activity.gpx',
+                external_id: `streven-cb-${activities[0].id}-${activities[1].id}`, // Doesn't work because of https://github.com/node-strava/node-strava-v3/blob/ed05aa781461d99237d9ae67c67655b208299ecf/lib/uploads.js#L5
+
+                //private: true, Not supported :(
+            }, function () {
+                console.log('First part of upload complete');
+            }
+            );
+
+            const { id: uploadId } = firstResp;
+
+            // @ts-ignore
+            await strava.uploads._check({
+                id: uploadId
+            }, function (err: any, res: any) {
+                response = res;
+                console.log(err, res);
+            });
+            let timeout = 0;
+            while (!response?.activity_id && !response?.error && timeout < 120000) {
+                console.log("Waiting for upload to complete...");
+                timeout += 500;
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            if (timeout >= 30000) {
+                throw new Error("Timeout waiting for upload to complete");
+            }
+
+            console.log('Second part of upload complete');
+
+            if (response?.error) {
+                throw new Error(`Error uploading activity: ${response.error}`);
+            }
+            if (!response?.activity_id) {
+                throw new Error("No activity_id returned from Strava");
+            }
+
+            return resolve();
         });
-        let timeout = 0;
-        while (!response?.activity_id && !response?.error && timeout < 120000) {
-            console.log("Waiting for upload to complete...");
-            timeout += 500;
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        if (timeout >= 30000) {
-            throw new Error("Timeout waiting for upload to complete");
-        }
 
-        console.log('Second part of upload complete');
-
-        if (response?.error) {
-            throw new Error(`Error uploading activity: ${response.error}`);
-        }
-        if (!response?.activity_id) {
-            throw new Error("No activity_id returned from Strava");
-        }
+        await Promise.all([saveToS3Promise, uploadToStravaPromise]);
 
         return {
             statusCode: 200,

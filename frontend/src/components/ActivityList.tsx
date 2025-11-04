@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { fetchWithAuth } from '../utils/api';
 import { sportTypeToIcon } from '../utils/sportTypeToIcon';
 
-const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, setActivities, reloadActivities }) => {
+const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, athlete, setActivities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
     const [modalContent, setModalContent] = useState<React.ReactNode>(null); // State for modal message
@@ -76,7 +76,11 @@ const ActivityList: React.FC<{ activities: any[]; setActivities: (activities: an
                                 startDate: selectedActivities[1].start_date,
                                 name: selectedActivities[1].name
                             }
-                        ]
+                        ],
+                        athlete: {
+                            id: athlete.id,
+                            firstName: athlete.firstname,
+                        }
                     }),
                 });
                 if (data.activityId) {

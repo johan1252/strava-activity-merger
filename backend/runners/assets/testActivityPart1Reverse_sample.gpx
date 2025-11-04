@@ -1,0 +1,2758 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gpx xmlns:ns0="http://www.topografix.com/GPX/1/1" xmlns:ns2="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" creator="StravaGPX" version="1.1">
+ <metadata>
+  <time>REPLACE_WITH_TIMESTAMP</time>
+ </metadata>
+ <trk>
+  <name>Test Sample Part 1 Reversed</name>
+  <type>running</type>
+  <trkseg>
+   <trkpt lat="-33.8996840" lon="151.2702270">
+    <ele>22.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>159</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997150" lon="151.2703190">
+    <ele>23.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997310" lon="151.2703790">
+    <ele>22.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997600" lon="151.2704510">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997750" lon="151.2705010">
+    <ele>20.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997800" lon="151.2706200">
+    <ele>20.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997850" lon="151.2706750">
+    <ele>19.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8997930" lon="151.2707020">
+    <ele>18.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8998050" lon="151.2707240">
+    <ele>18.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8998670" lon="151.2707840">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8999960" lon="151.2709320">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9000320" lon="151.2709850">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001240" lon="151.2711140">
+    <ele>18.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001590" lon="151.2712420">
+    <ele>18.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001590" lon="151.2712680">
+    <ele>19.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001220" lon="151.2714220">
+    <ele>19.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001160" lon="151.2714530">
+    <ele>19.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001130" lon="151.2714840">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001160" lon="151.2715360">
+    <ele>21.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9001100" lon="151.2715630">
+    <ele>22.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.9000770" lon="151.2716630">
+    <ele>23.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8999710" lon="151.2717890">
+    <ele>23.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>0</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8999230" lon="151.2718550">
+    <ele>23.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8998960" lon="151.2718700">
+    <ele>22.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8998240" lon="151.2718820">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>147</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8996890" lon="151.2719200">
+    <ele>19.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8996340" lon="151.2719190">
+    <ele>19.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8995830" lon="151.2718760">
+    <ele>19.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>145</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8995150" lon="151.2717420">
+    <ele>20.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8994440" lon="151.2717500">
+    <ele>20.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8994090" lon="151.2717690">
+    <ele>20.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8993560" lon="151.2717820">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8992890" lon="151.2717940">
+    <ele>22.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>141</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8992790" lon="151.2717960">
+    <ele>22.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>141</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8992180" lon="151.2717990">
+    <ele>22.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>141</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8991730" lon="151.2718000">
+    <ele>23.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>141</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8991540" lon="151.2718090">
+    <ele>23.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8990840" lon="151.2720150">
+    <ele>23.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>144</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8990530" lon="151.2721220">
+    <ele>23.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>145</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8990450" lon="151.2721540">
+    <ele>24.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>145</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8990140" lon="151.2722820">
+    <ele>24.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8989810" lon="151.2724150">
+    <ele>25.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8989350" lon="151.2725340">
+    <ele>27.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8988940" lon="151.2726130">
+    <ele>28.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8988480" lon="151.2726950">
+    <ele>29.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8987700" lon="151.2727780">
+    <ele>31.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8987070" lon="151.2727850">
+    <ele>32.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8986900" lon="151.2727930">
+    <ele>33.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8986450" lon="151.2728190">
+    <ele>33.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>157</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8985470" lon="151.2728520">
+    <ele>34.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>159</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8984720" lon="151.2728670">
+    <ele>34.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>160</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8984100" lon="151.2728460">
+    <ele>35.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>163</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8983820" lon="151.2728310">
+    <ele>35.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>163</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8982950" lon="151.2727750">
+    <ele>36.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>163</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8982440" lon="151.2727680">
+    <ele>36.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>164</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8981920" lon="151.2727800">
+    <ele>37.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>164</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8980770" lon="151.2728030">
+    <ele>38.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>166</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8980560" lon="151.2728060">
+    <ele>38.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>166</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8979620" lon="151.2728210">
+    <ele>39.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>166</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8978430" lon="151.2728430">
+    <ele>40.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>166</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8977280" lon="151.2729080">
+    <ele>41.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>166</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8977020" lon="151.2729310">
+    <ele>41.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>167</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8976270" lon="151.2730050">
+    <ele>40.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>167</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8975620" lon="151.2730730">
+    <ele>41.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>168</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8974530" lon="151.2730790">
+    <ele>41.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>169</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8973570" lon="151.2730660">
+    <ele>42.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>171</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8971680" lon="151.2730190">
+    <ele>42.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>171</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8971420" lon="151.2730120">
+    <ele>42.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>170</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8970100" lon="151.2729870">
+    <ele>43.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>167</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8968790" lon="151.2729740">
+    <ele>43.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>164</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8968100" lon="151.2729570">
+    <ele>43.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>161</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8966940" lon="151.2729330">
+    <ele>43.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>160</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8966730" lon="151.2729290">
+    <ele>42.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>160</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8965380" lon="151.2729150">
+    <ele>41.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>159</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8964550" lon="151.2729080">
+    <ele>41.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>158</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8963390" lon="151.2728710">
+    <ele>40.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>157</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8961730" lon="151.2729000">
+    <ele>40.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>157</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8960150" lon="151.2728550">
+    <ele>40.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8959460" lon="151.2728470">
+    <ele>41.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8959170" lon="151.2728570">
+    <ele>42.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958950" lon="151.2728830">
+    <ele>42.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958890" lon="151.2728920">
+    <ele>41.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958810" lon="151.2729000">
+    <ele>41.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958600" lon="151.2729700">
+    <ele>40.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958480" lon="151.2730150">
+    <ele>39.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958410" lon="151.2730420">
+    <ele>39.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958370" lon="151.2730990">
+    <ele>38.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958350" lon="151.2731650">
+    <ele>37.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958250" lon="151.2732390">
+    <ele>36.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958240" lon="151.2732630">
+    <ele>35.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958430" lon="151.2733190">
+    <ele>34.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958660" lon="151.2734110">
+    <ele>33.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958760" lon="151.2734720">
+    <ele>32.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958780" lon="151.2734970">
+    <ele>31.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8959040" lon="151.2735700">
+    <ele>30.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8959510" lon="151.2736260">
+    <ele>29.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8959870" lon="151.2736630">
+    <ele>28.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8960520" lon="151.2737120">
+    <ele>26.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8960870" lon="151.2737360">
+    <ele>25.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>150</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8961230" lon="151.2737660">
+    <ele>24.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962000" lon="151.2738640">
+    <ele>23.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>83</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962170" lon="151.2738930">
+    <ele>22.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>83</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962390" lon="151.2739590">
+    <ele>21.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>82</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962680" lon="151.2740340">
+    <ele>20.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8963050" lon="151.2741510">
+    <ele>20.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>147</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962850" lon="151.2742970">
+    <ele>20.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>147</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962840" lon="151.2743280">
+    <ele>20.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>147</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8962280" lon="151.2744710">
+    <ele>20.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8960740" lon="151.2745380">
+    <ele>21.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8960450" lon="151.2745310">
+    <ele>21.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8958480" lon="151.2744780">
+    <ele>21.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8957360" lon="151.2744700">
+    <ele>21.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>145</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8956510" lon="151.2744630">
+    <ele>22.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8954800" lon="151.2743800">
+    <ele>22.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8953620" lon="151.2743060">
+    <ele>21.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8953120" lon="151.2742750">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8952660" lon="151.2742600">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8951350" lon="151.2742300">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8951100" lon="151.2742220">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>146</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8949180" lon="151.2741760">
+    <ele>21.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8947660" lon="151.2741520">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>150</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8947140" lon="151.2741360">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8946180" lon="151.2741080">
+    <ele>20.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>0</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8945930" lon="151.2741080">
+    <ele>20.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>0</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8944360" lon="151.2739440">
+    <ele>22.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>150</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8943760" lon="151.2738910">
+    <ele>22.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8943400" lon="151.2738340">
+    <ele>22.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8943020" lon="151.2738100">
+    <ele>22.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8942890" lon="151.2738110">
+    <ele>22.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>84</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8942690" lon="151.2738010">
+    <ele>21.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8942660" lon="151.2737920">
+    <ele>21.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8942130" lon="151.2737670">
+    <ele>21.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8941730" lon="151.2737440">
+    <ele>21.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8940000" lon="151.2736680">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8938540" lon="151.2736450">
+    <ele>20.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8937470" lon="151.2736340">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>62</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8937280" lon="151.2736260">
+    <ele>20.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>62</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8935110" lon="151.2737330">
+    <ele>14.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8934260" lon="151.2737630">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8934010" lon="151.2737660">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8932130" lon="151.2738290">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8931350" lon="151.2738680">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8929550" lon="151.2739670">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8928530" lon="151.2740300">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8926910" lon="151.2741540">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8926410" lon="151.2741950">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8924820" lon="151.2743450">
+    <ele>13.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8923330" lon="151.2744880">
+    <ele>13.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8922900" lon="151.2745290">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8921860" lon="151.2746280">
+    <ele>12.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8920970" lon="151.2747080">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8920350" lon="151.2747750">
+    <ele>13.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>156</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8919060" lon="151.2749540">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8918510" lon="151.2750220">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>155</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8917190" lon="151.2752050">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8917010" lon="151.2752310">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8915760" lon="151.2754180">
+    <ele>13.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8915090" lon="151.2755330">
+    <ele>13.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913980" lon="151.2757210">
+    <ele>13.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913190" lon="151.2758560">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912140" lon="151.2760570">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912000" lon="151.2760870">
+    <ele>13.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8911070" lon="151.2762800">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8910030" lon="151.2764810">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8909730" lon="151.2765340">
+    <ele>13.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8908700" lon="151.2767290">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907930" lon="151.2769360">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907850" lon="151.2769660">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907110" lon="151.2771750">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8906900" lon="151.2772720">
+    <ele>12.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8906250" lon="151.2774930">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8906020" lon="151.2775870">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8905430" lon="151.2778140">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8905280" lon="151.2778760">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904880" lon="151.2781000">
+    <ele>12.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904770" lon="151.2781630">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904460" lon="151.2783860">
+    <ele>12.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904430" lon="151.2784170">
+    <ele>12.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904090" lon="151.2786470">
+    <ele>12.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903880" lon="151.2788810">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903850" lon="151.2789480">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903780" lon="151.2791780">
+    <ele>11.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>93</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903680" lon="151.2792400">
+    <ele>12.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903480" lon="151.2794670">
+    <ele>12.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>150</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903410" lon="151.2795620">
+    <ele>11.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>151</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903480" lon="151.2797840">
+    <ele>12.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903480" lon="151.2798160">
+    <ele>12.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>154</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903520" lon="151.2800440">
+    <ele>11.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>153</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903500" lon="151.2801730">
+    <ele>11.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903470" lon="151.2802360">
+    <ele>11.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>150</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903300" lon="151.2804610">
+    <ele>11.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903300" lon="151.2804920">
+    <ele>11.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>152</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903200" lon="151.2807230">
+    <ele>11.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903190" lon="151.2807870">
+    <ele>11.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903180" lon="151.2808500">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903160" lon="151.2810850">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903360" lon="151.2812770">
+    <ele>10.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903470" lon="151.2813690">
+    <ele>9.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903710" lon="151.2815320">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>148</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904190" lon="151.2817470">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904260" lon="151.2817810">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>149</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904820" lon="151.2819870">
+    <ele>9.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>147</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904890" lon="151.2820190">
+    <ele>9.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>145</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8905680" lon="151.2822230">
+    <ele>8.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8906660" lon="151.2823630">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>143</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907660" lon="151.2824020">
+    <ele>7.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>144</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8909590" lon="151.2824490">
+    <ele>7.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8910290" lon="151.2824670">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912170" lon="151.2824880">
+    <ele>6.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913350" lon="151.2824750">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914180" lon="151.2824730">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8916020" lon="151.2824450">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>140</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8917000" lon="151.2824510">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8917020" lon="151.2824620">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8916550" lon="151.2824760">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914840" lon="151.2825070">
+    <ele>6.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914590" lon="151.2825140">
+    <ele>6.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912630" lon="151.2825530">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912030" lon="151.2825570">
+    <ele>7.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8910050" lon="151.2825600">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>140</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907960" lon="151.2825380">
+    <ele>7.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907420" lon="151.2825100">
+    <ele>7.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8905920" lon="151.2823870">
+    <ele>8.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>141</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904930" lon="151.2822040">
+    <ele>8.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904690" lon="151.2821390">
+    <ele>8.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>142</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904040" lon="151.2819110">
+    <ele>8.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>140</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903900" lon="151.2818790">
+    <ele>8.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>140</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903100" lon="151.2816500">
+    <ele>8.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8902950" lon="151.2815410">
+    <ele>9.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8902570" lon="151.2813370">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>135</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8902020" lon="151.2811230">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8901210" lon="151.2809520">
+    <ele>9.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899590" lon="151.2809230">
+    <ele>10.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899310" lon="151.2809030">
+    <ele>10.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899120" lon="151.2808470">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899250" lon="151.2807460">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899570" lon="151.2805190">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899590" lon="151.2804570">
+    <ele>10.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899550" lon="151.2802310">
+    <ele>11.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>133</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899580" lon="151.2801970">
+    <ele>10.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>132</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899070" lon="151.2799690">
+    <ele>11.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>132</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8898960" lon="151.2799370">
+    <ele>11.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>132</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8898830" lon="151.2799050">
+    <ele>11.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>133</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8897830" lon="151.2797380">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8897510" lon="151.2796870">
+    <ele>12.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8896430" lon="151.2794940">
+    <ele>12.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8896260" lon="151.2794650">
+    <ele>12.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8895260" lon="151.2792530">
+    <ele>13.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8894950" lon="151.2791990">
+    <ele>13.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8894270" lon="151.2790470">
+    <ele>14.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8893910" lon="151.2789500">
+    <ele>15.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8893770" lon="151.2789180">
+    <ele>15.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8893080" lon="151.2786960">
+    <ele>15.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8892830" lon="151.2786010">
+    <ele>15.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8892400" lon="151.2784380">
+    <ele>16.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8892230" lon="151.2783680">
+    <ele>16.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>135</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891760" lon="151.2781300">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891720" lon="151.2780320">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891690" lon="151.2779030">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>138</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891370" lon="151.2777780">
+    <ele>17.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891240" lon="151.2775510">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>136</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891180" lon="151.2773820">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>139</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891130" lon="151.2773170">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>140</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891150" lon="151.2771460">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>137</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891220" lon="151.2770470">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>135</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891640" lon="151.2768200">
+    <ele>17.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>135</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8891740" lon="151.2767550">
+    <ele>16.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8892670" lon="151.2765380">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>134</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8892860" lon="151.2765130">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>133</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8893010" lon="151.2764880">
+    <ele>16.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>132</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8894170" lon="151.2763210">
+    <ele>16.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>130</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8894730" lon="151.2762520">
+    <ele>17.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>129</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8896130" lon="151.2760810">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>127</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8896480" lon="151.2760250">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>127</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8897970" lon="151.2758510">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>126</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8898910" lon="151.2757450">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>128</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8899590" lon="151.2756530">
+    <ele>17.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>131</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8900590" lon="151.2755380">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>130</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8901520" lon="151.2754330">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>127</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8902050" lon="151.2753610">
+    <ele>17.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>127</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8902910" lon="151.2752610">
+    <ele>18.0</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>124</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8903980" lon="151.2751610">
+    <ele>17.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>122</hr>
+      <cad>92</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8904840" lon="151.2750620">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>119</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8905500" lon="151.2749870">
+    <ele>17.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>118</hr>
+      <cad>91</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907040" lon="151.2748280">
+    <ele>17.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>116</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907480" lon="151.2747900">
+    <ele>17.2</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>115</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8907700" lon="151.2747710">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>112</hr>
+      <cad>90</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8909330" lon="151.2746420">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>112</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8910350" lon="151.2745600">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>110</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8910950" lon="151.2745280">
+    <ele>17.4</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>113</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8911810" lon="151.2744460">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>108</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912280" lon="151.2744110">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>105</hr>
+      <cad>89</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8912900" lon="151.2743560">
+    <ele>17.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>103</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913710" lon="151.2742810">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>100</hr>
+      <cad>88</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913890" lon="151.2742630">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>97</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914050" lon="151.2742510">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>97</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914210" lon="151.2742310">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>94</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914410" lon="151.2742090">
+    <ele>17.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>92</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914540" lon="151.2741870">
+    <ele>17.8</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>92</hr>
+      <cad>86</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914790" lon="151.2741480">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>87</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914790" lon="151.2741260">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>87</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914480" lon="151.2740390">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>82</hr>
+      <cad>87</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8914140" lon="151.2739780">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>78</hr>
+      <cad>85</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913660" lon="151.2739080">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>76</hr>
+      <cad>0</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt><trkpt lat="-33.8913660" lon="151.2739090">
+    <ele>18.6</ele>
+    <time>REPLACE_WITH_TIMESTAMP</time>
+    <extensions>
+     <TrackPointExtension>
+      <hr>76</hr>
+      <cad>0</cad>
+     </TrackPointExtension>
+    </extensions>
+   </trkpt>
+  </trkseg>
+ </trk>
+</gpx>

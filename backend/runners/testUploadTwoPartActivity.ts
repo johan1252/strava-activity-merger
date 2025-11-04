@@ -14,9 +14,15 @@ const logger = new Logger();
 
 	await strava.client(process.env.TEMP_ACCESS_TOKEN);
 
+	// const files = [
+	// 	'assets/testActivityPart1_sample.gpx',
+	// 	'assets/testActivityPart2_sample.gpx'
+	// ]
+
+	// Test edge case where two activities are reverse of each other
 	const files = [
 		'assets/testActivityPart1_sample.gpx',
-		'assets/testActivityPart2_sample.gpx'
+		'assets/testActivityPart1Reverse_sample.gpx'
 	]
 
 	// Loop through files and upload them one by one

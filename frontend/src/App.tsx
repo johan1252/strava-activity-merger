@@ -130,7 +130,7 @@ const Home: React.FC = () => {
                                 </div>
                             </div>
                             {activities.length > 0 ? (
-                                <ActivityList activities={activities} setActivities={setActivities} reloadActivities={reloadActivities} />
+                                <ActivityList activities={activities} athlete={athlete} setActivities={setActivities} reloadActivities={reloadActivities} />
                             ) : (
                                 <StravaLoading message="Loading your activities..." />
                             )}
