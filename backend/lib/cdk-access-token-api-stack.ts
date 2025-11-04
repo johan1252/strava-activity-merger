@@ -10,6 +10,7 @@ import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import 'dotenv/config';
 
 export class CdkAccessTokenApiStack extends cdk.Stack {
@@ -17,6 +18,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
     public readonly certificate: certificatemanager.ICertificate;
     public readonly cloudFrontDistribution: cloudfront.Distribution;
     public readonly s3Bucket: s3.Bucket;
+    public readonly strevenTmpBucket: s3.Bucket;
 
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
@@ -92,7 +94,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create a CloudFront distribution
         this.cloudFrontDistribution = new cloudfront.Distribution(this, 'ReactAppDistribution', {
             defaultBehavior: {
-                origin: cloudfrontOrigins.S3BucketOrigin.withOriginAccessControl(this.s3Bucket, { originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST]}),
+                origin: cloudfrontOrigins.S3BucketOrigin.withOriginAccessControl(this.s3Bucket, { originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST] }),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 responseHeadersPolicy: securityHeadersPolicy,
             },
@@ -120,6 +122,20 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             zone: this.hostedZone,
             recordName: 'streventools.com',
             target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(this.cloudFrontDistribution)),
+        });
+
+        // Create an S3 bucket for storing temporary app files
+        this.strevenTmpBucket = new s3.Bucket(this, 'StrevenTmpBucket', {
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            removalPolicy: cdk.RemovalPolicy.DESTROY, // Change to RETAIN for production
+            objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+        });
+
+        // Export the S3 bucket name
+        new cdk.CfnOutput(this, 'StrevenTmpBucketName', {
+            value: this.strevenTmpBucket.bucketName,
+            exportName: 'StrevenTmpBucketName',
         });
 
         // Define the Lambda function
@@ -151,14 +167,33 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         const getActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'GetActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             entry: './lib/handlers/getActivities.ts', // Path to the handler file
-            timeout: cdk.Duration.seconds(30),
+            timeout: cdk.Duration.seconds(30)
         });
 
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             entry: './lib/handlers/combineActivities.ts', // Path to the handler file
             timeout: cdk.Duration.seconds(240),
+            environment: {
+                STREVEN_TMP_BUCKET_NAME: this.strevenTmpBucket.bucketName,
+            },
         });
+
+        // Instead of granting on the bucket resource, add an inline policy to the
+        // Lambda's execution role so permissions are attached to the role.
+        if (combineActivitiesLambda.role) {
+            // Allow listing the bucket
+            combineActivitiesLambda.role.addToPrincipalPolicy(new iam.PolicyStatement({
+                actions: ['s3:ListBucket'],
+                resources: [this.strevenTmpBucket.bucketArn],
+            }));
+
+            // Allow object-level read/write/delete within the bucket
+            combineActivitiesLambda.role.addToPrincipalPolicy(new iam.PolicyStatement({
+                actions: ['s3:GetObject', 's3:PutObject'],
+                resources: [this.strevenTmpBucket.bucketArn + '/*'],
+            }));
+        }
 
         const roundUpLambda = new lambdaNodeJs.NodejsFunction(this, 'RoundUpHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
