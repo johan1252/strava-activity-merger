@@ -166,46 +166,58 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Define the Lambda function for fetching activities
         const getActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'GetActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 1024,
             entry: './lib/handlers/getActivities.ts', // Path to the handler file
             timeout: cdk.Duration.seconds(30)
         });
 
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 1024,
             entry: './lib/handlers/combineActivities.ts', // Path to the handler file
-            timeout: cdk.Duration.seconds(240),
+            timeout: cdk.Duration.seconds(30),
             environment: {
                 STREVEN_TMP_BUCKET_NAME: this.strevenTmpBucket.bucketName,
             },
         });
 
-        // Instead of granting on the bucket resource, add an inline policy to the
-        // Lambda's execution role so permissions are attached to the role.
-        if (combineActivitiesLambda.role) {
-            // Allow listing the bucket
-            combineActivitiesLambda.role.addToPrincipalPolicy(new iam.PolicyStatement({
-                actions: ['s3:ListBucket'],
-                resources: [this.strevenTmpBucket.bucketArn],
-            }));
-
-            // Allow object-level read/write/delete within the bucket
-            combineActivitiesLambda.role.addToPrincipalPolicy(new iam.PolicyStatement({
-                actions: ['s3:GetObject', 's3:PutObject'],
-                resources: [this.strevenTmpBucket.bucketArn + '/*'],
-            }));
-        }
+        // Allow object-level write within the bucket
+        combineActivitiesLambda?.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject'],
+            resources: [this.strevenTmpBucket.bucketArn + '/*'],
+        }));
 
         const roundUpLambda = new lambdaNodeJs.NodejsFunction(this, 'RoundUpHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 1024,
             entry: './lib/handlers/roundUp.ts', // Path to the new handler file
-            timeout: cdk.Duration.seconds(240),
+            timeout: cdk.Duration.seconds(30),
+            environment: {
+                STREVEN_TMP_BUCKET_NAME: this.strevenTmpBucket.bucketName,
+            },
         });
+
+        // Allow object-level write within the bucket
+        roundUpLambda?.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject'],
+            resources: [this.strevenTmpBucket.bucketArn + '/*'],
+        }));
 
         const roundDownLambda = new lambdaNodeJs.NodejsFunction(this, 'RoundDownHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 1024,
             entry: './lib/handlers/roundDown.ts', // Path to the new handler file
-            timeout: cdk.Duration.seconds(240),
+            timeout: cdk.Duration.seconds(30),
+            environment: {
+                STREVEN_TMP_BUCKET_NAME: this.strevenTmpBucket.bucketName,
+            },
         });
+
+        // Allow object-level write within the bucket
+        roundDownLambda?.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject'],
+            resources: [this.strevenTmpBucket.bucketArn + '/*'],
+        }));
 
         // Define the API Gateway
         const api = new apigateway.RestApi(this, 'AccessTokenApi', {
