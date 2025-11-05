@@ -3,6 +3,7 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import strava from 'strava-v3';
 import { buildGPX, StravaBuilder } from "gpx-builder";
 import * as fs from 'fs';
+import { saveToS3 } from "../utils/saveToS3";
 
 const logger = new Logger({ serviceName: 'authorize' });
 
@@ -18,7 +19,11 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             throw new Error("Request body is null or undefined");
         }
         const body = JSON.parse(event.body);
-        const { activity } = body
+        const { activity, athlete } = body
+        if (!athlete) {
+            throw new Error("Athlete object missing");
+        }
+        const { id: athleteId, firstName: athleteFirstName } = athlete
         if (!activity) {
             throw new Error("Activity object missing");
         }
@@ -82,7 +87,8 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         }
 
         // Find the index where distance is just below or equal to the rounded down km
-        const roundedDistance = Math.floor(activity.distance / 1000) * 1000;
+        const roundedDistanceWithoutBuffer = Math.floor(activity.distance / 1000) * 1000;
+        const roundedDistance = roundedDistanceWithoutBuffer + 0.9; // add a small buffer to ensure we go over the rounded distance (Strava will round down to nearest 2nd decimal)
         let lastIndex = distance.length - 1;
         for (let i = 0; i < distance.length; i++) {
             if (distance[i] > roundedDistance) {
@@ -142,7 +148,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             const lastCad = cad.length > 0 ? cad[cad.length - 1] : undefined;
             let lastTimeAbs = time[lastIndex];
             let toAdd = roundedDistance - lastDistanceVal;
-            let pointsToAdd = Math.ceil(toAdd / ((distance[lastIndex] - distance[lastIndex-1]) || 10));
+            let pointsToAdd = Math.ceil(toAdd / ((distance[lastIndex] - distance[lastIndex - 1]) || 10));
             if (!isFinite(pointsToAdd) || pointsToAdd < 1) pointsToAdd = Math.ceil(toAdd / 10); // fallback: 10m steps
             const step = toAdd / pointsToAdd;
             const timeStep = step / avgSpeed;
@@ -150,13 +156,15 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             console.log("Adding", pointsToAdd, "points of approx", step, "meters each to reach", roundedDistance, "m total");
             for (let i = 1; i <= pointsToAdd; i++) {
                 runningDistance += step;
+                // Round to 1 decimal place
+                const distance = Math.round(runningDistance * 10) / 10;
                 lastTimeAbs += timeStep;
                 const point = new Point(lastLat, lastLong, {
                     ele: lastEle,
                     time: new Date(startTime.getTime() + (lastTimeAbs * 1000)),
                     hr: lastHr,
                     power: lastPower,
-                    distance: runningDistance,
+                    distance,
                     cad: lastCad // TODO - debug why lastCad is sometimes undefined/0
                 });
                 gpxPoints.push(point);
@@ -167,7 +175,16 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         const gpxData = new StravaBuilder();
         gpxData.setSegmentPoints(gpxPoints);
         const gpx = buildGPX(gpxData.toObject());
-        await fs.writeFileSync('/tmp/activity.gpx', gpx);
+        const fileName = `/tmp/activity.gpx`;
+        await fs.writeFileSync(fileName, gpx);
+
+        // Backup file to S3 bucket for debugging
+        const dateNow = new Date();
+        const s3Key = `${athleteFirstName}-${athleteId}/${dateNow.toISOString()}/roundeddown-${activity.id}.gpx`;
+        await saveToS3(s3Key, fileName);
+
+        let response: any = {}
+
         const firstResp = await strava.uploads.post({
             activity_type: activity.sport_type,
             sport_type: activity.sport_type,
@@ -175,15 +192,14 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             name: activity.names,
             description: `Activity rounded down by streventools.com`,
             // @ts-ignore
-            file: '/tmp/activity.gpx',
+            file: fileName,
             external_id: `streven-rd-${activity.id}`,
         }, function () {
             console.log('First part of upload complete');
         });
-        
+
         const { id: uploadId } = firstResp;
 
-        let response: any = {}
         // @ts-ignore
         await strava.uploads._check({
             id: uploadId

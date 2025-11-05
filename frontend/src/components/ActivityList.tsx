@@ -164,6 +164,10 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         name: activity.name,
                         distance: activity.distance,
                         sport_type: activity.sport_type
+                    },
+                    athlete: {
+                        id: athlete.id,
+                        firstName: athlete.firstname,
                     }
                 }),
             });
@@ -237,6 +241,10 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         name: activity.name,
                         distance: activity.distance,
                         sport_type: activity.sport_type
+                    },
+                    athlete: {
+                        id: athlete.id,
+                        firstName: athlete.firstname,
                     }
                 }),
             });
@@ -334,7 +342,11 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     let durationStr = '-';
                     let paceStr = '-';
                     if (activity.distance && activity.elapsed_time) {
-                        distanceKm = (activity.distance / 1000).toFixed(2);
+                        // Convert from meters to kilometers (e.g. 6707.6m -> 6.7076km)
+                        const km = (activity.distance || 0) / 1000;
+                        // Floor to 2 decimals (e.g. 6.7076 -> 6.70)
+                        // Strava does not round up distances
+                        distanceKm = (Math.floor(km * 100) / 100).toFixed(2);
                         const durationSec = activity.moving_time || activity.elapsed_time || 0;
                         const durationMin = Math.floor(durationSec / 60);
                         const durationSecRemainder = durationSec % 60;

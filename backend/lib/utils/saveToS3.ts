@@ -29,7 +29,7 @@ export const saveToS3 = async (s3Key: string, fileName: string): Promise<void> =
             ContentType: 'application/gpx+xml'
         });
         await s3Client.send(putCommand);
-        logger.info("Uploaded backup GPX to S3:", s3Key);
+        logger.info("Uploaded backup GPX to S3", s3Key);
     } else {
         logger.error("No S3 bucket name provided, skipping backup upload");
     }
