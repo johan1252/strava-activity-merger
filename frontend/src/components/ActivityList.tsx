@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { fetchWithAuth } from '../utils/api';
 import { sportTypeToIcon } from '../utils/sportTypeToIcon';
+import SportTypeDropdown, { sportTypes } from './SportTypeDropdown';
+
 
 const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, athlete, setActivities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
@@ -15,6 +17,13 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingNextPage, setIsLoadingNextPage] = useState(false);
+    // Filter state (future extensible)
+    const [filters, setFilters] = useState<{ sportType: string }>({ sportType: 'All' });
+    // Filtered activities
+    const filteredActivities = filters.sportType === 'All'
+        ? activities
+        : activities.filter(a => a.sport_type && a.sport_type.toLowerCase().includes(filters.sportType.toLowerCase())); // Use includes to account for VirtualRide etc. in Ride
+    let prevSportType = 'All'; // To remember previous sport type filter when entering/exiting combine mode
 
     const loadNextPage = async () => {
         setIsLoadingNextPage(true);
@@ -86,6 +95,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                 if (data.activityId) {
                     setSelectedActivities([]); // Clear selected activities after combining
                     setShowCombineMode(false); // Exit combine mode
+                    setFilters({ sportType: prevSportType }); // Restore previous sport type filter
                     setModalContent(
                         <>
                             <div>
@@ -335,9 +345,26 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center', // Center the activity cards
+                    minHeight: '100svh',
                 }}
             >
-                {activities.map((activity) => {
+                {/* Filter Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10, gap: 10 }}>
+                    <SportTypeDropdown
+                        value={filters.sportType}
+                        onChange={val => setFilters(f => ({ ...f, sportType: val }))}
+                    />
+                    {/* Future filter options can be added here */}
+                </div>
+                {filteredActivities.length === 0 && (
+                    <div style={{ marginTop: 20, marginBottom: 20, color: '#555', fontSize: '1.1em' }}>
+                        No activities found for the selected filter.
+                        {hasMore && (<><br></br>
+                        <br></br>
+                        Try loading older activities using the "Load More" button below.</>)}
+                    </div>
+                )}
+                {filteredActivities.map((activity) => {
                     let distanceKm = '-';
                     let durationStr = '-';
                     let paceStr = '-';
@@ -400,8 +427,12 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                     {supportsCombineMode(activity) && (<button
                                         style={{ padding: '10px', borderRadius: '6px', border: 'none', background: '#FC4C02', color: 'white', fontWeight: 600, cursor: 'pointer' }}
                                         onClick={() => {
+                                            // Enter combine mode and filter the list to this activity's sport type
                                             setShowCombineMode(true);
                                             setActivePopoverId(null);
+                                            // Set the sport type filter so only same-sport activities are shown
+                                            prevSportType = filters.sportType;
+                                            setFilters({ sportType: activity.sport_type || 'All' });
                                             if (!selectedActivities.includes(activity) && supportsCombineMode(activity)) {
                                                 setSelectedActivities([activity]);
                                             }
@@ -592,16 +623,16 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     )
                 }
                 )}
+                {hasMore && (isLoadingNextPage ? (
+                    <span style={{ color: '#888', textDecoration: 'none', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0', cursor: 'default' }}>
+                        Loading...
+                    </span>
+                ) : (
+                    <a onClick={loadNextPage} style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0' }}>
+                        Load More...
+                    </a>
+                ))}
             </ul>
-            {hasMore && (isLoadingNextPage ? (
-                <span style={{ color: '#888', textDecoration: 'none', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0', cursor: 'default' }}>
-                    Loading...
-                </span>
-            ) : (
-                <a onClick={loadNextPage} style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0' }}>
-                    Load More...
-                </a>
-            ))}
             {/* Show combine button only in combine mode */}
             {showCombineMode && (
                 <div
@@ -645,6 +676,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     <button
                         onClick={() => {
                             setShowCombineMode(false);
+                            setFilters(f => ({ ...f, sportType: prevSportType })); // Restore previous sport type filter
                             setSelectedActivities([]);
                         }}
                         style={{
