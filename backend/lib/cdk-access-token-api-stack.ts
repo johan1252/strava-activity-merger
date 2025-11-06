@@ -130,6 +130,10 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             enforceSSL: true,
             removalPolicy: cdk.RemovalPolicy.DESTROY, // Change to RETAIN for production
             objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+            // Lifecycle rule to automatically delete objects after 30 days
+            lifecycleRules: [{
+                expiration: cdk.Duration.days(30),
+            }],
         });
 
         // Export the S3 bucket name
