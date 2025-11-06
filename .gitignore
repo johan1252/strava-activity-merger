@@ -10,3 +10,6 @@ cdk.out
 
 # Frontend build artifacts
 Frontend/build
+
+# MacOS system files
+.DS_Store
