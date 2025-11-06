@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { fetchWithAuth } from '../utils/api';
 import { sportTypeToIcon } from '../utils/sportTypeToIcon';
-import SportTypeDropdown, { sportTypes } from './SportTypeDropdown';
+import SportTypeDropdown from './SportTypeDropdown';
 
 
 const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, athlete, setActivities, reloadActivities }) => {
@@ -12,6 +12,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
     const [modalContent, setModalContent] = useState<React.ReactNode>(null); // State for modal message
     const [activePopoverId, setActivePopoverId] = useState<string | null>(null); // Track which activity popover is open
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [popoverButtonPressedId, setPopoverButtonPressedId] = useState<string | null>(null); // Track pressed state for button
     const [showCombineMode, setShowCombineMode] = useState(false); // Track if combine mode is active
     const [page, setPage] = useState(1);
@@ -360,8 +361,8 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     <div style={{ marginTop: 20, marginBottom: 20, color: '#555', fontSize: '1.1em' }}>
                         No activities found for the selected filter.
                         {hasMore && (<><br></br>
-                        <br></br>
-                        Try loading older activities using the "Load More" button below.</>)}
+                            <br></br>
+                            Try loading older activities using the "Load More" button below.</>)}
                     </div>
                 )}
                 {filteredActivities.map((activity) => {
@@ -628,9 +629,9 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         Loading...
                     </span>
                 ) : (
-                    <a onClick={loadNextPage} style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0' }}>
+                    <button onClick={loadNextPage} style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', marginTop: '10px', marginBottom: '10px' }}>
                         Load More...
-                    </a>
+                    </button>
                 ))}
             </ul>
             {/* Show combine button only in combine mode */}
