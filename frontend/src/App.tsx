@@ -142,8 +142,8 @@ const Home: React.FC = () => {
                                 style={{
                                     padding: '10px 20px',
                                     cursor: 'pointer',
-                                    transition: 'color 0.3s ease',
                                     border: 'none',
+                                    backgroundColor: 'transparent'
                                 }}
                                 onClick={handleAuthorizeClick}
                                 onMouseEnter={(e) => {
