@@ -111,6 +111,8 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             ]
         });
 
+        cdk.Annotations.of(this).acknowledgeWarning('@aws-cdk/aws-cloudfront-origins:listBucketSecurityRisk', 'defaultRootObject is set to index.html');
+
         // Export the CloudFront distribution domain name
         new cdk.CfnOutput(this, 'CloudFrontDistributionDomainName', {
             value: this.cloudFrontDistribution.distributionDomainName,
