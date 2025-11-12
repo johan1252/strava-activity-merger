@@ -43,6 +43,10 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             throw new Error("Activity sport_type missing");
         }
 
+        if (activity.distance < 1000) {
+            throw new Error("Activity distance is less than 1km, cannot round up");
+        }
+
         await strava.client(accessToken);
 
         let gpxPoints = [];
