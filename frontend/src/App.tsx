@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Header from './components/Header';
 import TermsOfService from './pages/TermsOfService';
+import FAQ from './pages/FAQ';
 
 const getStraveAuthorizeUrl = (clientId: string, redirectURI: string) => {
     const md = new MobileDetect(window.navigator.userAgent);
@@ -349,6 +350,7 @@ const App: React.FC = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/strava-callback" element={<StravaCallback />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
             </Routes>
         </Router>
