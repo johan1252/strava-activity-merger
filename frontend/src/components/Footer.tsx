@@ -20,7 +20,7 @@ const Footer: React.FC = () => (
                 justifyContent: 'center',
             }}
         >
-            <p
+                <p
                 style={{
                     margin: 0,
                     fontSize: '0.9rem',
@@ -30,6 +30,7 @@ const Footer: React.FC = () => (
             >
                 <a href="/privacy-policy" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Privacy Policy</a>
                 <a href="/terms-of-service" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>Terms of Service</a>
+                <a href="/faq" style={{ margin: '0 10px', color: 'white', textDecoration: 'none' }}>FAQ</a>
             </p>
             <img
                 src="/powered-by-strava.svg"

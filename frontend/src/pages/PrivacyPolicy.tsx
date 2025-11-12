@@ -10,7 +10,9 @@ const PrivacyPolicy: React.FC = () => (
             <p>Your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your information when you use Streven.</p>
             <h2>Information We Collect</h2>
             <ul>
-                <li>We do not store your personal information or activity data.</li>
+                <li>We do not store your personal information.</li>
+                <li>We do not store any of your existing Strava data.</li>
+                <li>Streven created activity data resulting from combine or rounding actions is stored only temporarily for processing and automatically deleted after 30 days.</li>
             </ul>
             <h2>How We Use Your Information</h2>
             <ul>
