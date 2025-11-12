@@ -38,7 +38,7 @@ const logger = new Logger();
 		description: `Activity rounded up by streventools.com`,
 		// @ts-ignore
 		file: gpxFilename,
-		external_id: `streven-ru-${now.toISOString().split('.')[0]}`,
+		external_id: `testupload-runner-${now.toISOString().split('.')[0]}`,
 	});
 
 	console.log("firstResp", firstResp);

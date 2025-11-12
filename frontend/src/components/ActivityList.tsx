@@ -55,6 +55,14 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
         );
     }
 
+    const supportsRoundingMode = (activity: any) => {
+        return (
+            activity.distance && activity.distance >= 1000
+            && !activity.external_id?.startsWith('streven-ru')
+            && !activity.external_id?.startsWith('streven-rd')
+        );
+    }
+
     const handleCheckboxChange = (activity: any) => {
         if (selectedActivities.includes(activity)) {
             // Remove activity if already selected
@@ -441,18 +449,17 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                     >
                                         Combine
                                     </button>)}
-                                    <button
+                                    {supportsRoundingMode(activity) && (<><button
                                         style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                                        onClick={() => { handleRoundUp(activity); setActivePopoverId(null); }}
+                                        onClick={() => { handleRoundUp(activity); setActivePopoverId(null); } }
                                     >
                                         Round Up
-                                    </button>
-                                    <button
+                                    </button><button
                                         style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                                        onClick={() => { handleRoundDown(activity); setActivePopoverId(null); }}
+                                        onClick={() => { handleRoundDown(activity); setActivePopoverId(null); } }
                                     >
-                                        Round Down
-                                    </button>
+                                            Round Down
+                                        </button></>)}
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
