@@ -50,6 +50,8 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
 
         await strava.client(accessToken);
 
+        logger.appendKeys({ athleteId, athleteFirstName });
+
         let gpxPoints = [];
         let firstActivityDistance = 0;
         for (let i = 0; i < activities.length; i += 1) {
@@ -72,7 +74,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             let cad: any[] = [];
             const origStartTime = new Date(activities[i].startDate);
             const startTime = new Date(origStartTime.getTime() + 120000); // Add 120 seconds to ensure Strava doesn't consider duplicate
-            console.log("Set start time", startTime, "Original:", activities[i].startDate);
+            logger.info("Set start time", {startTime, originalStartTime: activities[i].startDate});
 
 
             // Assign all the above
@@ -131,7 +133,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             if (i === 0) { // If first activity, store the last distance value
                 firstActivityDistance = distance[distance.length - 1];
             }
-            console.log("Completed activity: ", activities[i].name, "Id: ", activities[i].id);
+            logger.info("Completed activity", {activityName: activities[i].name, activityId:activities[i].id});
         }
         const gpxData = new StravaBuilder();
 
@@ -164,7 +166,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
 
             //private: true, Not supported :(
         }, function () {
-            console.log('First part of upload complete');
+            logger.info('First part of upload complete');
         }
         );
 
@@ -175,11 +177,11 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             id: uploadId
         }, function (err: any, res: any) {
             response = res;
-            console.log(err, res);
+            logger.error(err, res);
         });
         let timeout = 0;
         while (!response?.activity_id && !response?.error && timeout < 120000) {
-            console.log("Waiting for upload to complete...");
+            logger.info("Waiting for upload to complete...");
             timeout += 500;
             await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -187,7 +189,7 @@ const combineActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewa
             throw new Error("Timeout waiting for upload to complete");
         }
 
-        console.log('Second part of upload complete');
+        logger.info('Second part of upload complete');
 
         if (response?.error) {
             throw new Error(`Error uploading activity: ${response.error}`);
