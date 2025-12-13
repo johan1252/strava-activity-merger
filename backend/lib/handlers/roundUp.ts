@@ -47,6 +47,8 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             throw new Error("Activity distance is less than 1km, cannot round up");
         }
 
+        logger.appendKeys({ athleteId, athleteFirstName });
+
         await strava.client(accessToken);
 
         let gpxPoints = [];
@@ -70,7 +72,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         let cad: any[] = [];
         const origStartTime = new Date(activity.startDate);
         const startTime = new Date(origStartTime.getTime() + 120000); // Add 120 seconds to ensure Strava doesn't consider duplicate
-        console.log("Set start time", startTime, "Original:", activity.startDate);
+        logger.info("Set start time", { startTime, originalStart: activity.startDate });
 
 
         // Assign all the above
@@ -168,7 +170,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             }
         }
 
-        console.log("Completed activity: ", activity.name, "Id: ", activity.id);
+        logger.info("Completed activity", { name: activity.name, id: activity.id });
 
         const gpxData = new StravaBuilder();
 
@@ -199,24 +201,24 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             file: fileName,
             external_id: `streven-ru-${activity.id}`,
         }, function () {
-            console.log('First part of upload complete');
+            logger.info('First part of upload complete');
         }
         );
 
         const { id: uploadId } = firstResp;
 
-        console.log("Upload ID:", uploadId);
+        logger.info("Upload ID", { uploadId });
 
         // @ts-ignore
         await strava.uploads._check({
             id: uploadId
         }, function (err: any, res: any) {
             response = res;
-            console.log(err, res);
+            logger.error(err, res);
         });
         let timeout = 0;
         while (!response?.activity_id && !response?.error && timeout < 120000) {
-            console.log("Waiting for upload to complete...");
+            logger.info("Waiting for upload to complete...");
             timeout += 500;
             await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -224,7 +226,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             throw new Error("Timeout waiting for upload to complete");
         }
 
-        console.log('Second part of upload complete');
+        logger.info('Second part of upload complete');
 
         if (response?.error) {
             throw new Error(`Error uploading activity: ${response.error}`);

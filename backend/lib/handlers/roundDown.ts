@@ -47,6 +47,8 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             throw new Error("Activity distance is less than 1km, cannot round down");
         }
 
+        logger.appendKeys({ athleteId, athleteFirstName });
+
         await strava.client(accessToken);
 
         let gpxPoints = [];
@@ -68,7 +70,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         let cad: any[] = [];
         const origStartTime = new Date(activity.startDate);
         const startTime = new Date(origStartTime.getTime() + 120000); // Add 120 seconds to ensure Strava doesn't consider duplicate
-        console.log("Set start time", startTime, "Original:", activity.startDate);
+        logger.info("Set start time", { startTime, originalStart: activity.startDate });
 
         // Assign all the above
         for (let j = 0; j < activityStreamData.length; j += 1) {
@@ -127,7 +129,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         // If we didn't reach the roundedDistance, add points using avg speed from last 1km
         // This can happen since GPX points are not always exactly 1m apart in distance
         let lastDistanceVal = distance[lastIndex];
-        console.log("lastDistanceVal", lastDistanceVal, "roundedDistance", roundedDistance);
+        logger.info("lastDistanceVal", { lastDistanceVal, roundedDistance });
         if (lastDistanceVal < roundedDistance && distance.length > 1) {
             // Find the start index of the last 1km
             const lastKmStart = distance[distance.length - 1] - 1000;
@@ -157,7 +159,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             const step = toAdd / pointsToAdd;
             const timeStep = step / avgSpeed;
             let runningDistance = lastDistanceVal;
-            console.log("Adding", pointsToAdd, "points of approx", step, "meters each to reach", roundedDistance, "m total");
+            logger.info("Adding points", { pointsToAdd, approxStep: step, targetDistance: roundedDistance });
             for (let i = 1; i <= pointsToAdd; i++) {
                 runningDistance += step;
                 // Round to 1 decimal place
@@ -175,7 +177,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             }
         }
 
-        console.log("Completed activity (rounded down): ", activity.name, "Id: ", activity.id);
+        logger.info("Completed activity (rounded down)", { name: activity.name, id: activity.id });
         const gpxData = new StravaBuilder();
         gpxData.setSegmentPoints(gpxPoints);
         const gpx = buildGPX(gpxData.toObject());
@@ -199,7 +201,7 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             file: fileName,
             external_id: `streven-rd-${activity.id}`,
         }, function () {
-            console.log('First part of upload complete');
+            logger.info('First part of upload complete');
         });
 
         const { id: uploadId } = firstResp;
@@ -209,18 +211,18 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             id: uploadId
         }, function (err: any, res: any) {
             response = res;
-            console.log(err, res);
+            logger.error(err, res);
         });
         let timeout = 0;
         while (!response?.activity_id && !response?.error && timeout < 120000) {
-            console.log("Waiting for upload to complete...");
+            logger.info("Waiting for upload to complete...");
             timeout += 500;
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         if (timeout >= 30000) {
             throw new Error("Timeout waiting for upload to complete");
         }
-        console.log('Second part of upload complete');
+        logger.info('Second part of upload complete');
 
         if (response?.error) {
             throw new Error(`Error uploading activity: ${response.error}`);
