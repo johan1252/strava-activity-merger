@@ -214,7 +214,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             id: uploadId
         }, function (err: any, res: any) {
             response = res;
-            logger.error(err, res);
+            logger.error("Failed checking upload",{error: err,response: res});
         });
         let timeout = 0;
         while (!response?.activity_id && !response?.error && timeout < 120000) {
