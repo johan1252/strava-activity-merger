@@ -5,7 +5,7 @@ import { buildGPX, StravaBuilder } from "gpx-builder";
 import * as fs from 'fs';
 import { saveToS3 } from "../utils/saveToS3";
 
-const logger = new Logger({ serviceName: 'authorize' });
+const logger = new Logger({ serviceName: 'roundUp' });
 
 const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info("Entered handler");
@@ -23,7 +23,8 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         if (!athlete) {
             throw new Error("Athlete object missing");
         }
-        const { id: athleteId, firstName: athleteFirstName } = athlete
+        const { id: athleteId, firstName } = athlete
+        const athleteFirstName = firstName.trim();
         if (!activity) {
             throw new Error("Activity object missing");
         }
@@ -214,7 +215,7 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
             id: uploadId
         }, function (err: any, res: any) {
             response = res;
-            logger.error("Failed checking upload",{error: err,response: res});
+            logger.info("Upload not yet complete",{error: err,response: res});
         });
         let timeout = 0;
         while (!response?.activity_id && !response?.error && timeout < 120000) {
