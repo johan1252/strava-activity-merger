@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from '@aws-lambda-powertools/logger';
 import strava from 'strava-v3';
 
-const logger = new Logger({ serviceName: 'authorize' });
+const logger = new Logger({ serviceName: 'getActivities' });
 
 
 const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
