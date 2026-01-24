@@ -18,6 +18,8 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingNextPage, setIsLoadingNextPage] = useState(false);
+    const [roundingActivity, setRoundingActivity] = useState<any | null>(null); // Track activity being rounded
+    const [roundingDirection, setRoundingDirection] = useState<'up' | 'down' | null>(null); // Track rounding direction
     // Filter state (future extensible)
     const [filters, setFilters] = useState<{ sportType: string }>({ sportType: 'All' });
     // Filtered activities
@@ -62,6 +64,60 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
             && !activity.external_id?.startsWith('streven-rd')
         );
     }
+
+    const getRoundingOptions = (activity: any, direction?: 'up' | 'down' | null) => {
+        if (!supportsRoundingMode(activity)) return [];
+        
+        const distanceInMeters = activity.distance || 0;
+        const distanceInKm = distanceInMeters / 1000;
+        const options = [];
+
+        // Always available: round to nearest km
+        const roundedUp = Math.ceil(distanceInKm);
+        const roundedDown = Math.floor(distanceInKm);
+        const nearestKm = direction === 'up' ? roundedUp : direction === 'down' ? roundedDown : Math.round(distanceInKm);
+        options.push({
+            target: 'nearestKm',
+            label: `Nearest kilometer (${nearestKm}km)`,
+            distance: nearestKm * 1000,
+            enabled: true,
+            hint: undefined
+        });
+
+        // Half marathon: available if within 1km AND can actually round to it in the selected direction
+        const halfMarathonKm = 21.1;
+        const distToHalfMarathon = Math.abs(distanceInKm - halfMarathonKm);
+        const canRoundToHalfMarathon = direction === 'up' 
+            ? distanceInKm < halfMarathonKm 
+            : direction === 'down' 
+            ? distanceInKm > halfMarathonKm 
+            : true; // When no direction specified, allow if within range
+        options.push({
+            target: 'halfMarathon',
+            label: 'Half Marathon (21.1km)',
+            distance: halfMarathonKm * 1000,
+            enabled: distToHalfMarathon <= 1 && canRoundToHalfMarathon,
+            hint: !canRoundToHalfMarathon ? `Can't round ${direction} to this` : distToHalfMarathon > 1 ? `${Math.abs(halfMarathonKm - distanceInKm).toFixed(2)}km away` : undefined
+        });
+
+        // Marathon: available if within 1km AND can actually round to it in the selected direction
+        const marathonKm = 42.2;
+        const distToMarathon = Math.abs(distanceInKm - marathonKm);
+        const canRoundToMarathon = direction === 'up' 
+            ? distanceInKm < marathonKm 
+            : direction === 'down' 
+            ? distanceInKm > marathonKm 
+            : true; // When no direction specified, allow if within range
+        options.push({
+            target: 'marathon',
+            label: 'Marathon (42.2km)',
+            distance: marathonKm * 1000,
+            enabled: distToMarathon <= 1 && canRoundToMarathon,
+            hint: !canRoundToMarathon ? `Can't round ${direction} to this` : distToMarathon > 1 ? `${Math.abs(marathonKm - distanceInKm).toFixed(2)}km away` : undefined
+        });
+
+        return options;
+    };
 
     const handleCheckboxChange = (activity: any) => {
         if (selectedActivities.includes(activity)) {
@@ -171,10 +227,13 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
         }
     };
 
-    const handleRoundUp = async (activity: any) => {
+    const handleRound = async (activity: any, targetDistance: number) => {
         setIsLoading(true);
+        const isRoundingUp = targetDistance > activity.distance;
+        const endpoint = isRoundingUp ? '/activities/roundup' : '/activities/rounddown';
+        
         try {
-            const data = await fetchWithAuth('/activities/roundup', {
+            const data = await fetchWithAuth(endpoint, {
                 method: 'POST',
                 body: JSON.stringify({
                     activity: {
@@ -182,7 +241,8 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         startDate: activity.start_date,
                         name: activity.name,
                         distance: activity.distance,
-                        sport_type: activity.sport_type
+                        sport_type: activity.sport_type,
+                        targetDistance: targetDistance
                     },
                     athlete: {
                         id: athlete.id,
@@ -241,85 +301,8 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
             );
             reloadActivities();
         } catch (error) {
-            console.error('Error rounding up activity:', error);
-            setModalContent(<p>An error occurred while rounding up.<br></br>Please try again, if error persists contact us for assistance.</p>);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleRoundDown = async (activity: any) => {
-        setIsLoading(true);
-        try {
-            const data = await fetchWithAuth('/activities/rounddown', {
-                method: 'POST',
-                body: JSON.stringify({
-                    activity: {
-                        id: activity.id,
-                        startDate: activity.start_date,
-                        name: activity.name,
-                        distance: activity.distance,
-                        sport_type: activity.sport_type
-                    },
-                    athlete: {
-                        id: athlete.id,
-                        firstName: athlete.firstname,
-                    }
-                }),
-            });
-            setModalContent(
-                <>
-                    <div>
-                        <strong>Activity with updated distance created!</strong>
-                    </div>
-                    <div style={{ margin: '12px 0' }}>
-                        <a
-                            href={`https://www.strava.com/activities/${data.activityId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                backgroundColor: '#FC4C02',
-                                color: 'white',
-                                padding: '10px 20px',
-                                borderRadius: '6px',
-                                textDecoration: 'none',
-                                fontWeight: 600,
-                                marginRight: '8px',
-                                display: 'inline-block'
-                            }}
-                        >
-                            View New Activity
-                        </a>
-                    </div>
-                    <div style={{ marginBottom: '8px', fontSize: '15px', color: '#555' }}>
-                        <span>Consider deleting the original activity:</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <a
-                            key={activity.id}
-                            href={`https://www.strava.com/activities/${activity.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                backgroundColor: 'white',
-                                color: '#FC4C02',
-                                border: '2px solid #FC4C02',
-                                padding: '8px 16px',
-                                borderRadius: '6px',
-                                textDecoration: 'none',
-                                fontWeight: 600,
-                                fontSize: '14px'
-                            }}
-                        >
-                            {activity.name || `Activity ${activity.id}`}
-                        </a>
-                    </div>
-                </>
-            );
-            reloadActivities();
-        } catch (error) {
-            console.error('Error rounding down activity:', error);
-            setModalContent(<p>An error occurred while rounding down.<br></br>Please try again, if error persists contact us for assistance.</p>);
+            console.error('Error rounding activity:', error);
+            setModalContent(<p>An error occurred while rounding.<br></br>Please try again, if error persists contact us for assistance.</p>);
         } finally {
             setIsLoading(false);
         }
@@ -449,17 +432,30 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                     >
                                         Combine
                                     </button>)}
-                                    {supportsRoundingMode(activity) && (<><button
-                                        style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                                        onClick={() => { handleRoundUp(activity); setActivePopoverId(null); } }
-                                    >
-                                        Round Up
-                                    </button><button
-                                        style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                                        onClick={() => { handleRoundDown(activity); setActivePopoverId(null); } }
-                                    >
-                                            Round Down
-                                        </button></>)}
+                                    {supportsRoundingMode(activity) && (
+                                        <>
+                                            <button
+                                                style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'blue', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                                onClick={() => {
+                                                    setRoundingActivity(activity);
+                                                    setRoundingDirection('up');
+                                                    setActivePopoverId(null);
+                                                }}
+                                            >
+                                                Round Up
+                                            </button>
+                                            <button
+                                                style={{ padding: '10px', borderRadius: '6px', border: 'none', background: 'grey', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                                onClick={() => {
+                                                    setRoundingActivity(activity);
+                                                    setRoundingDirection('down');
+                                                    setActivePopoverId(null);
+                                                }}
+                                            >
+                                                Round Down
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -750,6 +746,93 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                 </button>
                             </>
                         )}
+                    </div>
+                </div>
+            )}
+            {roundingActivity && roundingDirection && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 2001,
+                    }}
+                    onClick={() => {
+                        setRoundingActivity(null);
+                        setRoundingDirection(null);
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+                            textAlign: 'center',
+                            maxWidth: '400px',
+                            width: '90%',
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>
+                            Round {roundingDirection === 'up' ? 'Up' : 'Down'} to:
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {(() => {
+                                const options = getRoundingOptions(roundingActivity, roundingDirection);
+                                return options.map((option) => (
+                                    <button
+                                        key={option.target}
+                                        disabled={!option.enabled}
+                                        title={option.hint}
+                                        style={{
+                                            padding: '12px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            background: option.enabled ? '#0b76ff' : '#ccc',
+                                            color: option.enabled ? 'white' : '#999',
+                                            fontWeight: 600,
+                                            cursor: option.enabled ? 'pointer' : 'not-allowed',
+                                            fontSize: '14px',
+                                            opacity: option.enabled ? 1 : 0.6
+                                        }}
+                                        onClick={() => {
+                                            if (option.enabled) {
+                                                handleRound(roundingActivity, option.distance);
+                                                setRoundingActivity(null);
+                                                setRoundingDirection(null);
+                                            }
+                                        }}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ));
+                            })()}
+                        </div>
+                        <button
+                            style={{
+                                marginTop: '16px',
+                                backgroundColor: 'white',
+                                color: '#666',
+                                border: '1px solid #ddd',
+                                padding: '10px 16px',
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                borderRadius: '5px',
+                            }}
+                            onClick={() => {
+                                setRoundingActivity(null);
+                                setRoundingDirection(null);
+                            }}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
             )}
