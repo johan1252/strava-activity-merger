@@ -43,6 +43,9 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         if (!activity.sport_type) {
             throw new Error("Activity sport_type missing");
         }
+        if (!activity.targetDistance) {
+            throw new Error("Activity targetDistance missing");
+        }
 
         if (activity.distance < 1000) {
             throw new Error("Activity distance is less than 1km, cannot round up");
@@ -123,8 +126,8 @@ const roundUp = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResu
         }
 
         // --- ROUND UP LOGIC ---
-        const roundedDistance = Math.ceil(activity.distance / 1000) * 1000;
-        const distanceToAdd = roundedDistance - activity.distance + 0.9; // add a small buffer to ensure we go over the rounded distance (Strava will round down to nearest 2nd decimal)
+        const targetDistance = activity.targetDistance; // Target distance in meters
+        const distanceToAdd = targetDistance - activity.distance + 0.9; // add a small buffer to ensure we go over the rounded distance (Strava will round down to nearest 2nd decimal)
         if (distanceToAdd > 0 && distance.length > 1) {
             // Find the start index of the last 1km
             const lastKmStart = distance[distance.length - 1] - 1000;

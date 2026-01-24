@@ -43,6 +43,9 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
         if (!activity.sport_type) {
             throw new Error("Activity sport_type missing");
         }
+        if (!activity.targetDistance) {
+            throw new Error("Activity targetDistance missing");
+        }
 
         if (activity.distance < 1000) {
             throw new Error("Activity distance is less than 1km, cannot round down");
@@ -93,9 +96,9 @@ const roundDown = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRe
             }
         }
 
-        // Find the index where distance is just below or equal to the rounded down km
-        const roundedDistanceWithoutBuffer = Math.floor(activity.distance / 1000) * 1000;
-        const roundedDistance = roundedDistanceWithoutBuffer + 0.9; // add a small buffer to ensure we go over the rounded distance (Strava will round down to nearest 2nd decimal)
+        // Find the index where distance is just below or equal to the target distance
+        const targetDistance = activity.targetDistance; // Target distance in meters
+        const roundedDistance = targetDistance + 0.9; // add a small buffer to ensure we go over the rounded distance (Strava will round down to nearest 2nd decimal)
         let lastIndex = distance.length - 1;
         for (let i = 0; i < distance.length; i++) {
             if (distance[i] > roundedDistance) {
