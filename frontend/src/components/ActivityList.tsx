@@ -6,6 +6,7 @@ import { fetchWithAuth } from '../utils/api';
 import { sportTypeToIcon } from '../utils/sportTypeToIcon';
 import SportTypeDropdown from './SportTypeDropdown';
 
+const MAX_DISTANCE_FILTER_ALLOWED = 80000; // 80km in meters
 
 const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, athlete, setActivities, reloadActivities }) => {
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
@@ -20,12 +21,22 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
     const [isLoadingNextPage, setIsLoadingNextPage] = useState(false);
     const [roundingActivity, setRoundingActivity] = useState<any | null>(null); // Track activity being rounded
     const [roundingDirection, setRoundingDirection] = useState<'up' | 'down' | null>(null); // Track rounding direction
+    const [showDistanceFilter, setShowDistanceFilter] = useState(false); // Track if distance filter modal is open
     // Filter state (future extensible)
-    const [filters, setFilters] = useState<{ sportType: string }>({ sportType: 'All' });
+    const [filters, setFilters] = useState<{ sportType: string; minDistance: number; maxDistance: number }>({
+        sportType: 'All',
+        minDistance: 0,
+        maxDistance: MAX_DISTANCE_FILTER_ALLOWED,
+    });
     // Filtered activities
-    const filteredActivities = filters.sportType === 'All'
-        ? activities
-        : activities.filter(a => a.sport_type && a.sport_type.toLowerCase().includes(filters.sportType.toLowerCase())); // Use includes to account for VirtualRide etc. in Ride
+    const filteredActivities = activities.filter(a => {
+        // Filter by sport type
+        const sportTypeMatch = filters.sportType === 'All' || (a.sport_type && a.sport_type.toLowerCase().includes(filters.sportType.toLowerCase()));
+        // Filter by distance range - if maxDistance > 80km, don't apply upper limit
+        const maxDistanceLimit = filters.maxDistance > MAX_DISTANCE_FILTER_ALLOWED ? Infinity : filters.maxDistance;
+        const distanceMatch = (!a.distance || (a.distance >= filters.minDistance && a.distance <= maxDistanceLimit));
+        return sportTypeMatch && distanceMatch;
+    });
     let prevSportType = 'All'; // To remember previous sport type filter when entering/exiting combine mode
 
     const loadNextPage = async () => {
@@ -341,12 +352,36 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                 }}
             >
                 {/* Filter Bar */}
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10, gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10, gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
                     <SportTypeDropdown
                         value={filters.sportType}
                         onChange={val => setFilters(f => ({ ...f, sportType: val }))}
                     />
-                    {/* Future filter options can be added here */}
+                    {/* Distance filter button */}
+                    <button
+                        onClick={() => setShowDistanceFilter(!showDistanceFilter)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1.5px solid #FC4C02',
+                            background: 'white',
+                            fontSize: 16,
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            color: '#222',
+                            minHeight: 45,
+                            minWidth: 100,
+                        }}
+                    >
+                        {filters.minDistance === 0 && filters.maxDistance === MAX_DISTANCE_FILTER_ALLOWED
+                            ? 'Any Distance' // No filter
+                            : filters.minDistance > 0 && filters.maxDistance === MAX_DISTANCE_FILTER_ALLOWED
+                            ? `Distance >${filters.minDistance / 1000}km` // Min only
+                            : filters.minDistance === 0 && filters.maxDistance < MAX_DISTANCE_FILTER_ALLOWED
+                            ? `Distance <${filters.maxDistance / 1000}km` // Max only
+                            : `Distance ${filters.minDistance / 1000}km - ${filters.maxDistance >= MAX_DISTANCE_FILTER_ALLOWED ? '>80km' : `${filters.maxDistance / 1000}km`}` // Range
+                        }
+                    </button>
                 </div>
                 {filteredActivities.length === 0 && (
                     <div style={{ marginTop: 20, marginBottom: 20, color: '#555', fontSize: '1.1em' }}>
@@ -833,6 +868,119 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         >
                             Cancel
                         </button>
+                    </div>
+                </div>
+            )}
+            {/* Distance Filter Modal */}
+            {showDistanceFilter && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 2001,
+                    }}
+                    onClick={() => setShowDistanceFilter(false)}
+                >
+                    <div
+                        id="distance-filter-modal"
+                        style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+                            textAlign: 'center',
+                            maxWidth: '400px',
+                            width: '90%',
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h2 style={{ margin: '0 0 20px 0', fontSize: '18px' }}>Distance Filter</h2>
+                        
+                        {/* Min Distance Slider */}
+                        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>
+                                Min Distance: {filters.minDistance / 1000}km
+                            </label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="80"
+                                step="1"
+                                value={filters.minDistance / 1000}
+                                onChange={(e) => {
+                                    const newMin = Number(e.target.value) * 1000;
+                                    if (newMin <= filters.maxDistance || filters.maxDistance > MAX_DISTANCE_FILTER_ALLOWED) {
+                                        setFilters(f => ({ ...f, minDistance: newMin }));
+                                    }
+                                }}
+                                style={{ width: '100%', cursor: 'pointer', accentColor: '#FC4C02' }}
+                            />
+                        </div>
+
+                        {/* Max Distance Slider */}
+                        <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>
+                                Max Distance: {filters.maxDistance >= MAX_DISTANCE_FILTER_ALLOWED ? '>80km' : `${filters.maxDistance / 1000}km`}
+                            </label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="80"
+                                step="1"
+                                value={Math.min(filters.maxDistance / 1000, 80)}
+                                onChange={(e) => {
+                                    const newMax = Number(e.target.value) * 1000;
+                                    if (newMax >= filters.minDistance) {
+                                        setFilters(f => ({ ...f, maxDistance: newMax }));
+                                    }
+                                }}
+                                style={{ width: '100%', cursor: 'pointer', accentColor: '#FC4C02' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setShowDistanceFilter(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 16px',
+                                    backgroundColor: '#FC4C02',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Done
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setFilters(f => ({ ...f, minDistance: 0, maxDistance: MAX_DISTANCE_FILTER_ALLOWED }));
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 16px',
+                                    backgroundColor: 'white',
+                                    color: '#666',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
