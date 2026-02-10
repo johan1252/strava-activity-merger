@@ -171,7 +171,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                 if (data.activityId) {
                     setSelectedActivities([]); // Clear selected activities after combining
                     setShowCombineMode(false); // Exit combine mode
-                    setFilters({ sportType: prevSportType }); // Restore previous sport type filter
+                    setFilters(f => ({ ...f, sportType: prevSportType })); // Restore previous sport type filter
                     setModalContent(
                         <>
                             <div>
@@ -459,7 +459,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                             setActivePopoverId(null);
                                             // Set the sport type filter so only same-sport activities are shown
                                             prevSportType = filters.sportType;
-                                            setFilters({ sportType: activity.sport_type || 'All' });
+                                            setFilters(f => ({ ...f, sportType: activity.sport_type || 'All' }));
                                             if (!selectedActivities.includes(activity) && supportsCombineMode(activity)) {
                                                 setSelectedActivities([activity]);
                                             }
