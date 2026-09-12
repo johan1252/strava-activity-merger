@@ -177,6 +177,7 @@ export async function updateLastSyncCompletedAt(athleteId: number): Promise<void
 
 export async function upsertActivities(athleteId: number, activities: StravaActivity[]): Promise<void> {
     const BATCH_SIZE = 25;
+    const pk = athletePK(athleteId);
     for (let i = 0; i < activities.length; i += BATCH_SIZE) {
         const batch = activities.slice(i, i + BATCH_SIZE);
         await client.send(new BatchWriteCommand({
@@ -186,7 +187,84 @@ export async function upsertActivities(athleteId: number, activities: StravaActi
                 })),
             },
         }));
+        // Write reverse lookup items so webhook handler can find activities by ID
+        await client.send(new BatchWriteCommand({
+            RequestItems: {
+                [TABLE_NAME]: batch.map(activity => ({
+                    PutRequest: {
+                        Item: {
+                            PK: lookupPK(activity.id),
+                            SK: 'META',
+                            athletePK: pk,
+                            activitySK: activitySK(activity),
+                        },
+                    },
+                })),
+            },
+        }));
     }
+}
+
+// --- Webhook support ---
+
+function lookupPK(activityId: number): string {
+    return `ACTIVITYLOOKUP#${activityId}`;
+}
+
+export async function getLookupItem(activityId: number): Promise<{ athletePK: string; activitySK: string } | null> {
+    const result = await client.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: lookupPK(activityId), SK: 'META' },
+    }));
+    if (!result.Item) return null;
+    return {
+        athletePK: result.Item.athletePK as string,
+        activitySK: result.Item.activitySK as string,
+    };
+}
+
+export async function getActivityItem(actPK: string, actSK: string): Promise<Record<string, unknown> | null> {
+    const result = await client.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: actPK, SK: actSK },
+    }));
+    return (result.Item as Record<string, unknown>) ?? null;
+}
+
+export async function updateActivityItem(
+    existing: Record<string, unknown>,
+    updates: { title?: string; type?: string; private?: boolean },
+): Promise<void> {
+    const updated = { ...existing };
+
+    if (updates.title !== undefined) {
+        updated.name = updates.title;
+    }
+
+    if (updates.type !== undefined) {
+        updated.sport_type = updates.type;
+        // Recompute GSI keys that embed sport type
+        const sportPK = `${existing.PK}#SPORT#${updates.type}`;
+        updated.gsi1pk = sportPK;
+        updated.gsi3pk = sportPK;
+    }
+
+    if (updates.private !== undefined) {
+        updated.visibility = updates.private ? 'only_me' : 'everyone';
+    }
+
+    await client.send(new PutCommand({ TableName: TABLE_NAME, Item: updated }));
+}
+
+export async function deleteActivityItem(actPK: string, actSK: string, activityId: number): Promise<void> {
+    await client.send(new BatchWriteCommand({
+        RequestItems: {
+            [TABLE_NAME]: [
+                { DeleteRequest: { Key: { PK: actPK, SK: actSK } } },
+                { DeleteRequest: { Key: { PK: lookupPK(activityId), SK: 'META' } } },
+            ],
+        },
+    }));
 }
 
 export async function queryActivities(athleteId: number, filters: ActivityFilters): Promise<CachedActivity[]> {

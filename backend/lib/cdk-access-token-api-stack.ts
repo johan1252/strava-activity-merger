@@ -12,6 +12,7 @@ import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import 'dotenv/config';
 
 export class CdkAccessTokenApiStack extends cdk.Stack {
@@ -337,5 +338,35 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /activities/rounddown endpoint
         const roundDownResource = activitiesResource.addResource('rounddown');
         roundDownResource.addMethod('POST', new apigateway.LambdaIntegration(roundDownLambda));
+
+        // Auto-generated secret used to validate Strava webhook subscription requests
+        const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {
+            secretName: 'strava-webhook-verify-token',
+            generateSecretString: {
+                excludePunctuation: true,
+                passwordLength: 32,
+            },
+        });
+
+        // Strava webhook handler — receives real-time activity create/update/delete events
+        const stravaWebhookLambda = new lambdaNodeJs.NodejsFunction(this, 'StravaWebhookHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 256,
+            entry: './lib/handlers/stravaWebhook.ts',
+            timeout: cdk.Duration.seconds(10),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                STRAVA_WEBHOOK_VERIFY_TOKEN_SECRET_ARN: webhookVerifyTokenSecret.secretArn,
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(stravaWebhookLambda);
+        webhookVerifyTokenSecret.grantRead(stravaWebhookLambda);
+
+        // Create the /webhook/strava endpoint (GET for validation, POST for events)
+        const webhookResource = apiResource.addResource('webhook');
+        const stravaWebhookResource = webhookResource.addResource('strava');
+        stravaWebhookResource.addMethod('GET', new apigateway.LambdaIntegration(stravaWebhookLambda));
+        stravaWebhookResource.addMethod('POST', new apigateway.LambdaIntegration(stravaWebhookLambda));
     }
 }
