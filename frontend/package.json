@@ -7,7 +7,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "npm run build && cdk deploy --all --require-approval never && aws cloudfront create-invalidation --distribution-id EE079INK46INE --paths '/*'"
+    "deploy": "npm run build && cdk deploy --all --require-approval never",
+    "deploy:staging": "REACT_APP_STRAVA_CLIENT_ID=$(grep REACT_APP_STRAVA_CLIENT_ID .env.staging | cut -d= -f2) REACT_APP_API_BASE_URL=$(grep REACT_APP_API_BASE_URL .env.staging | cut -d= -f2) npm run build && cdk deploy --all --require-approval never -c stage=staging"
   },
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
