@@ -620,34 +620,40 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                                             <div style={{ color: '#888', fontSize: '0.9em' }}>Time</div>
                                         </div>
                                     </div>
-                                    <div style={{ height: '300px', marginTop: '10px' }}>
-                                        <MapContainer
-                                            // @ts-ignore
-                                            center={[
-                                                activity.start_latlng[0],
-                                                activity.start_latlng[1],
-                                            ]}
-                                            zoom={13}
-                                            style={{ height: '100%', width: '100%', borderRadius: '8px' }}
-                                            // Disable map interactions for better UX on mobile, in future we can allow map interactions when viewing activity details
-                                            zoomControl={false}
-                                            dragging={false}
-                                            touchZoom={false}
-                                            scrollWheelZoom={false}
-                                            doubleClickZoom={false}
-                                            boxZoom={false}
-                                            keyboard={false}
-                                        >
-                                            <TileLayer
-                                                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                                // @ts-ignore
-                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
-                                            <Polyline
-                                                positions={polyline.decode(activity.map.summary_polyline).map(([lat, lng]) => [lat, lng])}
-                                                // @ts-ignore
-                                                color="blue" />
-                                        </MapContainer>
-                                    </div>
+                                    {(() => {
+                                        const routePositions: [number, number][] = activity.map?.summary_polyline
+                                            ? polyline.decode(activity.map.summary_polyline).map(([lat, lng]: [number, number]) => [lat, lng])
+                                            : [[activity.start_latlng[0], activity.start_latlng[1]]];
+                                        return (
+                                            <div style={{ height: '300px', marginTop: '10px' }}>
+                                                <MapContainer
+                                                    // @ts-ignore
+                                                    bounds={routePositions}
+                                                    boundsOptions={{ padding: [20, 20] }}
+                                                    style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+                                                    // Disable map interactions for better UX on mobile, in future we can allow map interactions when viewing activity details
+                                                    // @ts-ignore
+                                                    zoomControl={false}
+                                                    dragging={false}
+                                                    touchZoom={false}
+                                                    scrollWheelZoom={false}
+                                                    doubleClickZoom={false}
+                                                    boxZoom={false}
+                                                    keyboard={false}
+                                                >
+                                                    <TileLayer
+                                                        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                        // @ts-ignore
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
+                                                    <Polyline
+                                                        // @ts-ignore
+                                                        positions={routePositions}
+                                                        // @ts-ignore
+                                                        color="blue" />
+                                                </MapContainer>
+                                            </div>
+                                        );
+                                    })()}
                                 </>
                             )}
                             <div style={{ marginTop: '10px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
