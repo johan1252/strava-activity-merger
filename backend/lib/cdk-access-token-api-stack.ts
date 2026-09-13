@@ -229,7 +229,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 512,
             entry: './lib/handlers/syncActivities.ts',
-            timeout: cdk.Duration.seconds(300),
+            timeout: cdk.Duration.seconds(900),
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
             },
