@@ -298,7 +298,7 @@ export async function queryActivities(athleteId: number, filters: ActivityFilter
         items = await queryMainTable(pk);
     }
 
-    return items.map(fromDbItem);
+    return items.map(fromDbItem).sort((a, b) => b.start_date.localeCompare(a.start_date));
 }
 
 // --- Index query helpers ---

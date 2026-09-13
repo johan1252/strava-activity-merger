@@ -369,6 +369,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
                 STRAVA_WEBHOOK_VERIFY_TOKEN_SECRET_ARN: webhookVerifyTokenSecret.secretArn,
+                STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET || '',
             },
         });
 
