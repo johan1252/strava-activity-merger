@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import polyline from '@mapbox/polyline';
 import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,7 +8,8 @@ import SportTypeDropdown from './SportTypeDropdown';
 
 const MAX_DISTANCE_FILTER_ALLOWED = 80000; // 80km in meters
 
-const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (activities: any) => void; reloadActivities: () => void }> = ({ activities, athlete, setActivities, reloadActivities }) => {
+const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
+    const [activities, setActivities] = useState<any[]>([]);
     const [selectedActivities, setSelectedActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false); // State for loading modal
     const [modalContent, setModalContent] = useState<React.ReactNode>(null); // State for modal message
@@ -22,40 +23,78 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
     const [roundingActivity, setRoundingActivity] = useState<any | null>(null); // Track activity being rounded
     const [roundingDirection, setRoundingDirection] = useState<'up' | 'down' | null>(null); // Track rounding direction
     const [showDistanceFilter, setShowDistanceFilter] = useState(false); // Track if distance filter modal is open
-    // Filter state (future extensible)
     const [filters, setFilters] = useState<{ sportType: string; minDistance: number; maxDistance: number }>({
         sportType: 'All',
         minDistance: 0,
         maxDistance: MAX_DISTANCE_FILTER_ALLOWED,
     });
-    // Filtered activities
-    const filteredActivities = activities.filter(a => {
-        // Filter by sport type
-        const sportTypeMatch = filters.sportType === 'All' || (a.sport_type && a.sport_type.toLowerCase().includes(filters.sportType.toLowerCase()));
-        // Filter by distance range - if maxDistance > 80km, don't apply upper limit
-        const maxDistanceLimit = filters.maxDistance > MAX_DISTANCE_FILTER_ALLOWED ? Infinity : filters.maxDistance;
-        const distanceMatch = (!a.distance || (a.distance >= filters.minDistance && a.distance <= maxDistanceLimit));
-        return sportTypeMatch && distanceMatch;
-    });
+    const sentinelRef = useRef<HTMLDivElement>(null);
     let prevSportType = 'All'; // To remember previous sport type filter when entering/exiting combine mode
 
-    const loadNextPage = async () => {
-        setIsLoadingNextPage(true);
-        const nextPage = page + 1;
+    const buildUrl = (p: number, f: typeof filters) => {
+        const params = new URLSearchParams({ page: String(p) });
+        if (f.sportType !== 'All') params.set('sportType', f.sportType);
+        if (f.minDistance > 0) params.set('minDistance', String(f.minDistance));
+        if (f.maxDistance < MAX_DISTANCE_FILTER_ALLOWED) params.set('maxDistance', String(f.maxDistance));
+        return `/activities?${params}`;
+    };
+
+    const fetchPage = useCallback(async (p: number, f: typeof filters, replace: boolean) => {
+        if (replace) {
+            setIsLoading(true);
+        } else {
+            setIsLoadingNextPage(true);
+        }
         try {
-            const data = await fetchWithAuth(`/activities?page=${nextPage}`);
+            const data = await fetchWithAuth(buildUrl(p, f));
             if (data.activities && data.activities.length > 0) {
-                setActivities((prev: any) => [...prev, ...data.activities]);
-                setPage(nextPage);
+                setActivities(prev => replace ? data.activities : [...prev, ...data.activities]);
+                setPage(p);
+                setHasMore(data.hasMore !== false);
             } else {
+                if (replace) setActivities([]);
                 setHasMore(false);
             }
         } catch (error) {
-            console.error('Error loading next page:', error);
+            console.error('Error fetching activities:', error);
         } finally {
+            setIsLoading(false);
             setIsLoadingNextPage(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Initial load
+    useEffect(() => {
+        fetchPage(1, filters, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Re-fetch from page 1 when filters change
+    useEffect(() => {
+        fetchPage(1, filters, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.sportType, filters.minDistance, filters.maxDistance]);
+
+    const loadNextPage = useCallback(() => {
+        if (!isLoadingNextPage && hasMore) {
+            fetchPage(page + 1, filters, false);
+        }
+    }, [isLoadingNextPage, hasMore, page, filters, fetchPage]);
+
+    // Infinite scroll
+    useEffect(() => {
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+        const observer = new IntersectionObserver(
+            entries => { if (entries[0].isIntersecting) loadNextPage(); },
+            { threshold: 0.1 },
+        );
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [loadNextPage]);
+
+    const reloadActivities = () => fetchPage(1, filters, true);
 
     const supportsCombineMode = (activity: any) => {
         return (
@@ -383,15 +422,12 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                         }
                     </button>
                 </div>
-                {filteredActivities.length === 0 && (
+                {activities.length === 0 && !isLoading && (
                     <div style={{ marginTop: 20, marginBottom: 20, color: '#555', fontSize: '1.1em' }}>
                         No activities found for the selected filter.
-                        {hasMore && (<><br></br>
-                            <br></br>
-                            Try loading older activities using the "Load More" button below.</>)}
                     </div>
                 )}
-                {filteredActivities.map((activity) => {
+                {activities.map((activity: any) => {
                     let distanceKm = '-';
                     let durationStr = '-';
                     let paceStr = '-';
@@ -662,15 +698,12 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                     )
                 }
                 )}
-                {hasMore && (isLoadingNextPage ? (
-                    <span style={{ color: '#888', textDecoration: 'none', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0', cursor: 'default' }}>
+                {isLoadingNextPage && (
+                    <span style={{ color: '#888', fontWeight: 600, display: 'block', textAlign: 'center', margin: '10px 0' }}>
                         Loading...
                     </span>
-                ) : (
-                    <button onClick={loadNextPage} style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: 'blue', textDecoration: 'underline', fontWeight: 600, display: 'block', textAlign: 'center', marginTop: '10px', marginBottom: '10px' }}>
-                        Load More...
-                    </button>
-                ))}
+                )}
+                <div ref={sentinelRef} style={{ height: 1 }} />
             </ul>
             {/* Show combine button only in combine mode */}
             {showCombineMode && (
