@@ -19,12 +19,22 @@ Visit [streventools.com](https://streventools.com) and authorize with your Strav
 - A Strava API application (see [Strava API docs](https://developers.strava.com))
 
 ### Local Frontend Development
+
+The recommended development workflow is to run the frontend locally against the **staging backend**. This avoids the Strava single-callback-domain limitation because Strava always permits `localhost` as a redirect URI — no domain swapping needed.
+
+Create `frontend/.env.development` (gitignored) to point at staging:
+```
+REACT_APP_API_BASE_URL=https://staging.streventools.com/api
+```
+
+Then:
 ```bash
 cd frontend
 npm ci
 npm start
 ```
-The app will be available at http://localhost:3000
+
+The app will be available at http://localhost:3000, with API calls routed to `staging.streventools.com/api`.
 
 ### Running Backend Runners (Local Testing)
 
@@ -79,6 +89,8 @@ Staging runs at [staging.streventools.com](https://staging.streventools.com) and
 To set up staging credentials, create `backend/.env.staging` and `frontend/.env.staging` with the same Strava credentials as production but with `STRAVA_REDIRECT_URI=https://staging.streventools.com/strava-callback` and `REACT_APP_API_BASE_URL=https://staging.streventools.com/api`.
 
 > **Callback domain limitation:** Strava only permits one authorization callback domain per API application. To use OAuth on staging, temporarily update the callback domain to `staging.streventools.com` in the [Strava API settings](https://www.strava.com/settings/api), then switch it back to `streventools.com` when done.
+>
+> **Recommended alternative:** Run the frontend locally (`npm start`) against the staging backend instead of deploying to `staging.streventools.com`. Strava always permits `localhost` as a redirect URI, so no callback domain swap is needed.
 
 ## Architecture
 
