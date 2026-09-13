@@ -11,7 +11,6 @@ import type { StravaActivity, CachedActivity, ActivityFilters, SyncMeta } from '
 
 const TABLE_NAME = process.env.ACTIVITY_CACHE_TABLE_NAME!;
 const STALE_SYNC_THRESHOLD_SECONDS = 30 * 60;
-const PAGE_SIZE = 25;
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -175,33 +174,40 @@ export async function updateLastSyncCompletedAt(athleteId: number): Promise<void
     }));
 }
 
+// Sends a BatchWrite and retries any UnprocessedItems (DynamoDB returns these
+// when throttled). Gives up after 3 retries to avoid infinite loops.
+async function batchWriteWithRetry(items: Record<string, unknown>[]): Promise<void> {
+    let requestItems: Record<string, unknown>[] = items;
+    for (let attempt = 0; attempt < 3 && requestItems.length > 0; attempt++) {
+        if (attempt > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+        }
+        const response = await client.send(new BatchWriteCommand({
+            RequestItems: { [TABLE_NAME]: requestItems },
+        }));
+        requestItems = (response.UnprocessedItems?.[TABLE_NAME] ?? []) as Record<string, unknown>[];
+    }
+}
+
 export async function upsertActivities(athleteId: number, activities: StravaActivity[]): Promise<void> {
     const BATCH_SIZE = 25;
     const pk = athletePK(athleteId);
     for (let i = 0; i < activities.length; i += BATCH_SIZE) {
         const batch = activities.slice(i, i + BATCH_SIZE);
-        await client.send(new BatchWriteCommand({
-            RequestItems: {
-                [TABLE_NAME]: batch.map(activity => ({
-                    PutRequest: { Item: toDbItem(athleteId, activity) },
-                })),
-            },
-        }));
+        await batchWriteWithRetry(batch.map(activity => ({
+            PutRequest: { Item: toDbItem(athleteId, activity) },
+        })));
         // Write reverse lookup items so webhook handler can find activities by ID
-        await client.send(new BatchWriteCommand({
-            RequestItems: {
-                [TABLE_NAME]: batch.map(activity => ({
-                    PutRequest: {
-                        Item: {
-                            PK: lookupPK(activity.id),
-                            SK: 'META',
-                            athletePK: pk,
-                            activitySK: activitySK(activity),
-                        },
-                    },
-                })),
+        await batchWriteWithRetry(batch.map(activity => ({
+            PutRequest: {
+                Item: {
+                    PK: lookupPK(activity.id),
+                    SK: 'META',
+                    athletePK: pk,
+                    activitySK: activitySK(activity),
+                },
             },
-        }));
+        })));
     }
 }
 
