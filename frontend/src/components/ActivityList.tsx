@@ -603,7 +603,7 @@ const ActivityList: React.FC<{ activities: any[]; athlete: any, setActivities: (
                                             keyboard={false}
                                         >
                                             <TileLayer
-                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                                                 // @ts-ignore
                                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
                                             <Polyline
