@@ -34,8 +34,7 @@ h1 {
   .activities-header-spacer {
     display: none;
   }
-  .activities-header-title {
-    text-align: left;
+  .activities-header-tabs {
     margin-left: 0.5em;
   }
 }
