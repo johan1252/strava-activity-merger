@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
 import VolumeTrendChart from './stats/VolumeTrendChart';
 import PaceTrendChart from './stats/PaceTrendChart';
@@ -57,7 +58,22 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     const [stats, setStats] = useState<StatsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [timeframe, setTimeframe] = useState<Timeframe>('6m');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [timeframe, setTimeframe] = useState<Timeframe>(() => {
+        const requested = searchParams.get('timeframe');
+        return TIMEFRAME_OPTIONS.some(opt => opt.value === requested) ? (requested as Timeframe) : '6m';
+    });
+
+    // Keep the timeframe reflected in the URL so links/refreshes stay on the right view.
+    useEffect(() => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (timeframe === '6m') next.delete('timeframe');
+            else next.set('timeframe', timeframe);
+            return next;
+        }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [timeframe]);
 
     useEffect(() => {
         let cancelled = false;

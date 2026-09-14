@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import polyline from '@mapbox/polyline';
 import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -23,11 +24,12 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
     const [roundingActivity, setRoundingActivity] = useState<any | null>(null); // Track activity being rounded
     const [roundingDirection, setRoundingDirection] = useState<'up' | 'down' | null>(null); // Track rounding direction
     const [showDistanceFilter, setShowDistanceFilter] = useState(false); // Track if distance filter modal is open
-    const [filters, setFilters] = useState<{ sportType: string; minDistance: number; maxDistance: number }>({
-        sportType: 'All',
-        minDistance: 0,
-        maxDistance: MAX_DISTANCE_FILTER_ALLOWED,
-    });
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [filters, setFilters] = useState<{ sportType: string; minDistance: number; maxDistance: number }>(() => ({
+        sportType: searchParams.get('sportType') || 'All',
+        minDistance: Number(searchParams.get('minDistance')) || 0,
+        maxDistance: searchParams.get('maxDistance') ? Number(searchParams.get('maxDistance')) : MAX_DISTANCE_FILTER_ALLOWED,
+    }));
     const [isLoadingActivities, setIsLoadingActivities] = useState(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
     const isFirstRender = useRef(true);
@@ -80,6 +82,21 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
             return;
         }
         fetchPage(1, filters, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.sportType, filters.minDistance, filters.maxDistance]);
+
+    // Keep filters reflected in the URL so links/refreshes stay on the right view.
+    useEffect(() => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (filters.sportType === 'All') next.delete('sportType');
+            else next.set('sportType', filters.sportType);
+            if (filters.minDistance > 0) next.set('minDistance', String(filters.minDistance));
+            else next.delete('minDistance');
+            if (filters.maxDistance < MAX_DISTANCE_FILTER_ALLOWED) next.set('maxDistance', String(filters.maxDistance));
+            else next.delete('maxDistance');
+            return next;
+        }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters.sportType, filters.minDistance, filters.maxDistance]);
 
