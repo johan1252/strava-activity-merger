@@ -64,7 +64,6 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
-            <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 {TIMEFRAME_OPTIONS.map(opt => (
                     <button
@@ -87,7 +86,14 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
             </div>
             <VolumeTrendChart data={stats.volumeTrend} />
             <PaceTrendChart data={stats.paceTrend} />
-            <ActivityCalendar data={stats.calendar} />
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div style={{ flex: '1 1 260px' }}>
+                    <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />
+                </div>
+                <div style={{ flex: '1 1 260px' }}>
+                    <ActivityCalendar data={stats.calendar} />
+                </div>
+            </div>
             <SportBreakdown data={stats.sportBreakdown} />
             <GearMileage data={stats.gear} />
         </div>

@@ -15,7 +15,7 @@ const StatBox: React.FC<{ value: number; label: string; highlight?: boolean }> =
 const StreakCard: React.FC<{ dayStreak: Streak; weekStreak: Streak }> = ({ dayStreak, weekStreak }) => {
     return (
         <div style={{ background: '#fff', borderRadius: '10px', padding: '16px', marginBottom: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-            <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '16px' }}>
                 <StatBox value={dayStreak.current} label="Current streak (days)" highlight />
                 <StatBox value={dayStreak.longest} label="Longest streak (days)" />
             </div>
