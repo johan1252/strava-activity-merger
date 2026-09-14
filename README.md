@@ -92,6 +92,49 @@ To set up staging credentials, create `backend/.env.staging` and `frontend/.env.
 >
 > **Recommended alternative:** Run the frontend locally (`npm start`) against the staging backend instead of deploying to `staging.streventools.com`. Strava always permits `localhost` as a redirect URI, so no callback domain swap is needed.
 
+### Webhook Setup
+
+The Strava webhook subscription must be created once per environment after the backend is deployed. Strava only allows one active subscription per app.
+
+**1. Get the verify token from Secrets Manager:**
+```bash
+# Production
+VERIFY_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id strava-webhook-verify-token \
+  --query SecretString --output text)
+
+# Staging
+VERIFY_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id strava-webhook-verify-token-staging \
+  --query SecretString --output text)
+```
+
+**2. Check if a subscription already exists:**
+```bash
+curl -G https://www.strava.com/api/v3/push_subscriptions \
+  -d client_id=<STRAVA_CLIENT_ID> \
+  -d client_secret=<STRAVA_CLIENT_SECRET>
+```
+
+**3. Create the subscription:**
+```bash
+# Production
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=<STRAVA_CLIENT_ID> \
+  -F client_secret=<STRAVA_CLIENT_SECRET> \
+  -F callback_url=https://streventools.com/api/webhook/strava \
+  -F verify_token=$VERIFY_TOKEN
+
+# Staging
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=<STRAVA_CLIENT_ID> \
+  -F client_secret=<STRAVA_CLIENT_SECRET> \
+  -F callback_url=https://staging.streventools.com/api/webhook/strava \
+  -F verify_token=$VERIFY_TOKEN
+```
+
+Strava calls `GET /api/webhook/strava` to validate the endpoint, then returns a `subscription_id` — keep this in case you need to delete the subscription later. Test events using `backend/runners/testWebhook.ts`.
+
 ## Architecture
 
 The application uses:
