@@ -1,0 +1,49 @@
+export type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
+export type BucketUnit = 'day' | 'week' | 'month';
+
+export interface VolumeTrendPoint {
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
+    distance: number; // meters
+    count: number;
+}
+
+export interface PaceTrendPoint {
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
+    avgPaceSecPerKm: number;
+}
+
+export interface HeartRateTrendPoint {
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
+    avgHeartrate: number; // average of each activity's average_heartrate, across activities in the bucket
+    maxHeartrate: number; // highest max_heartrate reached by any activity in the bucket
+}
+
+export interface StreakInfo {
+    current: number; // consecutive days up to today/yesterday with an activity
+    longest: number;
+}
+
+export interface CalendarDay {
+    date: string; // 'YYYY-MM-DD'
+    count: number;
+    distance: number; // meters
+    sportTypes: string[]; // distinct sport types active that day
+}
+
+export interface GearStat {
+    id: string;
+    name: string;
+    type: 'shoe' | 'bike';
+    distance: number; // meters, Strava's own lifetime total
+}
+
+export interface StatsResponse {
+    volumeTrend: VolumeTrendPoint[];
+    paceTrend: PaceTrendPoint[];
+    heartRateTrend: HeartRateTrendPoint[];
+    trendBucketUnit: BucketUnit; // granularity used for volumeTrend/paceTrend/heartRateTrend, so the frontend can format axis labels appropriately
+    streak: StreakInfo; // consecutive days
+    weekStreak: StreakInfo; // consecutive weeks with at least one activity
+    calendar: CalendarDay[];
+    gear: GearStat[];
+}

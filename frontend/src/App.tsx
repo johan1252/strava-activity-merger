@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import './App.css';
 import querystring from 'querystring';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
@@ -42,7 +42,16 @@ const handleAuthorizeClick = () => {
 const Home: React.FC = () => {
     const [athlete, setAthlete] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState<'activities' | 'stats'>('activities');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab: 'activities' | 'stats' = searchParams.get('tab') === 'stats' ? 'stats' : 'activities';
+    const setActiveTab = (tab: 'activities' | 'stats') => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (tab === 'activities') next.delete('tab');
+            else next.set('tab', tab);
+            return next;
+        });
+    };
 
     useEffect(() => {
         const checkToken = async () => {
@@ -139,7 +148,7 @@ const Home: React.FC = () => {
                                     <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                                 </div>
                             </div>
-                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats />}
+                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats athlete={athlete} />}
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
