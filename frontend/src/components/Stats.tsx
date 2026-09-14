@@ -11,6 +11,7 @@ interface StatsResponse {
     volumeTrend: { weekStart: string; distance: number; count: number }[];
     paceTrend: { weekStart: string; avgPaceSecPerKm: number }[];
     streak: { current: number; longest: number };
+    weekStreak: { current: number; longest: number };
     sportBreakdown: { sportType: string; distance: number; count: number }[];
     calendar: { date: string; count: number; distance: number }[];
     gear: { id: string; name: string; type: 'shoe' | 'bike'; distance: number }[];
@@ -53,7 +54,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
-            <StreakCard current={stats.streak.current} longest={stats.streak.longest} />
+            <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />
             <VolumeTrendChart data={stats.volumeTrend} />
             <PaceTrendChart data={stats.paceTrend} />
             <ActivityCalendar data={stats.calendar} />

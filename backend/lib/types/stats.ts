@@ -36,7 +36,8 @@ export interface GearStat {
 export interface StatsResponse {
     volumeTrend: VolumeTrendPoint[];
     paceTrend: PaceTrendPoint[];
-    streak: StreakInfo;
+    streak: StreakInfo; // consecutive days
+    weekStreak: StreakInfo; // consecutive weeks with at least one activity
     sportBreakdown: SportBreakdownEntry[];
     calendar: CalendarDay[];
     gear: GearStat[];

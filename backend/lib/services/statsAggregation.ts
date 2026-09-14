@@ -112,6 +112,38 @@ export function computeStreak(activities: CachedActivity[]): StreakInfo {
     return { current, longest };
 }
 
+export function computeWeekStreak(activities: CachedActivity[]): StreakInfo {
+    const activeWeeks = new Set(activities.map(a => mondayOf(localDate(a))));
+    if (activeWeeks.size === 0) return { current: 0, longest: 0 };
+
+    const sortedWeeks = Array.from(activeWeeks).sort();
+
+    let longest = 1;
+    let run = 1;
+    for (let i = 1; i < sortedWeeks.length; i++) {
+        const diffDays = Math.round(
+            (new Date(`${sortedWeeks[i]}T00:00:00Z`).getTime() -
+                new Date(`${sortedWeeks[i - 1]}T00:00:00Z`).getTime()) / MS_PER_DAY,
+        );
+        run = diffDays === 7 ? run + 1 : 1;
+        longest = Math.max(longest, run);
+    }
+
+    // Current streak — if the in-progress week has no activity yet, anchor to last
+    // week instead so the streak stays "alive" until the current week actually ends.
+    let cursor = mondayOf(new Date().toISOString().slice(0, 10));
+    if (!activeWeeks.has(cursor)) {
+        cursor = addDays(cursor, -7);
+    }
+    let current = 0;
+    while (activeWeeks.has(cursor)) {
+        current += 1;
+        cursor = addDays(cursor, -7);
+    }
+
+    return { current, longest };
+}
+
 export function computeSportBreakdown(activities: CachedActivity[]): SportBreakdownEntry[] {
     const byType = new Map<string, { distance: number; count: number }>();
     for (const activity of activities) {

@@ -6,6 +6,7 @@ import {
     computeVolumeTrend,
     computePaceTrend,
     computeStreak,
+    computeWeekStreak,
     computeSportBreakdown,
     computeCalendarDays,
 } from '../services/statsAggregation';
@@ -39,6 +40,7 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
             volumeTrend: computeVolumeTrend(activities),
             paceTrend: computePaceTrend(activities),
             streak: computeStreak(activities),
+            weekStreak: computeWeekStreak(activities),
             sportBreakdown: computeSportBreakdown(activities),
             calendar: computeCalendarDays(activities),
             gear,
