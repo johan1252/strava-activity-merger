@@ -88,9 +88,7 @@ Staging runs at [staging.streventools.com](https://staging.streventools.com) and
 
 To set up staging credentials, create `backend/.env.staging` and `frontend/.env.staging` with the same Strava credentials as production but with `STRAVA_REDIRECT_URI=https://staging.streventools.com/strava-callback` and `REACT_APP_API_BASE_URL=https://staging.streventools.com/api`.
 
-> **Callback domain limitation:** Strava only permits one authorization callback domain per API application. To use OAuth on staging, temporarily update the callback domain to `staging.streventools.com` in the [Strava API settings](https://www.strava.com/settings/api), then switch it back to `streventools.com` when done.
->
-> **Recommended alternative:** Run the frontend locally (`npm start`) against the staging backend instead of deploying to `staging.streventools.com`. Strava always permits `localhost` as a redirect URI, so no callback domain swap is needed.
+> **Note:** Strava validates the root domain of the callback URL, so `staging.streventools.com` works without any changes to the Strava app settings as long as `streventools.com` is the configured callback domain. Running the frontend locally (`npm start`) against the staging backend also works — Strava always permits `localhost`.
 
 ### Webhook Setup
 
@@ -152,7 +150,7 @@ This application went through Strava's API approval process in September 2025. M
 **Important constraints (as of June 2026):**
 - Strava allows only one API application registration per user account.
 - Users of this application must have an active paid Strava subscription — the API returns `Application Status: Inactive` for apps whose owner does not have a paid subscription.
-- Only one authorization callback domain is permitted per application (see staging note above).
+- One authorization callback domain is configured per application, but Strava validates only the root domain — subdomains like `staging.streventools.com` work automatically.
 
 ## Issues & Support
 
