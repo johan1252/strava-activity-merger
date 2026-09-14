@@ -8,6 +8,7 @@ import {
     computeStreak,
     computeWeekStreak,
     computeCalendarDays,
+    getBucketUnitForTimeframe,
 } from '../services/statsAggregation';
 import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
 
@@ -44,6 +45,7 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
         const response: StatsResponse = {
             volumeTrend: computeVolumeTrend(activities, timeframe),
             paceTrend: computePaceTrend(activities, timeframe),
+            trendBucketUnit: getBucketUnitForTimeframe(timeframe),
             streak: computeStreak(activities),
             weekStreak: computeWeekStreak(activities),
             calendar: computeCalendarDays(activities),

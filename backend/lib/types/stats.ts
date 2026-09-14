@@ -1,13 +1,14 @@
 export type Timeframe = '7d' | '3m' | '6m' | '1y';
+export type BucketUnit = 'day' | 'week' | 'month';
 
 export interface VolumeTrendPoint {
-    periodStart: string; // ISO date — a single day (7d timeframe) or the Monday of a week (others)
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
     distance: number; // meters
     count: number;
 }
 
 export interface PaceTrendPoint {
-    periodStart: string; // ISO date — a single day (7d timeframe) or the Monday of a week (others)
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
     avgPaceSecPerKm: number;
 }
 
@@ -32,6 +33,7 @@ export interface GearStat {
 export interface StatsResponse {
     volumeTrend: VolumeTrendPoint[];
     paceTrend: PaceTrendPoint[];
+    trendBucketUnit: BucketUnit; // granularity used for volumeTrend/paceTrend, so the frontend can format axis labels appropriately
     streak: StreakInfo; // consecutive days
     weekStreak: StreakInfo; // consecutive weeks with at least one activity
     calendar: CalendarDay[];

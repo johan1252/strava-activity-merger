@@ -5,18 +5,24 @@ import type {
     StreakInfo,
     CalendarDay,
     Timeframe,
+    BucketUnit,
 } from '../types/stats';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// A single weekly bucket wouldn't show a trend over just 7 days, so the 7-day
-// timeframe buckets by day instead; everything longer buckets by week.
-const TIMEFRAME_CONFIG: Record<Timeframe, { days: number; bucketUnit: 'day' | 'week' }> = {
-    '7d': { days: 7, bucketUnit: 'day' },
-    '3m': { days: 91, bucketUnit: 'week' }, // 13 weeks
-    '6m': { days: 182, bucketUnit: 'week' }, // 26 weeks
-    '1y': { days: 364, bucketUnit: 'week' }, // 52 weeks
+// Bucket granularity scales with the timeframe so each chart shows a sensible
+// number of data points: daily for a week, weekly for 3-6 months, monthly for
+// a year (52 weekly bars would be too dense to read).
+const TIMEFRAME_CONFIG: Record<Timeframe, { bucketCount: number; bucketUnit: BucketUnit }> = {
+    '7d': { bucketCount: 7, bucketUnit: 'day' },
+    '3m': { bucketCount: 13, bucketUnit: 'week' },
+    '6m': { bucketCount: 26, bucketUnit: 'week' },
+    '1y': { bucketCount: 12, bucketUnit: 'month' },
 };
+
+export function getBucketUnitForTimeframe(timeframe: Timeframe): BucketUnit {
+    return TIMEFRAME_CONFIG[timeframe].bucketUnit;
+}
 
 // Strava's start_date_local carries a trailing 'Z' despite representing local time
 // (a known quirk), so the first 10 characters are the athlete's local calendar date —
@@ -40,23 +46,40 @@ function addDays(dateStr: string, days: number): string {
     return d.toISOString().slice(0, 10);
 }
 
-function bucketKeyFor(dateStr: string, unit: 'day' | 'week'): string {
-    return unit === 'week' ? mondayOf(dateStr) : dateStr;
+function firstOfMonth(dateStr: string): string {
+    return `${dateStr.slice(0, 7)}-01`;
+}
+
+function addMonths(dateStr: string, months: number): string {
+    const d = new Date(`${dateStr}T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() + months);
+    return d.toISOString().slice(0, 10);
+}
+
+function bucketKeyFor(dateStr: string, unit: BucketUnit): string {
+    if (unit === 'week') return mondayOf(dateStr);
+    if (unit === 'month') return firstOfMonth(dateStr);
+    return dateStr;
 }
 
 // Builds the ordered list of bucket keys (oldest to newest) covering a timeframe,
 // so callers can pre-seed empty buckets and get a continuous, gap-free trend line.
-function buildBucketKeys(timeframe: Timeframe): { keys: string[]; unit: 'day' | 'week' } {
-    const { days, bucketUnit } = TIMEFRAME_CONFIG[timeframe];
+function buildBucketKeys(timeframe: Timeframe): { keys: string[]; unit: BucketUnit } {
+    const { bucketCount, bucketUnit } = TIMEFRAME_CONFIG[timeframe];
     const todayStr = new Date().toISOString().slice(0, 10);
     const currentBucket = bucketKeyFor(todayStr, bucketUnit);
-    const step = bucketUnit === 'week' ? 7 : 1;
-    const bucketCount = Math.round(days / step);
-    const oldestBucket = addDays(currentBucket, -step * (bucketCount - 1));
 
     const keys: string[] = [];
-    for (let i = 0; i < bucketCount; i++) {
-        keys.push(addDays(oldestBucket, i * step));
+    if (bucketUnit === 'month') {
+        for (let i = 0; i < bucketCount; i++) {
+            keys.push(addMonths(currentBucket, -(bucketCount - 1 - i)));
+        }
+    } else {
+        const step = bucketUnit === 'week' ? 7 : 1;
+        const oldestBucket = addDays(currentBucket, -step * (bucketCount - 1));
+        for (let i = 0; i < bucketCount; i++) {
+            keys.push(addDays(oldestBucket, i * step));
+        }
     }
     return { keys, unit: bucketUnit };
 }
