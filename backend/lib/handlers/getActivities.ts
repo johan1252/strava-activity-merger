@@ -10,15 +10,12 @@ import {
     updateLastSyncCompletedAt,
     queryActivities,
 } from '../services/activityCache';
+import { resolveAthleteId } from '../utils/resolveAthlete';
 import type { ActivityFilters } from '../types/activity';
 
 const logger = new Logger({ serviceName: 'getActivities' });
 const lambdaClient = new LambdaClient({});
 const PAGE_SIZE = 25;
-
-// Cache athlete IDs per access token across warm Lambda invocations to avoid
-// calling strava.athlete.get() on every request.
-const athleteIdCache = new Map<string, number>();
 
 const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');
@@ -40,14 +37,7 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         };
 
         const accessToken = event.headers.Authorization.split(' ')[1];
-        await strava.client(accessToken);
-
-        let athleteId = athleteIdCache.get(accessToken);
-        if (!athleteId) {
-            const athlete = await (strava.athlete.get({}) as unknown as Promise<{ id: number }>);
-            athleteId = athlete.id;
-            athleteIdCache.set(accessToken, athleteId);
-        }
+        const athleteId = await resolveAthleteId(accessToken);
         logger.appendKeys({ athleteId });
 
         const syncMeta = await getSyncMeta(athleteId);

@@ -252,6 +252,20 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         activityCacheTable.grantReadWriteData(getActivitiesLambda);
         syncActivitiesLambda.grantInvoke(getActivitiesLambda);
 
+        // Aggregated training stats (volume/pace trends, streak, sport breakdown,
+        // calendar, gear mileage) computed from the cached activities.
+        const getStatsLambda = new lambdaNodeJs.NodejsFunction(this, 'GetStatsHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 1024,
+            entry: './lib/handlers/getStats.ts',
+            timeout: cdk.Duration.seconds(30),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+            },
+        });
+
+        activityCacheTable.grantReadData(getStatsLambda);
+
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 1024,
@@ -350,6 +364,10 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /activities/rounddown endpoint
         const roundDownResource = activitiesResource.addResource('rounddown');
         roundDownResource.addMethod('POST', new apigateway.LambdaIntegration(roundDownLambda));
+
+        // Create the /stats endpoint
+        const statsResource = apiResource.addResource('stats');
+        statsResource.addMethod('GET', new apigateway.LambdaIntegration(getStatsLambda));
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {
