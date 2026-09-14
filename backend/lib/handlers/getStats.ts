@@ -10,9 +10,10 @@ import {
     computeSportBreakdown,
     computeCalendarDays,
 } from '../services/statsAggregation';
-import type { StatsResponse, GearStat } from '../types/stats';
+import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
 
 const logger = new Logger({ serviceName: 'getStats' });
+const VALID_TIMEFRAMES: Timeframe[] = ['7d', '3m', '6m', '1y'];
 
 const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');
@@ -21,10 +22,15 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
             throw new Error('No Authorization information provided');
         }
 
+        const requestedTimeframe = event.queryStringParameters?.timeframe;
+        const timeframe: Timeframe = VALID_TIMEFRAMES.includes(requestedTimeframe as Timeframe)
+            ? (requestedTimeframe as Timeframe)
+            : '6m';
+
         const accessToken = event.headers.Authorization.split(' ')[1];
         const athlete = await resolveAthlete(accessToken);
         const athleteId = athlete.id;
-        logger.appendKeys({ athleteId });
+        logger.appendKeys({ athleteId, timeframe });
 
         // Relies on the activity cache already being populated/kept warm by the
         // Activities tab (the default tab) — this endpoint does not trigger a sync
@@ -37,8 +43,8 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
         ];
 
         const response: StatsResponse = {
-            volumeTrend: computeVolumeTrend(activities),
-            paceTrend: computePaceTrend(activities),
+            volumeTrend: computeVolumeTrend(activities, timeframe),
+            paceTrend: computePaceTrend(activities, timeframe),
             streak: computeStreak(activities),
             weekStreak: computeWeekStreak(activities),
             sportBreakdown: computeSportBreakdown(activities),

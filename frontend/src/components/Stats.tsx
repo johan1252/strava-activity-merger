@@ -7,9 +7,18 @@ import SportBreakdown from './stats/SportBreakdown';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
 
+type Timeframe = '7d' | '3m' | '6m' | '1y';
+
+const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
+    { value: '7d', label: '7 Days' },
+    { value: '3m', label: '3 Months' },
+    { value: '6m', label: '6 Months' },
+    { value: '1y', label: '1 Year' },
+];
+
 interface StatsResponse {
-    volumeTrend: { weekStart: string; distance: number; count: number }[];
-    paceTrend: { weekStart: string; avgPaceSecPerKm: number }[];
+    volumeTrend: { periodStart: string; distance: number; count: number }[];
+    paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
     streak: { current: number; longest: number };
     weekStreak: { current: number; longest: number };
     sportBreakdown: { sportType: string; distance: number; count: number }[];
@@ -22,6 +31,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     const [stats, setStats] = useState<StatsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [timeframe, setTimeframe] = useState<Timeframe>('6m');
 
     useEffect(() => {
         let cancelled = false;
@@ -29,7 +39,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
             setIsLoading(true);
             setError(null);
             try {
-                const data = await fetchWithAuth('/stats');
+                const data = await fetchWithAuth(`/stats?timeframe=${timeframe}`);
                 if (!cancelled) setStats(data);
             } catch (err) {
                 console.error('Error fetching stats:', err);
@@ -40,7 +50,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
         };
         load();
         return () => { cancelled = true; };
-    }, []);
+    }, [timeframe]);
 
     if (isLoading) {
         return <div style={{ marginTop: '40px', color: '#888', fontSize: '1.1em' }}>Loading stats...</div>;
@@ -55,6 +65,26 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
             <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                {TIMEFRAME_OPTIONS.map(opt => (
+                    <button
+                        key={opt.value}
+                        onClick={() => setTimeframe(opt.value)}
+                        style={{
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            border: timeframe === opt.value ? '2px solid #FC4C02' : '1px solid #ddd',
+                            background: timeframe === opt.value ? '#FC4C02' : '#fff',
+                            color: timeframe === opt.value ? '#fff' : '#333',
+                            fontWeight: 600,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
             <VolumeTrendChart data={stats.volumeTrend} />
             <PaceTrendChart data={stats.paceTrend} />
             <ActivityCalendar data={stats.calendar} />

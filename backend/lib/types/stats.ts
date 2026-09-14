@@ -1,11 +1,13 @@
+export type Timeframe = '7d' | '3m' | '6m' | '1y';
+
 export interface VolumeTrendPoint {
-    weekStart: string; // ISO date (Monday of that week)
+    periodStart: string; // ISO date — a single day (7d timeframe) or the Monday of a week (others)
     distance: number; // meters
     count: number;
 }
 
 export interface PaceTrendPoint {
-    weekStart: string; // ISO date (Monday of that week)
+    periodStart: string; // ISO date — a single day (7d timeframe) or the Monday of a week (others)
     avgPaceSecPerKm: number;
 }
 

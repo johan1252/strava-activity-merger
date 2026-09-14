@@ -5,10 +5,19 @@ import type {
     StreakInfo,
     SportBreakdownEntry,
     CalendarDay,
+    Timeframe,
 } from '../types/stats';
 
-const TREND_WEEKS = 26;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// A single weekly bucket wouldn't show a trend over just 7 days, so the 7-day
+// timeframe buckets by day instead; everything longer buckets by week.
+const TIMEFRAME_CONFIG: Record<Timeframe, { days: number; bucketUnit: 'day' | 'week' }> = {
+    '7d': { days: 7, bucketUnit: 'day' },
+    '3m': { days: 91, bucketUnit: 'week' }, // 13 weeks
+    '6m': { days: 182, bucketUnit: 'week' }, // 26 weeks
+    '1y': { days: 364, bucketUnit: 'week' }, // 52 weeks
+};
 
 // Strava's start_date_local carries a trailing 'Z' despite representing local time
 // (a known quirk), so the first 10 characters are the athlete's local calendar date —
@@ -32,52 +41,63 @@ function addDays(dateStr: string, days: number): string {
     return d.toISOString().slice(0, 10);
 }
 
-export function computeVolumeTrend(activities: CachedActivity[]): VolumeTrendPoint[] {
-    const currentWeekStart = mondayOf(new Date().toISOString().slice(0, 10));
-    const oldestWeekStart = addDays(currentWeekStart, -7 * (TREND_WEEKS - 1));
+function bucketKeyFor(dateStr: string, unit: 'day' | 'week'): string {
+    return unit === 'week' ? mondayOf(dateStr) : dateStr;
+}
 
-    const buckets = new Map<string, { distance: number; count: number }>();
-    for (let i = 0; i < TREND_WEEKS; i++) {
-        buckets.set(addDays(oldestWeekStart, i * 7), { distance: 0, count: 0 });
+// Builds the ordered list of bucket keys (oldest to newest) covering a timeframe,
+// so callers can pre-seed empty buckets and get a continuous, gap-free trend line.
+function buildBucketKeys(timeframe: Timeframe): { keys: string[]; unit: 'day' | 'week' } {
+    const { days, bucketUnit } = TIMEFRAME_CONFIG[timeframe];
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const currentBucket = bucketKeyFor(todayStr, bucketUnit);
+    const step = bucketUnit === 'week' ? 7 : 1;
+    const bucketCount = Math.round(days / step);
+    const oldestBucket = addDays(currentBucket, -step * (bucketCount - 1));
+
+    const keys: string[] = [];
+    for (let i = 0; i < bucketCount; i++) {
+        keys.push(addDays(oldestBucket, i * step));
     }
+    return { keys, unit: bucketUnit };
+}
+
+export function computeVolumeTrend(activities: CachedActivity[], timeframe: Timeframe = '6m'): VolumeTrendPoint[] {
+    const { keys, unit } = buildBucketKeys(timeframe);
+    const buckets = new Map<string, { distance: number; count: number }>();
+    for (const key of keys) buckets.set(key, { distance: 0, count: 0 });
 
     for (const activity of activities) {
-        const week = mondayOf(localDate(activity));
-        const bucket = buckets.get(week);
+        const bucket = buckets.get(bucketKeyFor(localDate(activity), unit));
         if (!bucket) continue; // outside the trend window
         bucket.distance += activity.distance ?? 0;
         bucket.count += 1;
     }
 
-    return Array.from(buckets.entries()).map(([weekStart, { distance, count }]) => ({
-        weekStart,
-        distance,
-        count,
-    }));
+    return keys.map(periodStart => ({ periodStart, ...buckets.get(periodStart)! }));
 }
 
-export function computePaceTrend(activities: CachedActivity[]): PaceTrendPoint[] {
-    const currentWeekStart = mondayOf(new Date().toISOString().slice(0, 10));
-    const oldestWeekStart = addDays(currentWeekStart, -7 * (TREND_WEEKS - 1));
-
+export function computePaceTrend(activities: CachedActivity[], timeframe: Timeframe = '6m'): PaceTrendPoint[] {
+    const { keys, unit } = buildBucketKeys(timeframe);
+    const keySet = new Set(keys);
     const buckets = new Map<string, { totalPace: number; count: number }>();
 
     for (const activity of activities) {
         if (activity.sport_type !== 'Run' || activity.pace_per_km === undefined) continue;
-        const week = mondayOf(localDate(activity));
-        if (week < oldestWeekStart || week > currentWeekStart) continue;
-        const bucket = buckets.get(week) ?? { totalPace: 0, count: 0 };
+        const key = bucketKeyFor(localDate(activity), unit);
+        if (!keySet.has(key)) continue;
+        const bucket = buckets.get(key) ?? { totalPace: 0, count: 0 };
         bucket.totalPace += activity.pace_per_km;
         bucket.count += 1;
-        buckets.set(week, bucket);
+        buckets.set(key, bucket);
     }
 
     return Array.from(buckets.entries())
-        .map(([weekStart, { totalPace, count }]) => ({
-            weekStart,
+        .map(([periodStart, { totalPace, count }]) => ({
+            periodStart,
             avgPaceSecPerKm: totalPace / count,
         }))
-        .sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+        .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
 }
 
 export function computeStreak(activities: CachedActivity[]): StreakInfo {
