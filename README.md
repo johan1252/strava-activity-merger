@@ -135,11 +135,6 @@ curl -X POST https://www.strava.com/api/v3/push_subscriptions \
 
 Strava calls `GET /api/webhook/strava` to validate the endpoint, then returns a `subscription_id` — keep this in case you need to delete the subscription later. Test events using `backend/runners/testWebhook.ts`.
 
-**Active subscriptions:**
-| Environment | Subscription ID |
-|-------------|----------------|
-| Production | `372434` |
-
 ## Architecture
 
 The application uses:
