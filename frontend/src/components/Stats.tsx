@@ -17,6 +17,28 @@ const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
 
 type BucketUnit = 'day' | 'week' | 'month';
 
+const Spinner: React.FC = () => (
+    <>
+        <div
+            style={{
+                width: '14px',
+                height: '14px',
+                border: '2px solid rgba(0, 0, 0, 0.1)',
+                borderTop: '2px solid #FC4C02',
+                borderRadius: '50%',
+                animation: 'statsSpin 0.8s linear infinite',
+                display: 'inline-block',
+            }}
+        />
+        <style>{`
+            @keyframes statsSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `}</style>
+    </>
+);
+
 interface StatsResponse {
     volumeTrend: { periodStart: string; distance: number; count: number }[];
     paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
@@ -86,7 +108,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                         {opt.label}
                     </button>
                 ))}
-                {isLoading && <span style={{ color: '#888', fontSize: '0.85rem' }}>Updating...</span>}
+                {isLoading && <Spinner />}
             </div>
             <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
             <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
