@@ -31,7 +31,7 @@ interface WebhookEvent {
     updates?: {
         title?: string;
         type?: string;
-        private?: boolean;
+        visibility?: string;
     };
 }
 

@@ -239,7 +239,7 @@ export async function getActivityItem(actPK: string, actSK: string): Promise<Rec
 
 export async function updateActivityItem(
     existing: Record<string, unknown>,
-    updates: { title?: string; type?: string; private?: boolean },
+    updates: { title?: string; type?: string; visibility?: string },
 ): Promise<void> {
     const updated = { ...existing };
 
@@ -255,8 +255,11 @@ export async function updateActivityItem(
         updated.gsi3pk = sportPK;
     }
 
-    if (updates.private !== undefined) {
-        updated.visibility = updates.private ? 'only_me' : 'everyone';
+    // Strava sends the exact visibility enum ('everyone' | 'followers_only' | 'only_me')
+    // directly in the webhook payload — use it as-is rather than inferring from `private`,
+    // which is a lossy two-state boolean (and arrives as a string, not a JSON boolean).
+    if (updates.visibility !== undefined) {
+        updated.visibility = updates.visibility;
     }
 
     await client.send(new PutCommand({ TableName: TABLE_NAME, Item: updated }));
