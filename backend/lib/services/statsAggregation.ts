@@ -3,7 +3,6 @@ import type {
     VolumeTrendPoint,
     PaceTrendPoint,
     StreakInfo,
-    SportBreakdownEntry,
     CalendarDay,
     Timeframe,
 } from '../types/stats';
@@ -162,19 +161,6 @@ export function computeWeekStreak(activities: CachedActivity[]): StreakInfo {
     }
 
     return { current, longest };
-}
-
-export function computeSportBreakdown(activities: CachedActivity[]): SportBreakdownEntry[] {
-    const byType = new Map<string, { distance: number; count: number }>();
-    for (const activity of activities) {
-        const entry = byType.get(activity.sport_type) ?? { distance: 0, count: 0 };
-        entry.distance += activity.distance ?? 0;
-        entry.count += 1;
-        byType.set(activity.sport_type, entry);
-    }
-    return Array.from(byType.entries())
-        .map(([sportType, { distance, count }]) => ({ sportType, distance, count }))
-        .sort((a, b) => b.distance - a.distance);
 }
 
 export function computeCalendarDays(activities: CachedActivity[]): CalendarDay[] {

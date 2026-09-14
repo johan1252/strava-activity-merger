@@ -3,7 +3,6 @@ import { fetchWithAuth } from '../utils/api';
 import VolumeTrendChart from './stats/VolumeTrendChart';
 import PaceTrendChart from './stats/PaceTrendChart';
 import StreakCard from './stats/StreakCard';
-import SportBreakdown from './stats/SportBreakdown';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
 
@@ -21,7 +20,6 @@ interface StatsResponse {
     paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
     streak: { current: number; longest: number };
     weekStreak: { current: number; longest: number };
-    sportBreakdown: { sportType: string; distance: number; count: number }[];
     calendar: { date: string; count: number; distance: number }[];
     gear: { id: string; name: string; type: 'shoe' | 'bike'; distance: number }[];
 }
@@ -94,7 +92,6 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                     <ActivityCalendar data={stats.calendar} />
                 </div>
             </div>
-            <SportBreakdown data={stats.sportBreakdown} />
             <GearMileage data={stats.gear} />
         </div>
     );

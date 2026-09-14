@@ -7,7 +7,6 @@ import {
     computePaceTrend,
     computeStreak,
     computeWeekStreak,
-    computeSportBreakdown,
     computeCalendarDays,
 } from '../services/statsAggregation';
 import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
@@ -47,7 +46,6 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
             paceTrend: computePaceTrend(activities, timeframe),
             streak: computeStreak(activities),
             weekStreak: computeWeekStreak(activities),
-            sportBreakdown: computeSportBreakdown(activities),
             calendar: computeCalendarDays(activities),
             gear,
         };

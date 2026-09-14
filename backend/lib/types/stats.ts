@@ -16,12 +16,6 @@ export interface StreakInfo {
     longest: number;
 }
 
-export interface SportBreakdownEntry {
-    sportType: string;
-    distance: number; // meters
-    count: number;
-}
-
 export interface CalendarDay {
     date: string; // 'YYYY-MM-DD'
     count: number;
@@ -40,7 +34,6 @@ export interface StatsResponse {
     paceTrend: PaceTrendPoint[];
     streak: StreakInfo; // consecutive days
     weekStreak: StreakInfo; // consecutive weeks with at least one activity
-    sportBreakdown: SportBreakdownEntry[];
     calendar: CalendarDay[];
     gear: GearStat[];
 }
