@@ -139,7 +139,7 @@ const Home: React.FC = () => {
                                     <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                                 </div>
                             </div>
-                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats />}
+                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats athlete={athlete} />}
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
