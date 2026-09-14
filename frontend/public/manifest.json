@@ -1,0 +1,12 @@
+{
+  "name": "Streven",
+  "short_name": "Streven",
+  "description": "Tools for Strava athletes to combine activities and round distances",
+  "icons": [
+    { "src": "logo.png", "sizes": "1024x1024", "type": "image/png" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FC4C02"
+}
