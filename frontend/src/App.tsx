@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import querystring from 'querystring';
-import { fetchWithAuth } from './utils/api';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 import MobileDetect from 'mobile-detect';
@@ -34,30 +33,14 @@ const handleAuthorizeClick = () => {
     const clientId = STRAVA_CLIENT_ID;
     // Use either localhost or your production URL (https://streventools.com/strava-callback)   
     // Make sure to set the redirect URI (authorization callback domain) in your Strava app settings to match this URL
-    const redirectURI = window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/strava-callback'
-        : 'https://streventools.com/strava-callback';
+    const redirectURI = `${window.location.origin}/strava-callback`;
     const url = getStraveAuthorizeUrl(clientId, redirectURI);
     window.location.href = url;
 };
 
 const Home: React.FC = () => {
     const [athlete, setAthlete] = useState<any>(null);
-    const [activities, setActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-
-    const reloadActivities = async () => {
-        try {
-            const { activities: newActivities } = await fetchWithAuth('/activities');
-            setActivities(newActivities);
-        } catch (error: any) {
-            console.error('Error fetching activities:', error);
-            // If token error, might want to logout user
-            if (error.message === 'No valid token available') {
-                handleLogout();
-            }
-        }
-    };
 
     useEffect(() => {
         const checkToken = async () => {
@@ -82,17 +65,10 @@ const Home: React.FC = () => {
         checkToken();
     }, []);
 
-    useEffect(() => {
-        if (athlete) {
-            reloadActivities();
-        }
-    }, [athlete]);
-
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('athlete');
         setAthlete(null);
-        setActivities([]);
         window.location.reload(); // Reload the page to reset the state
     };
 
@@ -130,11 +106,7 @@ const Home: React.FC = () => {
                                     <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                                 </div>
                             </div>
-                            {activities.length > 0 ? (
-                                <ActivityList activities={activities} athlete={athlete} setActivities={setActivities} reloadActivities={reloadActivities} />
-                            ) : (
-                                <StravaLoading message="Loading your activities..." />
-                            )}
+                            <ActivityList athlete={athlete} />
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
