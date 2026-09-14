@@ -1,5 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { formatTrendLabel, BucketUnit } from '../../utils/formatTrendLabel';
 
 interface VolumeTrendPoint {
     periodStart: string;
@@ -7,9 +8,9 @@ interface VolumeTrendPoint {
     count: number;
 }
 
-const VolumeTrendChart: React.FC<{ data: VolumeTrendPoint[] }> = ({ data }) => {
+const VolumeTrendChart: React.FC<{ data: VolumeTrendPoint[]; bucketUnit: BucketUnit }> = ({ data, bucketUnit }) => {
     const chartData = data.map(d => ({
-        period: new Date(d.periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        period: formatTrendLabel(d.periodStart, bucketUnit),
         km: Math.round((d.distance / 1000) * 10) / 10,
     }));
 

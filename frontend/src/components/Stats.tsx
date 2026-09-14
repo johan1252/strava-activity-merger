@@ -15,9 +15,12 @@ const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
     { value: '1y', label: '1 Year' },
 ];
 
+type BucketUnit = 'day' | 'week' | 'month';
+
 interface StatsResponse {
     volumeTrend: { periodStart: string; distance: number; count: number }[];
     paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
+    trendBucketUnit: BucketUnit;
     streak: { current: number; longest: number };
     weekStreak: { current: number; longest: number };
     calendar: { date: string; count: number; distance: number }[];
@@ -50,11 +53,13 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
         return () => { cancelled = true; };
     }, [timeframe]);
 
-    if (isLoading) {
+    // Only show the full-page loading state before we have any data at all —
+    // switching timeframe re-fetches in the background without blanking the charts.
+    if (isLoading && !stats) {
         return <div style={{ marginTop: '40px', color: '#888', fontSize: '1.1em' }}>Loading stats...</div>;
     }
 
-    if (error) {
+    if (error && !stats) {
         return <div style={{ marginTop: '40px', color: '#d32f2f', fontSize: '1.1em' }}>{error}</div>;
     }
 
@@ -62,7 +67,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 {TIMEFRAME_OPTIONS.map(opt => (
                     <button
                         key={opt.value}
@@ -81,9 +86,10 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                         {opt.label}
                     </button>
                 ))}
+                {isLoading && <span style={{ color: '#888', fontSize: '0.85rem' }}>Updating...</span>}
             </div>
-            <VolumeTrendChart data={stats.volumeTrend} />
-            <PaceTrendChart data={stats.paceTrend} />
+            <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
+            <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div style={{ flex: '1 1 260px' }}>
                     <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />

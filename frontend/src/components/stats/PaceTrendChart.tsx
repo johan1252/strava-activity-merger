@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { formatTrendLabel, BucketUnit } from '../../utils/formatTrendLabel';
 
 interface PaceTrendPoint {
     periodStart: string;
@@ -12,7 +13,7 @@ function formatPace(secPerKm: number): string {
     return `${min}:${sec.toString().padStart(2, '0')}`;
 }
 
-const PaceTrendChart: React.FC<{ data: PaceTrendPoint[] }> = ({ data }) => {
+const PaceTrendChart: React.FC<{ data: PaceTrendPoint[]; bucketUnit: BucketUnit }> = ({ data, bucketUnit }) => {
     if (data.length === 0) {
         return (
             <div style={{ background: '#fff', borderRadius: '10px', padding: '16px', marginBottom: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', color: '#888' }}>
@@ -23,7 +24,7 @@ const PaceTrendChart: React.FC<{ data: PaceTrendPoint[] }> = ({ data }) => {
     }
 
     const chartData = data.map(d => ({
-        period: new Date(d.periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        period: formatTrendLabel(d.periodStart, bucketUnit),
         pace: Math.round(d.avgPaceSecPerKm),
     }));
 
