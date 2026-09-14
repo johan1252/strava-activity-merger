@@ -9,8 +9,8 @@ npm run build       # compile TypeScript
 npm run watch       # watch mode
 npm test            # jest unit tests
 npx cdk diff        # preview infra changes
-npx cdk deploy      # deploy production stack
-npx cdk deploy -c stage=staging   # deploy staging stack
+npm run deploy          # deploy production stack
+npm run deploy:staging  # deploy staging stack
 npx cdk synth       # emit CloudFormation template
 ```
 

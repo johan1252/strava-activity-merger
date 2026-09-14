@@ -59,10 +59,10 @@ npm ci
 npx cdk diff
 
 # Deploy production stack
-npx cdk deploy
+npm run deploy
 
 # Deploy staging stack
-npx cdk deploy -c stage=staging
+npm run deploy:staging
 ```
 
 ### Frontend Deployment

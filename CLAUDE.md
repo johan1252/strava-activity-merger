@@ -10,18 +10,20 @@ Do **not** include `Co-Authored-By` lines in commit messages.
 
 ### Frontend (`/frontend`)
 ```bash
-npm start          # dev server at localhost:3000
-npm test           # run tests (watch mode)
-npm run build      # production build
-npm run deploy     # build + cdk deploy + CloudFront invalidation
+npm start              # dev server at localhost:3000
+npm test               # run tests (watch mode)
+npm run build          # production build
+npm run deploy         # build + cdk deploy + CloudFront invalidation (production)
+npm run deploy:staging # build + cdk deploy + CloudFront invalidation (staging)
 ```
 
 ### Backend (`/backend`)
 ```bash
-npm run build      # tsc compile
-npm test           # jest
-npx cdk diff       # preview infra changes before deploying
-npx cdk deploy     # deploy stack to AWS
+npm run build          # tsc compile
+npm test               # jest
+npx cdk diff           # preview infra changes before deploying
+npm run deploy         # build + deploy stack to AWS (production)
+npm run deploy:staging # build + deploy stack to AWS (staging)
 ```
 
 ### Local backend testing (runners)
