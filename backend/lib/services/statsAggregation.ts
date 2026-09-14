@@ -19,6 +19,7 @@ const TIMEFRAME_CONFIG: Record<Timeframe, { bucketCount: number; bucketUnit: Buc
     '3m': { bucketCount: 13, bucketUnit: 'week' },
     '6m': { bucketCount: 26, bucketUnit: 'week' },
     '1y': { bucketCount: 12, bucketUnit: 'month' },
+    '5y': { bucketCount: 60, bucketUnit: 'month' },
 };
 
 export function getBucketUnitForTimeframe(timeframe: Timeframe): BucketUnit {

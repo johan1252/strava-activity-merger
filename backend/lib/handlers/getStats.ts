@@ -14,7 +14,7 @@ import {
 import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
 
 const logger = new Logger({ serviceName: 'getStats' });
-const VALID_TIMEFRAMES: Timeframe[] = ['7d', '3m', '6m', '1y'];
+const VALID_TIMEFRAMES: Timeframe[] = ['7d', '3m', '6m', '1y', '5y'];
 
 const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');

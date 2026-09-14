@@ -7,13 +7,14 @@ import StreakCard from './stats/StreakCard';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
 
-type Timeframe = '7d' | '3m' | '6m' | '1y';
+type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
 
 const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
     { value: '7d', label: '7 Days' },
     { value: '3m', label: '3 Months' },
     { value: '6m', label: '6 Months' },
     { value: '1y', label: '1 Year' },
+    { value: '5y', label: '5 Years' },
 ];
 
 type BucketUnit = 'day' | 'week' | 'month';

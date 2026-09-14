@@ -1,4 +1,4 @@
-export type Timeframe = '7d' | '3m' | '6m' | '1y';
+export type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
 export type BucketUnit = 'day' | 'week' | 'month';
 
 export interface VolumeTrendPoint {
