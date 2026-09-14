@@ -1,20 +1,38 @@
-# Welcome to your CDK TypeScript project
+# Backend
 
-This is a blank project for CDK development with TypeScript.
+AWS Lambda + API Gateway backend, deployed via AWS CDK.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Commands
 
-## Useful commands
-
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+```bash
+npm run build       # compile TypeScript
+npm run watch       # watch mode
+npm test            # jest unit tests
+npx cdk diff        # preview infra changes
+npx cdk deploy      # deploy production stack
+npx cdk deploy -c stage=staging   # deploy staging stack
+npx cdk synth       # emit CloudFormation template
+```
 
 ## Runners
 
-Use provided `/runners` to invoke backend directly for development and debugging.
+Use the scripts in `/runners` to invoke Lambda handlers directly for local development and debugging — no AWS deployment needed.
 
-Example - `npx tsx runners/roundUp.ts`
+```bash
+export TEMP_ACCESS_TOKEN=<stravaAccessToken>
+npx tsx runners/roundUp.ts
+npx tsx runners/combineActivities.ts
+```
+
+## Environment Variables
+
+Copy `.env.example` or create `.env` with:
+```
+STRAVA_CLIENT_ID=
+STRAVA_CLIENT_SECRET=
+STRAVA_ACCESS_TOKEN=
+STRAVA_REFRESH_TOKEN=
+STRAVA_REDIRECT_URI=
+```
+
+For staging, create `.env.staging` with the same keys and `STRAVA_REDIRECT_URI=https://staging.streventools.com/strava-callback`. The deploy command loads the stage-specific file automatically.

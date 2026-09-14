@@ -13,7 +13,7 @@ Visit [streventools.com](https://streventools.com) and authorize with your Strav
 ## Development
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 22+ and npm
 - AWS CDK CLI (`npm install -g aws-cdk`)
 - AWS CLI configured with appropriate credentials
 - A Strava API application (see [Strava API docs](https://developers.strava.com))
@@ -45,31 +45,59 @@ See [./backend/runners](./backend/runners) for all available runners.
 cd backend
 npm ci
 
-# Deploy the stack
-cdk deploy
+# Preview changes before deploying
+npx cdk diff
+
+# Deploy production stack
+npx cdk deploy
+
+# Deploy staging stack
+npx cdk deploy -c stage=staging
 ```
 
 ### Frontend Deployment
+
+The frontend CDK stack (`frontend/lib/frontend-stack.ts`) uploads the build to S3 and invalidates CloudFront automatically.
+
 ```bash
 cd frontend
 npm ci
 
-# l
+# Deploy to production
 npm run deploy
+
+# Deploy to staging
+npm run deploy:staging
 ```
+
+The backend stack must be deployed before the frontend stack — the frontend stack imports S3 bucket and CloudFront distribution references from backend stack outputs.
+
+### Staging Environment
+
+Staging runs at [staging.streventools.com](https://staging.streventools.com) and uses separate AWS infrastructure (DynamoDB table, S3 buckets, Secrets Manager secret) but shares the same Strava API application as production.
+
+To set up staging credentials, create `backend/.env.staging` and `frontend/.env.staging` with the same Strava credentials as production but with `STRAVA_REDIRECT_URI=https://staging.streventools.com/strava-callback` and `REACT_APP_API_BASE_URL=https://staging.streventools.com/api`.
+
+> **Callback domain limitation:** Strava only permits one authorization callback domain per API application. To use OAuth on staging, temporarily update the callback domain to `staging.streventools.com` in the [Strava API settings](https://www.strava.com/settings/api), then switch it back to `streventools.com` when done.
 
 ## Architecture
 
 The application uses:
-- Frontend: React + TypeScript
-- Backend: AWS Lambda + API Gateway
+- Frontend: React + TypeScript, served from S3 via CloudFront
+- Backend: AWS Lambda + API Gateway, fronted by the same CloudFront distribution at `/api/*`
+- Database: DynamoDB (`StravaActivityCache`) for caching Strava activities
 - Storage: S3 for temporary GPX files
-- CDK for Infrastructure as Code
+- CDK for Infrastructure as Code (two stacks: backend in `backend/`, frontend in `frontend/`)
 - [strava-v3](https://github.com/node-strava/node-strava-v3) Node.js library for Strava API integration
 
 ## Strava API Approval
 
 This application went through Strava's API approval process in September 2025. More information in [Strava Developers Documentation](https://developers.strava.com).
+
+**Important constraints (as of June 2026):**
+- Strava allows only one API application registration per user account.
+- Users of this application must have an active paid Strava subscription — the API returns `Application Status: Inactive` for apps whose owner does not have a paid subscription.
+- Only one authorization callback domain is permitted per application (see staging note above).
 
 ## Issues & Support
 

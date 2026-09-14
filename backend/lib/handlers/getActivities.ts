@@ -27,9 +27,6 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         const page = qs.page ? Math.max(1, parseInt(qs.page)) : 1;
         if (isNaN(page)) throw new Error('Invalid page number');
 
-        const athleteId = qs.athleteId ? parseInt(qs.athleteId) : undefined;
-        if (!athleteId || isNaN(athleteId)) throw new Error('Missing or invalid athleteId query parameter');
-
         const filters: ActivityFilters = {
             sportType: qs.sportType || undefined,
             minDistance: qs.minDistance ? parseFloat(qs.minDistance) : undefined,
@@ -38,10 +35,12 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             maxPace: qs.maxPace ? parseFloat(qs.maxPace) : undefined,
         };
 
-        logger.appendKeys({ athleteId });
-
         const accessToken = event.headers.Authorization.split(' ')[1];
         await strava.client(accessToken);
+
+        const athlete = await (strava.athlete.get({}) as unknown as Promise<{ id: number }>);
+        const athleteId: number = athlete.id;
+        logger.appendKeys({ athleteId });
 
         const syncMeta = await getSyncMeta(athleteId);
         const needsFullSync = !syncMeta || isSyncStale(syncMeta);
@@ -52,7 +51,7 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             const activities = await strava.athlete.listActivities({ page, per_page: PAGE_SIZE });
 
             // Best-effort: write this page to the cache
-            if (activities?.length) {
+            if (Array.isArray(activities) && activities.length) {
                 await upsertActivities(athleteId, activities).catch(() => {});
             }
 
@@ -80,7 +79,7 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
                 after: syncMeta.lastSyncCompletedAt,
                 per_page: 100,
             });
-            if (newActivities?.length) {
+            if (Array.isArray(newActivities) && newActivities.length) {
                 logger.info(`Found ${newActivities.length} new activities — upserting`);
                 await upsertActivities(athleteId, newActivities);
             }

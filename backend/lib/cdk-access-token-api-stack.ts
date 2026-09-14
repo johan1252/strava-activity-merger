@@ -13,7 +13,10 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import 'dotenv/config';
+
+interface CdkAccessTokenApiStackProps extends cdk.StackProps {
+    stage: string;
+}
 
 export class CdkAccessTokenApiStack extends cdk.Stack {
     public readonly hostedZone: route53.IHostedZone;
@@ -22,30 +25,35 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
     public readonly s3Bucket: s3.Bucket;
     public readonly strevenTmpBucket: s3.Bucket;
 
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    constructor(scope: Construct, id: string, props: CdkAccessTokenApiStackProps) {
         super(scope, id, props);
 
-        // Create a hosted zone for streventools.com
-        this.hostedZone = new route53.HostedZone(this, 'HostedZone', {
-            zoneName: 'streventools.com',
-        });
+        const { stage } = props;
+        const isProd = stage === 'prod';
+        const suffix = isProd ? '' : `-${stage}`;
+        const domain = isProd ? 'streventools.com' : `${stage}.streventools.com`;
+
+        // Prod creates and manages the hosted zone; staging imports the existing one
+        this.hostedZone = isProd
+            ? new route53.HostedZone(this, 'HostedZone', { zoneName: 'streventools.com' })
+            : route53.HostedZone.fromLookup(this, 'HostedZone', { domainName: 'streventools.com' });
 
         // Create a certificate for HTTPS
         this.certificate = new certificatemanager.Certificate(this, 'SiteCertificate', {
-            domainName: 'streventools.com',
+            domainName: domain,
             validation: certificatemanager.CertificateValidation.fromDns(this.hostedZone),
         });
 
         // Export the hosted zone ID
         new cdk.CfnOutput(this, 'HostedZoneId', {
             value: this.hostedZone.hostedZoneId,
-            exportName: 'StrevenHostedZoneId',
+            exportName: `StrevenHostedZoneId${suffix}`,
         });
 
         // Export the certificate ARN
         new cdk.CfnOutput(this, 'CertificateArn', {
             value: this.certificate.certificateArn,
-            exportName: 'StrevenCertificateArn',
+            exportName: `StrevenCertificateArn${suffix}`,
         });
 
         // Create an S3 bucket for the React app
@@ -61,7 +69,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Export the S3 bucket name
         new cdk.CfnOutput(this, 'FrontendS3BucketName', {
             value: this.s3Bucket.bucketName,
-            exportName: 'FrontendS3BucketName',
+            exportName: `FrontendS3BucketName${suffix}`,
         });
 
         const securityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeadersPolicy', {
@@ -86,9 +94,8 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
                     override: true,
                 },
                 referrerPolicy: {
-                    referrerPolicy: cloudfront.HeadersReferrerPolicy.NO_REFERRER,
+                    referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
                     override: true,
-
                 },
             },
         });
@@ -100,7 +107,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 responseHeadersPolicy: securityHeadersPolicy,
             },
-            domainNames: ['streventools.com'],
+            domainNames: [domain],
             certificate: this.certificate,
             defaultRootObject: 'index.html',
             errorResponses: [
@@ -115,16 +122,21 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         cdk.Annotations.of(this).acknowledgeWarning('@aws-cdk/aws-cloudfront-origins:listBucketSecurityRisk', 'defaultRootObject is set to index.html');
 
-        // Export the CloudFront distribution domain name
+        // Export the CloudFront distribution domain name and ID (used by frontend stack for deployment + invalidation)
         new cdk.CfnOutput(this, 'CloudFrontDistributionDomainName', {
             value: this.cloudFrontDistribution.distributionDomainName,
-            exportName: 'CloudFrontDistributionDomainName',
+            exportName: `CloudFrontDistributionDomainName${suffix}`,
+        });
+
+        new cdk.CfnOutput(this, 'CloudFrontDistributionId', {
+            value: this.cloudFrontDistribution.distributionId,
+            exportName: `CloudFrontDistributionId${suffix}`,
         });
 
         // Create a Route 53 record for the CloudFront distribution
         new route53.ARecord(this, 'CloudFrontAliasRecord', {
             zone: this.hostedZone,
-            recordName: 'streventools.com',
+            recordName: domain,
             target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(this.cloudFrontDistribution)),
         });
 
@@ -143,7 +155,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Export the S3 bucket name
         new cdk.CfnOutput(this, 'StrevenTmpBucketName', {
             value: this.strevenTmpBucket.bucketName,
-            exportName: 'StrevenTmpBucketName',
+            exportName: `StrevenTmpBucketName${suffix}`,
         });
 
         // Define the Lambda function
@@ -173,7 +185,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         // DynamoDB table for caching Strava activities
         const activityCacheTable = new dynamodb.TableV2(this, 'ActivityCacheTable', {
-            tableName: 'StravaActivityCache',
+            tableName: `StravaActivityCache${suffix}`,
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
             billing: dynamodb.Billing.onDemand(),
@@ -217,7 +229,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 512,
             entry: './lib/handlers/syncActivities.ts',
-            timeout: cdk.Duration.seconds(300),
+            timeout: cdk.Duration.seconds(900),
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
             },
@@ -293,7 +305,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             restApiName: 'Access Token Service',
             description: 'This service handles Strava access token requests.',
             defaultCorsPreflightOptions: {
-                allowOrigins: ["streventools.com"],
+                allowOrigins: [domain],
                 allowMethods: apigateway.Cors.ALL_METHODS,
                 allowHeaders: ["Content-Type", "Authorization"],
             },
@@ -341,7 +353,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {
-            secretName: 'strava-webhook-verify-token',
+            secretName: `strava-webhook-verify-token${suffix}`,
             generateSecretString: {
                 excludePunctuation: true,
                 passwordLength: 32,
