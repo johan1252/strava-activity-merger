@@ -16,6 +16,10 @@ const logger = new Logger({ serviceName: 'getActivities' });
 const lambdaClient = new LambdaClient({});
 const PAGE_SIZE = 25;
 
+// Cache athlete IDs per access token across warm Lambda invocations to avoid
+// calling strava.athlete.get() on every request.
+const athleteIdCache = new Map<string, number>();
+
 const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');
     try {
@@ -38,8 +42,12 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         const accessToken = event.headers.Authorization.split(' ')[1];
         await strava.client(accessToken);
 
-        const athlete = await (strava.athlete.get({}) as unknown as Promise<{ id: number }>);
-        const athleteId: number = athlete.id;
+        let athleteId = athleteIdCache.get(accessToken);
+        if (!athleteId) {
+            const athlete = await (strava.athlete.get({}) as unknown as Promise<{ id: number }>);
+            athleteId = athlete.id;
+            athleteIdCache.set(accessToken, athleteId);
+        }
         logger.appendKeys({ athleteId });
 
         const syncMeta = await getSyncMeta(athleteId);
@@ -82,11 +90,16 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             if (Array.isArray(newActivities) && newActivities.length) {
                 logger.info(`Found ${newActivities.length} new activities — upserting`);
                 await upsertActivities(athleteId, newActivities);
+                await updateLastSyncCompletedAt(athleteId);
             }
-            await updateLastSyncCompletedAt(athleteId);
         }
 
-        // Query DynamoDB and paginate in-memory
+        // Fetch all matching items then paginate in-memory. Distance/pace filters require
+        // an in-memory sort regardless (DynamoDB returns them in distance/pace order, not date),
+        // so a consistent approach across all filter types is simpler than mixing DynamoDB
+        // cursor pagination for some cases and in-memory for others. 
+        //
+        // Revisit if athletes with very large activity counts (10k+) become a concern.
         const allItems = await queryActivities(athleteId, filters);
         const startIndex = (page - 1) * PAGE_SIZE;
         const activities = allItems.slice(startIndex, startIndex + PAGE_SIZE);

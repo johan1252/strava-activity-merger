@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
@@ -22,6 +23,17 @@ async function getVerifyToken(): Promise<string> {
 }
 
 const logger = new Logger({ serviceName: 'stravaWebhook' });
+
+function verifySignature(body: string, signatureHeader: string | undefined): boolean {
+    if (!signatureHeader) return false;
+    const expected = `sha256=${createHmac('sha256', process.env.STRAVA_CLIENT_SECRET!).update(body).digest('hex')}`;
+    try {
+        return timingSafeEqual(Buffer.from(signatureHeader), Buffer.from(expected));
+    } catch {
+        // timingSafeEqual throws if the two buffers have different lengths
+        return false;
+    }
+}
 
 interface WebhookEvent {
     aspect_type: 'create' | 'update' | 'delete';
@@ -73,6 +85,12 @@ async function handleValidation(event: APIGatewayProxyEvent): Promise<APIGateway
 async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     if (!event.body) {
         return { statusCode: 400, body: JSON.stringify({ message: 'Missing body' }) };
+    }
+
+    const signature = event.headers['X-Hub-Signature'] ?? event.headers['x-hub-signature'];
+    if (!verifySignature(event.body, signature)) {
+        logger.warn('Webhook signature verification failed');
+        return { statusCode: 403, body: JSON.stringify({ message: 'Forbidden' }) };
     }
 
     const payload: WebhookEvent = JSON.parse(event.body);

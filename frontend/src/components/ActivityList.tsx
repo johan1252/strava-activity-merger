@@ -28,8 +28,10 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
         minDistance: 0,
         maxDistance: MAX_DISTANCE_FILTER_ALLOWED,
     });
+    const [isLoadingActivities, setIsLoadingActivities] = useState(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
-    let prevSportType = 'All'; // To remember previous sport type filter when entering/exiting combine mode
+    const isFirstRender = useRef(true);
+    const prevSportType = useRef('All'); // To remember previous sport type filter when entering/exiting combine mode
 
     const buildUrl = (p: number, f: typeof filters) => {
         const params = new URLSearchParams({ page: String(p) });
@@ -41,7 +43,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     const fetchPage = useCallback(async (p: number, f: typeof filters, replace: boolean) => {
         if (replace) {
-            setIsLoading(true);
+            setIsLoadingActivities(true);
         } else {
             setIsLoadingNextPage(true);
         }
@@ -58,7 +60,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
         } catch (error) {
             console.error('Error fetching activities:', error);
         } finally {
-            setIsLoading(false);
+            setIsLoadingActivities(false);
             setIsLoadingNextPage(false);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,8 +72,13 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Re-fetch from page 1 when filters change
+    // Re-fetch from page 1 when filters change — skipped on the initial render
+    // to avoid double-fetching alongside the initial load effect above.
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
         fetchPage(1, filters, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters.sportType, filters.minDistance, filters.maxDistance]);
@@ -82,17 +89,23 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
         }
     }, [isLoadingNextPage, hasMore, page, filters, fetchPage]);
 
-    // Infinite scroll
+    // Stable ref so the IntersectionObserver closure always calls the latest
+    // loadNextPage without needing to be recreated on every state change.
+    const loadNextPageRef = useRef(loadNextPage);
+    loadNextPageRef.current = loadNextPage;
+
+    // Infinite scroll — observer is set up once and never torn down.
     useEffect(() => {
         const sentinel = sentinelRef.current;
         if (!sentinel) return;
         const observer = new IntersectionObserver(
-            entries => { if (entries[0].isIntersecting) loadNextPage(); },
+            entries => { if (entries[0].isIntersecting) loadNextPageRef.current(); },
             { threshold: 0.1 },
         );
         observer.observe(sentinel);
         return () => observer.disconnect();
-    }, [loadNextPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const reloadActivities = () => fetchPage(1, filters, true);
 
@@ -210,7 +223,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                 if (data.activityId) {
                     setSelectedActivities([]); // Clear selected activities after combining
                     setShowCombineMode(false); // Exit combine mode
-                    setFilters(f => ({ ...f, sportType: prevSportType })); // Restore previous sport type filter
+                    setFilters(f => ({ ...f, sportType: prevSportType.current })); // Restore previous sport type filter
                     setModalContent(
                         <>
                             <div>
@@ -422,7 +435,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                         }
                     </button>
                 </div>
-                {activities.length === 0 && !isLoading && (
+                {activities.length === 0 && !isLoadingActivities && (
                     <div style={{ marginTop: 20, marginBottom: 20, color: '#555', fontSize: '1.1em' }}>
                         No activities found for the selected filter.
                     </div>
@@ -494,7 +507,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                                             setShowCombineMode(true);
                                             setActivePopoverId(null);
                                             // Set the sport type filter so only same-sport activities are shown
-                                            prevSportType = filters.sportType;
+                                            prevSportType.current = filters.sportType;
                                             setFilters(f => ({ ...f, sportType: activity.sport_type || 'All' }));
                                             if (!selectedActivities.includes(activity) && supportsCombineMode(activity)) {
                                                 setSelectedActivities([activity]);
@@ -754,7 +767,7 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                     <button
                         onClick={() => {
                             setShowCombineMode(false);
-                            setFilters(f => ({ ...f, sportType: prevSportType })); // Restore previous sport type filter
+                            setFilters(f => ({ ...f, sportType: prevSportType.current })); // Restore previous sport type filter
                             setSelectedActivities([]);
                         }}
                         style={{
