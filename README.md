@@ -88,9 +88,50 @@ Staging runs at [staging.streventools.com](https://staging.streventools.com) and
 
 To set up staging credentials, create `backend/.env.staging` and `frontend/.env.staging` with the same Strava credentials as production but with `STRAVA_REDIRECT_URI=https://staging.streventools.com/strava-callback` and `REACT_APP_API_BASE_URL=https://staging.streventools.com/api`.
 
-> **Callback domain limitation:** Strava only permits one authorization callback domain per API application. To use OAuth on staging, temporarily update the callback domain to `staging.streventools.com` in the [Strava API settings](https://www.strava.com/settings/api), then switch it back to `streventools.com` when done.
->
-> **Recommended alternative:** Run the frontend locally (`npm start`) against the staging backend instead of deploying to `staging.streventools.com`. Strava always permits `localhost` as a redirect URI, so no callback domain swap is needed.
+> **Note:** Strava validates the root domain of the callback URL, so `staging.streventools.com` works without any changes to the Strava app settings as long as `streventools.com` is the configured callback domain. Running the frontend locally (`npm start`) against the staging backend also works — Strava always permits `localhost`.
+
+### Webhook Setup
+
+The Strava webhook subscription must be created once per environment after the backend is deployed. Strava only allows one active subscription per app.
+
+**1. Get the verify token from Secrets Manager:**
+```bash
+# Production
+VERIFY_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id strava-webhook-verify-token \
+  --query SecretString --output text)
+
+# Staging
+VERIFY_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id strava-webhook-verify-token-staging \
+  --query SecretString --output text)
+```
+
+**2. Check if a subscription already exists:**
+```bash
+curl -G https://www.strava.com/api/v3/push_subscriptions \
+  -d client_id=<STRAVA_CLIENT_ID> \
+  -d client_secret=<STRAVA_CLIENT_SECRET>
+```
+
+**3. Create the subscription:**
+```bash
+# Production
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=<STRAVA_CLIENT_ID> \
+  -F client_secret=<STRAVA_CLIENT_SECRET> \
+  -F callback_url=https://streventools.com/api/webhook/strava \
+  -F verify_token=$VERIFY_TOKEN
+
+# Staging
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=<STRAVA_CLIENT_ID> \
+  -F client_secret=<STRAVA_CLIENT_SECRET> \
+  -F callback_url=https://staging.streventools.com/api/webhook/strava \
+  -F verify_token=$VERIFY_TOKEN
+```
+
+Strava calls `GET /api/webhook/strava` to validate the endpoint, then returns a `subscription_id` — keep this in case you need to delete the subscription later. Test events using `backend/runners/testWebhook.ts`.
 
 ## Architecture
 
@@ -109,7 +150,7 @@ This application went through Strava's API approval process in September 2025. M
 **Important constraints (as of June 2026):**
 - Strava allows only one API application registration per user account.
 - Users of this application must have an active paid Strava subscription — the API returns `Application Status: Inactive` for apps whose owner does not have a paid subscription.
-- Only one authorization callback domain is permitted per application (see staging note above).
+- One authorization callback domain is configured per application, but Strava validates only the root domain — subdomains like `staging.streventools.com` work automatically.
 
 ## Issues & Support
 
