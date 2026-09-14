@@ -41,13 +41,22 @@ function paceSK(pace: number, activityId: number): string {
     return `PACE#${paddedNumber(pace)}#${activityId}`;
 }
 
+// Internal bookkeeping attributes added on top of the raw Strava activity —
+// stripped back off in fromDbItem so callers only ever see Strava's own fields
+// plus our computed pace_per_km.
+const INTERNAL_KEYS = ['PK', 'SK', 'gsi1pk', 'gsi1sk', 'gsi2pk', 'gsi2sk', 'gsi3pk', 'gsi3sk', 'gsi4sk', 'gsi5sk'] as const;
+
 function toDbItem(athleteId: number, activity: StravaActivity): Record<string, unknown> {
     const pace = computePace(activity);
     const pk = athletePK(athleteId);
     const sk = activitySK(activity);
     const sportPK = `${pk}#SPORT#${activity.sport_type}`;
 
+    // Store the complete raw activity object from Strava (whatever fields it contains —
+    // average_heartrate, average_watts, kudos_count, etc.) then layer our own key/index
+    // attributes on top so they can't be shadowed by a same-named field from Strava.
     const item: Record<string, unknown> = {
+        ...activity,
         PK: pk,
         SK: sk,
         gsi1pk: sportPK,
@@ -56,19 +65,6 @@ function toDbItem(athleteId: number, activity: StravaActivity): Record<string, u
         gsi2sk: distanceSK(activity),
         gsi3pk: sportPK,
         gsi3sk: distanceSK(activity),
-        id: activity.id,
-        name: activity.name,
-        sport_type: activity.sport_type,
-        distance: activity.distance,
-        elapsed_time: activity.elapsed_time,
-        moving_time: activity.moving_time,
-        start_date: activity.start_date,
-        start_date_local: activity.start_date_local,
-        device_name: activity.device_name,
-        start_latlng: activity.start_latlng,
-        map_summary_polyline: activity.map?.summary_polyline,
-        visibility: activity.visibility,
-        external_id: activity.external_id,
     };
 
     // Sparse GSIs — only written when distance > 0
@@ -82,22 +78,9 @@ function toDbItem(athleteId: number, activity: StravaActivity): Record<string, u
 }
 
 function fromDbItem(item: Record<string, unknown>): CachedActivity {
-    return {
-        id: item.id as number,
-        name: item.name as string,
-        sport_type: item.sport_type as string,
-        distance: item.distance as number,
-        elapsed_time: item.elapsed_time as number,
-        moving_time: item.moving_time as number | undefined,
-        start_date: item.start_date as string,
-        start_date_local: item.start_date_local as string,
-        device_name: item.device_name as string,
-        start_latlng: item.start_latlng as [number, number],
-        map: { summary_polyline: item.map_summary_polyline as string },
-        visibility: item.visibility as string,
-        external_id: item.external_id as string | undefined,
-        pace_per_km: item.pace_per_km as number | undefined,
-    };
+    const activity = { ...item };
+    for (const key of INTERNAL_KEYS) delete activity[key];
+    return activity as CachedActivity;
 }
 
 // --- Public API ---
