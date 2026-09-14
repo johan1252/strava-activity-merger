@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
+import LoadingIndicator from './LoadingIndicator';
 import VolumeTrendChart from './stats/VolumeTrendChart';
 import PaceTrendChart from './stats/PaceTrendChart';
 import HeartRateTrendChart from './stats/HeartRateTrendChart';
@@ -97,7 +98,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     // Only show the full-page loading state before we have any data at all —
     // switching timeframe re-fetches in the background without blanking the charts.
     if (isLoading && !stats) {
-        return <div style={{ marginTop: '40px', color: '#888', fontSize: '1.1em' }}>Loading stats...</div>;
+        return <LoadingIndicator message="Loading your stats..." />;
     }
 
     if (error && !stats) {
