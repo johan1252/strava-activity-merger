@@ -4,6 +4,7 @@ import './App.css';
 import querystring from 'querystring';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
+import Stats from './components/Stats';
 import MobileDetect from 'mobile-detect';
 import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -41,6 +42,7 @@ const handleAuthorizeClick = () => {
 const Home: React.FC = () => {
     const [athlete, setAthlete] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'activities' | 'stats'>('activities');
 
     useEffect(() => {
         const checkToken = async () => {
@@ -99,14 +101,45 @@ const Home: React.FC = () => {
                                 Log Out
                             </button>
                             <div className="activities-header-row" style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '5px' }}>
-                                <div className="activities-header-spacer" style={{ flex: 1 }} /> {/* Center activities text */}
-                                <h2 className="activities-header-title">Your Activities</h2>
+                                <div className="activities-header-spacer" style={{ flex: 1 }} /> {/* Center tabs */}
+                                <div className="activities-header-tabs" style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={() => setActiveTab('activities')}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 700,
+                                            padding: '0 8px 4px',
+                                            borderBottom: activeTab === 'activities' ? '3px solid #FC4C02' : '3px solid transparent',
+                                            color: activeTab === 'activities' ? '#FC4C02' : '#888',
+                                        }}
+                                    >
+                                        Activities
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('stats')}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 700,
+                                            padding: '0 8px 4px',
+                                            borderBottom: activeTab === 'stats' ? '3px solid #FC4C02' : '3px solid transparent',
+                                            color: activeTab === 'stats' ? '#FC4C02' : '#888',
+                                        }}
+                                    >
+                                        Stats
+                                    </button>
+                                </div>
                                 <div className="activities-header-user" style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
-                                    <h3 style={{ margin: 0 }}>{athlete.firstname} {athlete.lastname}</h3>
+                                    <h3 style={{ margin: 0 }}>{athlete.firstname}</h3>
                                     <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                                 </div>
                             </div>
-                            <ActivityList athlete={athlete} />
+                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats />}
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
