@@ -2,6 +2,7 @@ import type { CachedActivity } from '../types/activity';
 import type {
     VolumeTrendPoint,
     PaceTrendPoint,
+    HeartRateTrendPoint,
     StreakInfo,
     CalendarDay,
     Timeframe,
@@ -118,6 +119,35 @@ export function computePaceTrend(activities: CachedActivity[], timeframe: Timefr
         .map(([periodStart, { totalPace, count }]) => ({
             periodStart,
             avgPaceSecPerKm: totalPace / count,
+        }))
+        .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
+}
+
+// Heart rate is meaningful across all sport types (unlike pace, which is Run-specific),
+// so this includes every activity that has HR data, regardless of sport.
+export function computeHeartRateTrend(activities: CachedActivity[], timeframe: Timeframe = '6m'): HeartRateTrendPoint[] {
+    const { keys, unit } = buildBucketKeys(timeframe);
+    const keySet = new Set(keys);
+    const buckets = new Map<string, { totalAvgHr: number; maxHr: number; count: number }>();
+
+    for (const activity of activities) {
+        const avgHr = activity.average_heartrate as number | undefined;
+        const maxHr = activity.max_heartrate as number | undefined;
+        if (!activity.has_heartrate || avgHr === undefined || maxHr === undefined) continue;
+        const key = bucketKeyFor(localDate(activity), unit);
+        if (!keySet.has(key)) continue;
+        const bucket = buckets.get(key) ?? { totalAvgHr: 0, maxHr: 0, count: 0 };
+        bucket.totalAvgHr += avgHr;
+        bucket.maxHr = Math.max(bucket.maxHr, maxHr);
+        bucket.count += 1;
+        buckets.set(key, bucket);
+    }
+
+    return Array.from(buckets.entries())
+        .map(([periodStart, { totalAvgHr, maxHr, count }]) => ({
+            periodStart,
+            avgHeartrate: totalAvgHr / count,
+            maxHeartrate: maxHr,
         }))
         .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
 }

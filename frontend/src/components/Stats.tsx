@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchWithAuth } from '../utils/api';
 import VolumeTrendChart from './stats/VolumeTrendChart';
 import PaceTrendChart from './stats/PaceTrendChart';
+import HeartRateTrendChart from './stats/HeartRateTrendChart';
 import StreakCard from './stats/StreakCard';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
@@ -42,6 +43,7 @@ const Spinner: React.FC = () => (
 interface StatsResponse {
     volumeTrend: { periodStart: string; distance: number; count: number }[];
     paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
+    heartRateTrend: { periodStart: string; avgHeartrate: number; maxHeartrate: number }[];
     trendBucketUnit: BucketUnit;
     streak: { current: number; longest: number };
     weekStreak: { current: number; longest: number };
@@ -112,6 +114,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
             </div>
             <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
             <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
+            <HeartRateTrendChart data={stats.heartRateTrend} bucketUnit={stats.trendBucketUnit} />
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div style={{ flex: '1 1 260px' }}>
                     <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />

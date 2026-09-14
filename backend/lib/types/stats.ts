@@ -12,6 +12,12 @@ export interface PaceTrendPoint {
     avgPaceSecPerKm: number;
 }
 
+export interface HeartRateTrendPoint {
+    periodStart: string; // ISO date — meaning depends on bucketUnit (a day, the Monday of a week, or the 1st of a month)
+    avgHeartrate: number; // average of each activity's average_heartrate, across activities in the bucket
+    maxHeartrate: number; // highest max_heartrate reached by any activity in the bucket
+}
+
 export interface StreakInfo {
     current: number; // consecutive days up to today/yesterday with an activity
     longest: number;
@@ -34,7 +40,8 @@ export interface GearStat {
 export interface StatsResponse {
     volumeTrend: VolumeTrendPoint[];
     paceTrend: PaceTrendPoint[];
-    trendBucketUnit: BucketUnit; // granularity used for volumeTrend/paceTrend, so the frontend can format axis labels appropriately
+    heartRateTrend: HeartRateTrendPoint[];
+    trendBucketUnit: BucketUnit; // granularity used for volumeTrend/paceTrend/heartRateTrend, so the frontend can format axis labels appropriately
     streak: StreakInfo; // consecutive days
     weekStreak: StreakInfo; // consecutive weeks with at least one activity
     calendar: CalendarDay[];

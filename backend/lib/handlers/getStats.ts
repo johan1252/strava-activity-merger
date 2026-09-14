@@ -5,6 +5,7 @@ import { resolveAthlete } from '../utils/resolveAthlete';
 import {
     computeVolumeTrend,
     computePaceTrend,
+    computeHeartRateTrend,
     computeStreak,
     computeWeekStreak,
     computeCalendarDays,
@@ -45,6 +46,7 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
         const response: StatsResponse = {
             volumeTrend: computeVolumeTrend(activities, timeframe),
             paceTrend: computePaceTrend(activities, timeframe),
+            heartRateTrend: computeHeartRateTrend(activities, timeframe),
             trendBucketUnit: getBucketUnitForTimeframe(timeframe),
             streak: computeStreak(activities),
             weekStreak: computeWeekStreak(activities),
