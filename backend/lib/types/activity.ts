@@ -12,6 +12,11 @@ export interface StravaActivity {
     map: { summary_polyline: string };
     visibility: string;
     external_id?: string;
+    // Strava's activity summary object includes many more fields (average_heartrate,
+    // max_heartrate, average_watts, average_cadence, total_elevation_gain, kudos_count,
+    // pr_count, etc.) that we cache verbatim without naming them all here — see
+    // toDbItem/fromDbItem in activityCache.ts, which store/return the whole object.
+    [key: string]: unknown;
 }
 
 export interface CachedActivity extends StravaActivity {
