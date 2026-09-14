@@ -10,12 +10,12 @@ import ActivityCalendar from './stats/ActivityCalendar';
 
 type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
 
-const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
-    { value: '7d', label: '7 Days' },
-    { value: '3m', label: '3 Months' },
-    { value: '6m', label: '6 Months' },
-    { value: '1y', label: '1 Year' },
-    { value: '5y', label: '5 Years' },
+const TIMEFRAME_OPTIONS: { value: Timeframe; label: string; fullLabel: string }[] = [
+    { value: '7d', label: '7D', fullLabel: '7 Days' },
+    { value: '3m', label: '3M', fullLabel: '3 Months' },
+    { value: '6m', label: '6M', fullLabel: '6 Months' },
+    { value: '1y', label: '1Y', fullLabel: '1 Year' },
+    { value: '5y', label: '5Y', fullLabel: '5 Years' },
 ];
 
 type BucketUnit = 'day' | 'week' | 'month';
@@ -108,19 +108,21 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
                 {TIMEFRAME_OPTIONS.map(opt => (
                     <button
                         key={opt.value}
                         onClick={() => setTimeframe(opt.value)}
+                        title={opt.fullLabel}
                         style={{
-                            padding: '6px 14px',
-                            borderRadius: '20px',
+                            flex: '1 1 0',
+                            padding: '6px 4px',
+                            borderRadius: '16px',
                             border: timeframe === opt.value ? '2px solid #FC4C02' : '1px solid #ddd',
                             background: timeframe === opt.value ? '#FC4C02' : '#fff',
                             color: timeframe === opt.value ? '#fff' : '#333',
                             fontWeight: 600,
-                            fontSize: '0.85rem',
+                            fontSize: '0.8rem',
                             cursor: 'pointer',
                         }}
                     >
