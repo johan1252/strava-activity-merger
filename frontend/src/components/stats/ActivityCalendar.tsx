@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
+import { sportTypeToIcon } from '../../utils/sportTypeToIcon';
 
 interface CalendarDay {
     date: string; // 'YYYY-MM-DD'
     count: number;
     distance: number;
+    sportTypes: string[];
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const ICON_SIZE = 16;
 
 function toDateKey(year: number, month: number, day: number): string {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -61,12 +64,21 @@ const ActivityCalendar: React.FC<{ data: CalendarDay[] }> = ({ data }) => {
                     const dateKey = toDateKey(viewYear, viewMonth, day);
                     const entry = byDate.get(dateKey);
                     const active = !!entry;
+                    const icon = active
+                        ? React.cloneElement(
+                            sportTypeToIcon(entry!.sportTypes.length === 1 ? entry!.sportTypes[0] : 'All'),
+                            { width: ICON_SIZE, height: ICON_SIZE },
+                        )
+                        : null;
                     return (
                         <div
                             key={i}
-                            title={active ? `${(entry!.distance / 1000).toFixed(1)} km, ${entry!.count} activit${entry!.count === 1 ? 'y' : 'ies'}` : undefined}
+                            title={active
+                                ? `${entry!.sportTypes.join(', ')} — ${(entry!.distance / 1000).toFixed(1)} km, ${entry!.count} activit${entry!.count === 1 ? 'y' : 'ies'}`
+                                : undefined}
                             style={{
                                 aspectRatio: '1',
+                                position: 'relative',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -77,7 +89,12 @@ const ActivityCalendar: React.FC<{ data: CalendarDay[] }> = ({ data }) => {
                                 fontWeight: active ? 700 : 400,
                             }}
                         >
-                            {day}
+                            {active ? icon : day}
+                            {active && (
+                                <span style={{ position: 'absolute', bottom: 1, right: 3, fontSize: '0.5rem', fontWeight: 700, lineHeight: 1 }}>
+                                    {day}
+                                </span>
+                            )}
                         </div>
                     );
                 })}

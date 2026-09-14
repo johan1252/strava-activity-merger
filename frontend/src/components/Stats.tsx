@@ -45,7 +45,7 @@ interface StatsResponse {
     trendBucketUnit: BucketUnit;
     streak: { current: number; longest: number };
     weekStreak: { current: number; longest: number };
-    calendar: { date: string; count: number; distance: number }[];
+    calendar: { date: string; count: number; distance: number; sportTypes: string[] }[];
     gear: { id: string; name: string; type: 'shoe' | 'bike'; distance: number }[];
 }
 

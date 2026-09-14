@@ -187,15 +187,21 @@ export function computeWeekStreak(activities: CachedActivity[]): StreakInfo {
 }
 
 export function computeCalendarDays(activities: CachedActivity[]): CalendarDay[] {
-    const byDate = new Map<string, { distance: number; count: number }>();
+    const byDate = new Map<string, { distance: number; count: number; sportTypes: Set<string> }>();
     for (const activity of activities) {
         const date = localDate(activity);
-        const entry = byDate.get(date) ?? { distance: 0, count: 0 };
+        const entry = byDate.get(date) ?? { distance: 0, count: 0, sportTypes: new Set<string>() };
         entry.distance += activity.distance ?? 0;
         entry.count += 1;
+        entry.sportTypes.add(activity.sport_type);
         byDate.set(date, entry);
     }
     return Array.from(byDate.entries())
-        .map(([date, { distance, count }]) => ({ date, distance, count }))
+        .map(([date, { distance, count, sportTypes }]) => ({
+            date,
+            distance,
+            count,
+            sportTypes: Array.from(sportTypes),
+        }))
         .sort((a, b) => a.date.localeCompare(b.date));
 }

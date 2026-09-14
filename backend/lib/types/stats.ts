@@ -21,6 +21,7 @@ export interface CalendarDay {
     date: string; // 'YYYY-MM-DD'
     count: number;
     distance: number; // meters
+    sportTypes: string[]; // distinct sport types active that day
 }
 
 export interface GearStat {
