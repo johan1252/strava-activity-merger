@@ -11,6 +11,8 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import 'dotenv/config';
 
 export class CdkAccessTokenApiStack extends cdk.Stack {
@@ -169,13 +171,74 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             },
         });
 
+        // DynamoDB table for caching Strava activities
+        const activityCacheTable = new dynamodb.TableV2(this, 'ActivityCacheTable', {
+            tableName: 'StravaActivityCache',
+            partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+            billing: dynamodb.Billing.onDemand(),
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+            globalSecondaryIndexes: [
+                {
+                    indexName: 'GSI1-SportDate',
+                    partitionKey: { name: 'gsi1pk', type: dynamodb.AttributeType.STRING },
+                    sortKey: { name: 'gsi1sk', type: dynamodb.AttributeType.STRING },
+                    projectionType: dynamodb.ProjectionType.ALL,
+                },
+                {
+                    indexName: 'GSI2-AllDist',
+                    partitionKey: { name: 'gsi2pk', type: dynamodb.AttributeType.STRING },
+                    sortKey: { name: 'gsi2sk', type: dynamodb.AttributeType.STRING },
+                    projectionType: dynamodb.ProjectionType.ALL,
+                },
+                {
+                    indexName: 'GSI3-SportDist',
+                    partitionKey: { name: 'gsi3pk', type: dynamodb.AttributeType.STRING },
+                    sortKey: { name: 'gsi3sk', type: dynamodb.AttributeType.STRING },
+                    projectionType: dynamodb.ProjectionType.ALL,
+                },
+                {
+                    indexName: 'GSI4-AllPace',
+                    partitionKey: { name: 'gsi2pk', type: dynamodb.AttributeType.STRING },
+                    sortKey: { name: 'gsi4sk', type: dynamodb.AttributeType.STRING },
+                    projectionType: dynamodb.ProjectionType.ALL,
+                },
+                {
+                    indexName: 'GSI5-SportPace',
+                    partitionKey: { name: 'gsi3pk', type: dynamodb.AttributeType.STRING },
+                    sortKey: { name: 'gsi5sk', type: dynamodb.AttributeType.STRING },
+                    projectionType: dynamodb.ProjectionType.ALL,
+                },
+            ],
+        });
+
+        // Background Lambda for full activity sync (invoked async by getActivitiesLambda)
+        const syncActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'SyncActivitiesHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 512,
+            entry: './lib/handlers/syncActivities.ts',
+            timeout: cdk.Duration.seconds(300),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(syncActivitiesLambda);
+
         // Define the Lambda function for fetching activities
         const getActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'GetActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 1024,
             entry: './lib/handlers/getActivities.ts', // Path to the handler file
-            timeout: cdk.Duration.seconds(30)
+            timeout: cdk.Duration.seconds(30),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                SYNC_ACTIVITIES_FUNCTION_ARN: syncActivitiesLambda.functionArn,
+            },
         });
+
+        activityCacheTable.grantReadWriteData(getActivitiesLambda);
+        syncActivitiesLambda.grantInvoke(getActivitiesLambda);
 
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -275,5 +338,35 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /activities/rounddown endpoint
         const roundDownResource = activitiesResource.addResource('rounddown');
         roundDownResource.addMethod('POST', new apigateway.LambdaIntegration(roundDownLambda));
+
+        // Auto-generated secret used to validate Strava webhook subscription requests
+        const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {
+            secretName: 'strava-webhook-verify-token',
+            generateSecretString: {
+                excludePunctuation: true,
+                passwordLength: 32,
+            },
+        });
+
+        // Strava webhook handler — receives real-time activity create/update/delete events
+        const stravaWebhookLambda = new lambdaNodeJs.NodejsFunction(this, 'StravaWebhookHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 256,
+            entry: './lib/handlers/stravaWebhook.ts',
+            timeout: cdk.Duration.seconds(10),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                STRAVA_WEBHOOK_VERIFY_TOKEN_SECRET_ARN: webhookVerifyTokenSecret.secretArn,
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(stravaWebhookLambda);
+        webhookVerifyTokenSecret.grantRead(stravaWebhookLambda);
+
+        // Create the /webhook/strava endpoint (GET for validation, POST for events)
+        const webhookResource = apiResource.addResource('webhook');
+        const stravaWebhookResource = webhookResource.addResource('strava');
+        stravaWebhookResource.addMethod('GET', new apigateway.LambdaIntegration(stravaWebhookLambda));
+        stravaWebhookResource.addMethod('POST', new apigateway.LambdaIntegration(stravaWebhookLambda));
     }
 }
