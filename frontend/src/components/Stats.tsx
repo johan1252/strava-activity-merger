@@ -129,7 +129,9 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                         {opt.label}
                     </button>
                 ))}
-                {isLoading && <Spinner />}
+                <div style={{ width: '14px', height: '14px', flexShrink: 0 }}>
+                    {isLoading && <Spinner />}
+                </div>
             </div>
             <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
             <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
