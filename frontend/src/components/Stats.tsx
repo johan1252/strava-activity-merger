@@ -116,6 +116,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                         title={opt.fullLabel}
                         style={{
                             flex: '1 1 0',
+                            maxWidth: '52px',
                             padding: '6px 4px',
                             borderRadius: '16px',
                             border: timeframe === opt.value ? '2px solid #FC4C02' : '1px solid #ddd',
