@@ -102,10 +102,12 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
     }, [filters.sportType, filters.minDistance, filters.maxDistance]);
 
     const loadNextPage = useCallback(() => {
-        if (!isLoadingNextPage && hasMore) {
+        // Guard against isLoadingActivities too — the sentinel can already be in
+        // view (e.g. on an empty/short list) before the initial page finishes loading.
+        if (!isLoadingNextPage && !isLoadingActivities && hasMore) {
             fetchPage(page + 1, filters, false);
         }
-    }, [isLoadingNextPage, hasMore, page, filters, fetchPage]);
+    }, [isLoadingNextPage, isLoadingActivities, hasMore, page, filters, fetchPage]);
 
     // Stable ref so the IntersectionObserver closure always calls the latest
     // loadNextPage without needing to be recreated on every state change.
