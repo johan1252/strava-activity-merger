@@ -9,7 +9,7 @@ interface CalendarDay {
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const ICON_SIZE = 16;
+const ICON_SIZE = 14;
 
 function toDateKey(year: number, month: number, day: number): string {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -83,18 +83,14 @@ const ActivityCalendar: React.FC<{ data: CalendarDay[] }> = ({ data }) => {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 borderRadius: '6px',
-                                fontSize: '0.8rem',
                                 background: active ? '#FC4C02' : '#f0f0f0',
                                 color: active ? '#fff' : '#888',
-                                fontWeight: active ? 700 : 400,
                             }}
                         >
-                            {active ? icon : day}
-                            {active && (
-                                <span style={{ position: 'absolute', bottom: 1, right: 3, fontSize: '0.5rem', fontWeight: 700, lineHeight: 1 }}>
-                                    {day}
-                                </span>
-                            )}
+                            <span style={{ position: 'absolute', top: 2, left: 4, fontSize: '0.55rem', fontWeight: 700, lineHeight: 1 }}>
+                                {day}
+                            </span>
+                            {active && icon}
                         </div>
                     );
                 })}
