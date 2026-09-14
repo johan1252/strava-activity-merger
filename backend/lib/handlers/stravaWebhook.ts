@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
@@ -23,17 +22,6 @@ async function getVerifyToken(): Promise<string> {
 }
 
 const logger = new Logger({ serviceName: 'stravaWebhook' });
-
-function verifySignature(body: string, signatureHeader: string | undefined): boolean {
-    if (!signatureHeader) return false;
-    const expected = `sha256=${createHmac('sha256', process.env.STRAVA_CLIENT_SECRET!).update(body).digest('hex')}`;
-    try {
-        return timingSafeEqual(Buffer.from(signatureHeader), Buffer.from(expected));
-    } catch {
-        // timingSafeEqual throws if the two buffers have different lengths
-        return false;
-    }
-}
 
 interface WebhookEvent {
     aspect_type: 'create' | 'update' | 'delete';
@@ -87,12 +75,10 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
         return { statusCode: 400, body: JSON.stringify({ message: 'Missing body' }) };
     }
 
-    const signature = event.headers['X-Hub-Signature'] ?? event.headers['x-hub-signature'];
-    if (!verifySignature(event.body, signature)) {
-        logger.warn('Webhook signature verification failed');
-        return { statusCode: 403, body: JSON.stringify({ message: 'Forbidden' }) };
-    }
-
+    // Strava does not sign webhook event POSTs (no X-Hub-Signature or equivalent) —
+    // the verify_token is only used during the one-time GET subscription handshake.
+    // Blast radius is bounded: unknown activityIds are no-ops (see getLookupItem below),
+    // so a forged event can only affect an activity already present in our own cache.
     const payload: WebhookEvent = JSON.parse(event.body);
     const { aspect_type, object_type, object_id: activityId, owner_id: athleteId, updates } = payload;
     logger.appendKeys({ activityId, athleteId, aspect_type });
