@@ -157,6 +157,35 @@ export async function updateLastSyncCompletedAt(athleteId: number): Promise<void
     }));
 }
 
+export interface TrainingSummaryCache {
+    summary: string;
+    generatedAt: number; // epoch seconds
+}
+
+export async function getCachedTrainingSummary(athleteId: number): Promise<TrainingSummaryCache | null> {
+    const result = await client.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_SUMMARY' },
+    }));
+    if (!result.Item) return null;
+    return {
+        summary: result.Item.summary as string,
+        generatedAt: result.Item.generatedAt as number,
+    };
+}
+
+export async function saveTrainingSummary(athleteId: number, summary: string): Promise<void> {
+    await client.send(new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+            PK: athletePK(athleteId),
+            SK: 'TRAINING_SUMMARY',
+            summary,
+            generatedAt: Math.floor(Date.now() / 1000),
+        },
+    }));
+}
+
 // Sends a BatchWrite and retries any UnprocessedItems (DynamoDB returns these
 // when throttled). Gives up after 3 retries to avoid infinite loops.
 async function batchWriteWithRetry(items: Record<string, unknown>[]): Promise<void> {

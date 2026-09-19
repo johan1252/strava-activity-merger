@@ -266,6 +266,51 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
 
         activityCacheTable.grantReadData(getStatsLambda);
 
+        // AI-generated training summary — a short natural-language digest of the
+        // athlete's recent training (volume/pace trends, streaks, race predictions),
+        // fetched separately from /stats since it depends on Bedrock and shouldn't
+        // block the deterministic charts from rendering. Calls Grok 4.3 via Amazon
+        // Bedrock's Mantle endpoint, authenticating with a bearer token minted at
+        // request time (via @aws/bedrock-token-generator) from this Lambda's own
+        // execution role — no API key/secret to manage.
+        const getTrainingSummaryLambda = new lambdaNodeJs.NodejsFunction(this, 'GetTrainingSummaryHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 512,
+            entry: './lib/handlers/getTrainingSummary.ts',
+            timeout: cdk.Duration.seconds(30),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+            },
+            // The project-wide sdkV3ExcludeSmithyPackages feature flag externalizes
+            // @smithy/* on the assumption the Lambda runtime's built-in SDK layer
+            // provides it — but @aws/bedrock-token-generator imports @smithy/signature-v4
+            // directly, which isn't reliably resolvable from that layer, causing a
+            // "Cannot find module '@smithy/signature-v4'" error at runtime. Bundle
+            // everything for this function instead of relying on the runtime-provided SDK.
+            bundling: {
+                externalModules: [],
+            },
+        });
+
+        // Read/write — it reads cached activities and also writes/reads the cached
+        // training summary itself (TRAINING_SUMMARY item, 24h TTL).
+        activityCacheTable.grantReadWriteData(getTrainingSummaryLambda);
+        // Permissions backing the minted bearer token, both under the bedrock-mantle
+        // namespace: `CallWithBearerToken` authorizes minting/using the token at all
+        // (AWS checks this against resource `*`, not a model/project ARN), while the
+        // actual inference call against the Mantle endpoint is authorized separately as
+        // `CreateInference` against a Mantle "project" resource. Model access for Grok
+        // 4.3 must still be manually enabled in the Bedrock console for this
+        // account/region; that toggle isn't exposed via CDK/IAM.
+        getTrainingSummaryLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CallWithBearerToken'],
+            resources: ['*'],
+        }));
+        getTrainingSummaryLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CreateInference'],
+            resources: [`arn:aws:bedrock-mantle:${this.region}:${this.account}:project/default`],
+        }));
+
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 1024,
@@ -368,6 +413,10 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /stats endpoint
         const statsResource = apiResource.addResource('stats');
         statsResource.addMethod('GET', new apigateway.LambdaIntegration(getStatsLambda));
+
+        // Create the /stats/training-summary endpoint
+        const trainingSummaryResource = statsResource.addResource('training-summary');
+        trainingSummaryResource.addMethod('GET', new apigateway.LambdaIntegration(getTrainingSummaryLambda));
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {

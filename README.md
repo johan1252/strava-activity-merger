@@ -133,6 +133,14 @@ curl -X POST https://www.strava.com/api/v3/push_subscriptions \
 
 Strava calls `GET /api/webhook/strava` to validate the endpoint, then returns a `subscription_id` — keep this in case you need to delete the subscription later. Test events using `backend/runners/testWebhook.ts`.
 
+### AI Training Summary Setup
+
+The Stats page's AI-generated training summary (`GET /api/stats/training-summary`) calls Grok 4.3 via **AWS Bedrock's "Mantle" endpoint**. Mantle only accepts bearer-token auth (not direct SigV4), but the handler uses [`@aws/bedrock-token-generator`](https://github.com/aws/aws-bedrock-token-generator-js) to mint that bearer token on the fly from the Lambda's own execution role — there's no API key or secret to create, store, or rotate; the IAM policy (`bedrock:CallWithBearerToken`, granted in the CDK stack) is what actually authorizes it.
+
+The one manual step CDK/IAM can't do for you: **enable model access for Grok 4.3 in the Bedrock console**, once per AWS account/region (Bedrock console → Model access). Until that's enabled, `/api/stats/training-summary` returns a 500 and the frontend simply hides the summary card — the deterministic stats and race predictions on the Stats page work fine either way.
+
+The exact model ID (`GetTrainingSummaryHandler`'s `BEDROCK_MODEL_ID` in `backend/lib/handlers/getTrainingSummary.ts`, currently `xai.grok-4.3`) and the IAM resource ARN it's scoped to may need adjusting if AWS changes Bedrock's model/ARN naming for this model.
+
 ## Architecture
 
 The application uses:
