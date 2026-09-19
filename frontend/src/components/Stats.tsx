@@ -8,6 +8,7 @@ import HeartRateTrendChart from './stats/HeartRateTrendChart';
 import StreakCard from './stats/StreakCard';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
+import RacePredictions from './stats/RacePredictions';
 
 type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
 
@@ -52,6 +53,7 @@ interface StatsResponse {
     weekStreak: { current: number; longest: number };
     calendar: { date: string; count: number; distance: number; sportTypes: string[] }[];
     gear: { id: string; name: string; type: 'shoe' | 'bike'; distance: number }[];
+    racePredictions: { distanceLabel: string; distanceMeters: number; predictedSeconds: number; sourceActivityId: number }[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -62,14 +64,14 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [timeframe, setTimeframe] = useState<Timeframe>(() => {
         const requested = searchParams.get('timeframe');
-        return TIMEFRAME_OPTIONS.some(opt => opt.value === requested) ? (requested as Timeframe) : '6m';
+        return TIMEFRAME_OPTIONS.some(opt => opt.value === requested) ? (requested as Timeframe) : '3m';
     });
 
     // Keep the timeframe reflected in the URL so links/refreshes stay on the right view.
     useEffect(() => {
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
-            if (timeframe === '6m') next.delete('timeframe');
+            if (timeframe === '3m') next.delete('timeframe');
             else next.set('timeframe', timeframe);
             return next;
         }, { replace: true });
@@ -138,6 +140,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
             <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
             <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
             <HeartRateTrendChart data={stats.heartRateTrend} bucketUnit={stats.trendBucketUnit} />
+            <RacePredictions data={stats.racePredictions} />
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div style={{ flex: '1 1 260px' }}>
                     <StreakCard dayStreak={stats.streak} weekStreak={stats.weekStreak} />

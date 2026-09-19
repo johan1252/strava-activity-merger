@@ -37,6 +37,13 @@ export interface GearStat {
     distance: number; // meters, Strava's own lifetime total
 }
 
+export interface RacePrediction {
+    distanceLabel: string; // '5K' | '10K' | 'Half Marathon' | 'Marathon'
+    distanceMeters: number;
+    predictedSeconds: number;
+    sourceActivityId: number; // the run this prediction was extrapolated from
+}
+
 export interface StatsResponse {
     volumeTrend: VolumeTrendPoint[];
     paceTrend: PaceTrendPoint[];
@@ -46,4 +53,5 @@ export interface StatsResponse {
     weekStreak: StreakInfo; // consecutive weeks with at least one activity
     calendar: CalendarDay[];
     gear: GearStat[];
+    racePredictions: RacePrediction[];
 }

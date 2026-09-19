@@ -5,6 +5,7 @@ import type {
     HeartRateTrendPoint,
     StreakInfo,
     CalendarDay,
+    RacePrediction,
     Timeframe,
     BucketUnit,
 } from '../types/stats';
@@ -235,4 +236,51 @@ export function computeCalendarDays(activities: CachedActivity[]): CalendarDay[]
             sportTypes: Array.from(sportTypes),
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Riegel's formula (T2 = T1 * (D2/D1)^1.06) — a well-established, purely statistical
+// race-time model. No AI involved: every eligible run is extrapolated to each standard
+// distance, and the fastest (best-effort) prediction wins, since that run best represents
+// current fitness at that distance.
+const RIEGEL_EXPONENT = 1.06;
+const MIN_SOURCE_DISTANCE_METERS = 3000; // exclude short jogs/warmups — too noisy a base effort to extrapolate from
+const RACE_PREDICTION_LOOKBACK_DAYS = 120; // reflect current fitness, not a stale effort from years ago
+
+const RACE_DISTANCES: { label: string; meters: number }[] = [
+    { label: '5K', meters: 5000 },
+    { label: '10K', meters: 10000 },
+    { label: 'Half Marathon', meters: 21097.5 },
+    { label: 'Marathon', meters: 42195 },
+];
+
+export function computeRacePredictions(activities: CachedActivity[]): RacePrediction[] {
+    const cutoff = Date.now() - RACE_PREDICTION_LOOKBACK_DAYS * MS_PER_DAY;
+    const eligible = activities.filter(a => {
+        const time = a.moving_time ?? a.elapsed_time;
+        return a.sport_type === 'Run'
+            && a.distance >= MIN_SOURCE_DISTANCE_METERS
+            && !!time
+            && new Date(a.start_date).getTime() >= cutoff;
+    });
+
+    const predictions: RacePrediction[] = [];
+    for (const target of RACE_DISTANCES) {
+        let best: { seconds: number; sourceActivityId: number } | null = null;
+        for (const activity of eligible) {
+            const t1 = (activity.moving_time ?? activity.elapsed_time) as number;
+            const predictedSeconds = t1 * Math.pow(target.meters / activity.distance, RIEGEL_EXPONENT);
+            if (!best || predictedSeconds < best.seconds) {
+                best = { seconds: predictedSeconds, sourceActivityId: activity.id };
+            }
+        }
+        if (best) {
+            predictions.push({
+                distanceLabel: target.label,
+                distanceMeters: target.meters,
+                predictedSeconds: Math.round(best.seconds),
+                sourceActivityId: best.sourceActivityId,
+            });
+        }
+    }
+    return predictions;
 }
