@@ -5,6 +5,7 @@ import querystring from 'querystring';
 import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 import Stats from './components/Stats';
+import Training from './components/Training';
 import MobileDetect from 'mobile-detect';
 import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -43,8 +44,11 @@ const Home: React.FC = () => {
     const [athlete, setAthlete] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
-    const activeTab: 'activities' | 'stats' = searchParams.get('tab') === 'stats' ? 'stats' : 'activities';
-    const setActiveTab = (tab: 'activities' | 'stats') => {
+    const activeTab: 'activities' | 'stats' | 'training' =
+        searchParams.get('tab') === 'stats' ? 'stats'
+        : searchParams.get('tab') === 'training' ? 'training'
+        : 'activities';
+    const setActiveTab = (tab: 'activities' | 'stats' | 'training') => {
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
             if (tab === 'activities') next.delete('tab');
@@ -142,13 +146,30 @@ const Home: React.FC = () => {
                                     >
                                         Stats
                                     </button>
+                                    <button
+                                        onClick={() => setActiveTab('training')}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 700,
+                                            padding: '0 8px 4px',
+                                            borderBottom: activeTab === 'training' ? '3px solid #FC4C02' : '3px solid transparent',
+                                            color: activeTab === 'training' ? '#FC4C02' : '#888',
+                                        }}
+                                    >
+                                        Training
+                                    </button>
                                 </div>
                                 <div className="activities-header-user" style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '5px' }}>
                                     <h3 style={{ margin: 0 }}>{athlete.firstname}</h3>
                                     <img src={athlete.profile.startsWith("https:") ? athlete.profile : 'blank-user-icon.png'} alt="Athlete Profile" style={{ borderRadius: '50%', width: '40px', height: '40px', paddingRight: '10px' }} />
                                 </div>
                             </div>
-                            {activeTab === 'activities' ? <ActivityList athlete={athlete} /> : <Stats athlete={athlete} />}
+                            {activeTab === 'activities' ? <ActivityList athlete={athlete} />
+                                : activeTab === 'stats' ? <Stats athlete={athlete} />
+                                : <Training athlete={athlete} />}
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
