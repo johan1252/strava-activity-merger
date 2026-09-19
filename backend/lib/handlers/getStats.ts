@@ -9,6 +9,7 @@ import {
     computeStreak,
     computeWeekStreak,
     computeCalendarDays,
+    computeRacePredictions,
     getBucketUnitForTimeframe,
 } from '../services/statsAggregation';
 import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
@@ -26,7 +27,7 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
         const requestedTimeframe = event.queryStringParameters?.timeframe;
         const timeframe: Timeframe = VALID_TIMEFRAMES.includes(requestedTimeframe as Timeframe)
             ? (requestedTimeframe as Timeframe)
-            : '6m';
+            : '3m';
 
         const accessToken = event.headers.Authorization.split(' ')[1];
         const athlete = await resolveAthlete(accessToken);
@@ -52,6 +53,7 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
             weekStreak: computeWeekStreak(activities),
             calendar: computeCalendarDays(activities),
             gear,
+            racePredictions: computeRacePredictions(activities),
         };
 
         logger.info(`Computed stats from ${activities.length} cached activities`);
