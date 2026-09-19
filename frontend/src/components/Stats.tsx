@@ -9,6 +9,7 @@ import StreakCard from './stats/StreakCard';
 import GearMileage from './stats/GearMileage';
 import ActivityCalendar from './stats/ActivityCalendar';
 import RacePredictions from './stats/RacePredictions';
+import TrainingSummary from './stats/TrainingSummary';
 
 type Timeframe = '7d' | '3m' | '6m' | '1y' | '5y';
 
@@ -111,6 +112,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
+            <TrainingSummary />
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
                 {TIMEFRAME_OPTIONS.map(opt => (
                     <button

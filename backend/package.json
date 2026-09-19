@@ -43,10 +43,12 @@
     "@aws-sdk/client-s3": "^3.920.0",
     "@aws-sdk/client-secrets-manager": "^3.1131.0",
     "@aws-sdk/lib-dynamodb": "^3.1048.0",
+    "@aws/bedrock-token-generator": "^1.1.0",
     "aws-cdk-lib": "^2.188.0",
     "constructs": "^10.0.0",
     "dotenv": "^16.4.7",
     "gpx-builder": "^5.4.0",
+    "openai": "^7.19.0",
     "strava-v3": "git+https://github.com/node-strava/node-strava-v3.git#edda7ea0926a4a789a46a67956db123c6501906b"
   }
 }

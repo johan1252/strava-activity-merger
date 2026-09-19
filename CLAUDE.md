@@ -59,6 +59,8 @@ Each handler follows the same pattern: extract Bearer token from `Authorization`
 | `roundUp` | POST /api/activities/roundup | Extend distance to round number |
 | `roundDown` | POST /api/activities/rounddown | Trim distance to round number |
 | `stravaWebhook` | GET+POST /api/webhook/strava | Strava webhook validation + real-time event handling |
+| `getStats` | GET /api/stats | Training stats: trend charts, streaks, calendar, gear, race predictions (all deterministic) |
+| `getTrainingSummary` | GET /api/stats/training-summary | AI-generated (Grok 4.3 via AWS Bedrock) natural-language training summary |
 
 ### Strava Auth Flow
 OAuth tokens are stored in `localStorage` (`token` and `athlete` keys). `frontend/src/utils/api.ts` exports `fetchWithAuth`, which auto-refreshes the token if it expires within 5 minutes before every API call. The frontend never calls Strava directly — all Strava API calls go through the backend using the Bearer token passed in the `Authorization` header.
@@ -68,6 +70,7 @@ Activities are cached per athlete with three item types:
 - **ACTIVITY**: `PK = ATHLETE#{athleteId}`, `SK = ACTIVITY#{start_date}#{activityId}`. Includes computed `pace_per_km` and GSI projection keys.
 - **SYNC_META**: `PK = ATHLETE#{athleteId}`, `SK = SYNC_META`. Tracks `lastSyncStartedAt`, `lastSyncCompletedAt`, and `fullSyncDone`.
 - **ACTIVITYLOOKUP**: `PK = ACTIVITYLOOKUP#{activityId}`, `SK = META`. Reverse index written alongside each activity so the webhook handler can resolve an `activityId` → full DynamoDB keys without knowing `start_date`.
+- **TRAINING_SUMMARY**: `PK = ATHLETE#{athleteId}`, `SK = TRAINING_SUMMARY`. Caches the AI-generated training summary (`summary`, `generatedAt`); `getTrainingSummary` regenerates only once the cached copy is older than 24h.
 
 Five GSIs enable efficient server-side filtering by sport type, distance range, and pace range. The cache service is in `backend/lib/services/activityCache.ts`.
 
