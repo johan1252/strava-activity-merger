@@ -311,6 +311,51 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             resources: [`arn:aws:bedrock-mantle:${this.region}:${this.account}:project/default`],
         }));
 
+        // Async worker for training plan generation (invoked by trainingPlanLambda,
+        // not behind API Gateway) — kept off the request path entirely since a single
+        // Grok call producing a full multi-week structured plan can plausibly exceed
+        // API Gateway's hard 29s integration timeout. No route; internal-invoke only.
+        const generateTrainingPlanLambda = new lambdaNodeJs.NodejsFunction(this, 'GenerateTrainingPlanHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 512,
+            entry: './lib/handlers/generateTrainingPlan.ts',
+            timeout: cdk.Duration.seconds(90),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+            },
+            // Same reason as getTrainingSummaryLambda above — @aws/bedrock-token-generator
+            // imports @smithy/signature-v4 directly.
+            bundling: {
+                externalModules: [],
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(generateTrainingPlanLambda);
+        generateTrainingPlanLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CallWithBearerToken'],
+            resources: ['*'],
+        }));
+        generateTrainingPlanLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CreateInference'],
+            resources: [`arn:aws:bedrock-mantle:${this.region}:${this.account}:project/default`],
+        }));
+
+        // Request-facing handler — fast (no Grok call), just validates input, flips the
+        // plan status to "generating", and fires the worker above asynchronously.
+        const trainingPlanLambda = new lambdaNodeJs.NodejsFunction(this, 'TrainingPlanHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 256,
+            entry: './lib/handlers/trainingPlan.ts',
+            timeout: cdk.Duration.seconds(10),
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                GENERATE_TRAINING_PLAN_FUNCTION_ARN: generateTrainingPlanLambda.functionArn,
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(trainingPlanLambda);
+        generateTrainingPlanLambda.grantInvoke(trainingPlanLambda);
+
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             memorySize: 1024,
@@ -417,6 +462,12 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         // Create the /stats/training-summary endpoint
         const trainingSummaryResource = statsResource.addResource('training-summary');
         trainingSummaryResource.addMethod('GET', new apigateway.LambdaIntegration(getTrainingSummaryLambda));
+
+        // Create the /training-plan endpoint (GET current plan, POST to (re)generate)
+        const trainingPlanResource = apiResource.addResource('training-plan');
+        const trainingPlanIntegration = new apigateway.LambdaIntegration(trainingPlanLambda);
+        trainingPlanResource.addMethod('GET', trainingPlanIntegration);
+        trainingPlanResource.addMethod('POST', trainingPlanIntegration);
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {
