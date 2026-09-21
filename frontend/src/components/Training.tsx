@@ -178,9 +178,8 @@ const WeekCard: React.FC<{ week: TrainingPlanWeek; dateRange: string }> = ({ wee
                 {week.focus}
             </span>
         </div>
-        <div style={{ display: 'flex', gap: '16px', color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
-            <span>{week.totalDistanceKm.toFixed(0)} km total</span>
-            <span>{week.longRunKm.toFixed(0)} km long run</span>
+        <div style={{ color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
+            {week.totalDistanceKm.toFixed(0)} km total
         </div>
         <p style={{ margin: 0, color: '#333', fontSize: '0.9rem', lineHeight: 1.4 }}>{week.description}</p>
     </div>
