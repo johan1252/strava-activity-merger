@@ -31,7 +31,7 @@ const MIN_TARGET_TIME_SECONDS: Record<RaceDistance, number> = {
 // crashed (e.g. the worker Lambda errored before it could mark itself failed) —
 // self-heal on read so the frontend doesn't poll forever.
 const STUCK_GENERATION_THRESHOLD_SECONDS = 2 * 60;
-const MIN_DAYS_PER_WEEK = 2;
+const MIN_DAYS_PER_WEEK = 1;
 const MAX_DAYS_PER_WEEK = 7;
 
 function todayDateString(): string {

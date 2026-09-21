@@ -19,7 +19,7 @@ const MIN_TARGET_TIME_SECONDS: Record<RaceDistance, number> = {
 const HOUR_OPTIONS = Array.from({ length: 9 }, (_, i) => i); // 0-8
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i); // 0-59
 const SECOND_OPTIONS = Array.from({ length: 12 }, (_, i) => i * 5); // 0,5,...,55
-const DAYS_PER_WEEK_OPTIONS = [2, 3, 4, 5, 6, 7];
+const DAYS_PER_WEEK_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 
 interface TrainingPlanRequest {
     raceDistance: RaceDistance;
@@ -494,7 +494,7 @@ const Training: React.FC<{ athlete: any }> = () => {
                                     style={selectStyle}
                                 >
                                     <option value="">No preference</option>
-                                    {DAYS_PER_WEEK_OPTIONS.map(n => <option key={n} value={n}>{n} days/week</option>)}
+                                    {DAYS_PER_WEEK_OPTIONS.map(n => <option key={n} value={n}>{n} {n === 1 ? 'Day' : 'Days'}/week</option>)}
                                 </select>
                             </div>
                         )}
