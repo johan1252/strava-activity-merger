@@ -219,8 +219,8 @@ export async function completeTrainingPlanGeneration(athleteId: number, plan: Tr
     await client.send(new UpdateCommand({
         TableName: TABLE_NAME,
         Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
-        UpdateExpression: 'SET #status = :complete, plan = :plan, generatedAt = :now REMOVE errorMessage',
-        ExpressionAttributeNames: { '#status': 'status' },
+        UpdateExpression: 'SET #status = :complete, #plan = :plan, generatedAt = :now REMOVE errorMessage',
+        ExpressionAttributeNames: { '#status': 'status', '#plan': 'plan' },
         ExpressionAttributeValues: {
             ':complete': 'complete',
             ':plan': plan,
