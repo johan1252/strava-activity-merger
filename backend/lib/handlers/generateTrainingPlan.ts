@@ -62,9 +62,11 @@ const SYSTEM_PROMPT = `You are an experienced running and endurance coach design
 
 Design a training plan from now until race day, broken into weeks. Each week needs a total distance (km), a long-run distance (km), a focus tag (one of: Base, Build, Peak, Taper, Race Week — the plan should progress through these in a sensible order, ending with Taper then Race Week), and a short 1-2 sentence description of that week's key workout(s). Keep descriptions brief — this is a weekly overview, not a daily schedule.
 
-Also produce two distinct scores, each 0-100 with a one-sentence rationale:
-- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
+Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
+- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. If the current predicted time already matches or beats the target time, the goal is already within reach — score this 90-100, not low, regardless of how much time is available. If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
 - difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — their current weekly volume, consistency/streaks, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism.
+
+Before responding, check that each score's direction matches its own rationale — e.g. a realismRationale that describes the target as already met, trivial, or easily achievable must pair with a high realismScore (90+), never a low one.
 
 These two scores must be able to diverge. Example: an athlete already running 60km/week with a 40-day streak chasing a modest, statistically realistic PR should score high realism, low difficulty. An athlete with sporadic activity chasing that exact same realistic PR should score the same realism but high difficulty — the target is equally plausible on paper, but far harder for this athlete to actually execute.
 
@@ -134,6 +136,16 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         });
 
         const plan = parseAndValidatePlan(rawContent);
+
+        // Deterministic safety net for one unambiguous case: if the athlete's current
+        // predicted time already meets or beats the target, realism is mathematically
+        // guaranteed to be high — this isn't a judgment call the model can get "wrong" in
+        // a defensible way. Guards against exactly the inconsistency seen in practice: a
+        // rationale describing the goal as already beaten, paired with a low score.
+        if (baseline && request.targetTimeSeconds && baseline.predictedSeconds <= request.targetTimeSeconds) {
+            plan.realismScore = Math.max(plan.realismScore, 90);
+        }
+
         await completeTrainingPlanGeneration(athleteId, plan);
         logger.info('Training plan generation complete', { weekCount: plan.weeks.length });
     } catch (error) {
