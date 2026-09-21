@@ -13,12 +13,18 @@ interface TrainingPlanRequest {
     targetTimeSeconds?: number;
 }
 
+interface TrainingPlanRun {
+    count: number;
+    label: string;
+    distanceKm: number;
+    notes: string;
+}
+
 interface TrainingPlanWeek {
     weekNumber: number;
     totalDistanceKm: number;
-    longRunKm: number;
     focus: 'Base' | 'Build' | 'Peak' | 'Taper' | 'Race Week';
-    description: string;
+    runs: TrainingPlanRun[];
 }
 
 interface TrainingPlan {
@@ -37,6 +43,25 @@ interface TrainingPlanItem {
     generatedAt?: number;
     errorMessage?: string;
     isPast?: boolean;
+}
+
+const RUN_COUNT_WORDS: Record<number, string> = { 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six' };
+
+function pluralizeRunLabel(label: string): string {
+    return label.toLowerCase().endsWith('s') ? label : `${label}s`;
+}
+
+function formatDistanceKm(distanceKm: number): string {
+    return `${Number.isInteger(distanceKm) ? distanceKm : distanceKm.toFixed(1)}km`;
+}
+
+function formatRun(run: TrainingPlanRun): string {
+    const distance = formatDistanceKm(run.distanceKm);
+    if (run.count > 1) {
+        const countLabel = RUN_COUNT_WORDS[run.count] ?? `${run.count}x`;
+        return `${countLabel} ${pluralizeRunLabel(run.label)} — ${distance} each${run.notes ? `, ${run.notes}` : ''}`;
+    }
+    return `${run.label} — ${distance}${run.notes ? `, ${run.notes}` : ''}`;
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -186,7 +211,11 @@ const WeekCard: React.FC<{ week: TrainingPlanWeek; dateRange: string }> = ({ wee
         <div style={{ color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
             {week.totalDistanceKm.toFixed(0)} km total
         </div>
-        <p style={{ margin: 0, color: '#333', fontSize: '0.9rem', lineHeight: 1.4 }}>{week.description}</p>
+        <ol style={{ margin: 0, paddingLeft: '20px', color: '#333', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            {week.runs.map((run, i) => (
+                <li key={i}>{formatRun(run)}</li>
+            ))}
+        </ol>
     </div>
 );
 

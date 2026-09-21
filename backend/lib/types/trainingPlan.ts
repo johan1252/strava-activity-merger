@@ -6,12 +6,18 @@ export interface TrainingPlanRequest {
     targetTimeSeconds?: number;
 }
 
+export interface TrainingPlanRun {
+    count: number; // e.g. 2 for "two tempo runs"
+    label: string; // e.g. "Easy run", "Long run", "Tempo run", "Rest"
+    distanceKm: number; // distance per single instance
+    notes: string; // e.g. "with 4-5km at race pace" — empty string if nothing extra to add
+}
+
 export interface TrainingPlanWeek {
     weekNumber: number;
     totalDistanceKm: number;
-    longRunKm: number;
     focus: 'Base' | 'Build' | 'Peak' | 'Taper' | 'Race Week';
-    description: string;
+    runs: TrainingPlanRun[];
 }
 
 export interface TrainingPlan {

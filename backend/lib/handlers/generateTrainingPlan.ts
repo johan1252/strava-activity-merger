@@ -11,7 +11,7 @@ import {
     computePaceTrend,
     computeRacePredictions,
 } from '../services/statsAggregation';
-import type { GenerateTrainingPlanEvent, TrainingPlan, TrainingPlanWeek } from '../types/trainingPlan';
+import type { GenerateTrainingPlanEvent, TrainingPlan, TrainingPlanWeek, TrainingPlanRun } from '../types/trainingPlan';
 
 const logger = new Logger({ serviceName: 'generateTrainingPlan' });
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -30,16 +30,27 @@ function formatDuration(totalSeconds: number): string {
     return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}m` : `${minutes}m`;
 }
 
+const runItemSchema = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['count', 'label', 'distanceKm', 'notes'],
+    properties: {
+        count: { type: 'integer' },
+        label: { type: 'string' },
+        distanceKm: { type: 'number' },
+        notes: { type: 'string' },
+    },
+};
+
 const weekItemSchema = {
     type: 'object',
     additionalProperties: false,
-    required: ['weekNumber', 'totalDistanceKm', 'longRunKm', 'focus', 'description'],
+    required: ['weekNumber', 'totalDistanceKm', 'focus', 'runs'],
     properties: {
         weekNumber: { type: 'integer' },
         totalDistanceKm: { type: 'number' },
-        longRunKm: { type: 'number' },
         focus: { type: 'string', enum: ['Base', 'Build', 'Peak', 'Taper', 'Race Week'] },
-        description: { type: 'string' },
+        runs: { type: 'array', items: runItemSchema },
     },
 };
 
@@ -58,7 +69,18 @@ const planSchema = {
 
 const SYSTEM_PROMPT = `You are an experienced running and endurance coach designing a personalized week-by-week training plan. You will be given a compact JSON summary of an athlete's current fitness (recent weekly running volume, running pace trend) and their race goal (distance, weeks available until race day, and optionally a target finish time with the athlete's current Riegel-predicted time for that distance for comparison).
 
-Design a training plan from now until race day, broken into weeks. Each week needs a total distance (km), a long-run distance (km), a focus tag (one of: Base, Build, Peak, Taper, Race Week — the plan should progress through these in a sensible order, ending with Taper then Race Week), and a short 1-2 sentence description of that week's key workout(s). Keep descriptions brief — this is a weekly overview, not a daily schedule.
+Design a training plan from now until race day, broken into weeks. Each week needs a total distance (km), a focus tag (one of: Base, Build, Peak, Taper, Race Week — the plan should progress through these in a sensible order, ending with Taper then Race Week), and a list of the individual runs that make up that week — this is a weekly overview, not a full daily schedule, so only list the runs that matter (skip easy filler/rest days unless they're the only thing that week). Each run needs:
+- count: how many times this exact run repeats that week (e.g. 2 for "two tempo runs" — don't list the same run twice, use count instead)
+- label: a short name, e.g. "Easy run", "Long run", "Tempo run", "Interval run"
+- distanceKm: the distance of a single instance of this run
+- notes: a short extra detail when relevant (e.g. "with 4-5km at race pace"), or an empty string when there's nothing more to add
+
+For example, a week's runs might be:
+1. Easy run — 5km
+2. Long run — 12km, notes: "with 4-5km of race pace"
+3. Tempo run — 5km, count: 2 ("two tempo runs")
+
+Make sure totalDistanceKm for the week is consistent with summing (count × distanceKm) across that week's runs.
 
 Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
 - realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. If the current predicted time already matches or beats the target time, the goal is already within reach — score this 90-100, not low, regardless of how much time is available. If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
@@ -176,18 +198,34 @@ function parseAndValidatePlan(rawContent: string): TrainingPlan {
 
     const weeks: TrainingPlanWeek[] = parsed.weeks.map((w: Record<string, unknown>, i: number) => {
         const totalDistanceKm = Number(w.totalDistanceKm);
-        const longRunKm = Number(w.longRunKm);
-        if (!Number.isFinite(totalDistanceKm) || !Number.isFinite(longRunKm)) {
-            throw new Error(`Week ${i + 1} has non-numeric distance fields`);
+        if (!Number.isFinite(totalDistanceKm)) {
+            throw new Error(`Week ${i + 1} has a non-numeric totalDistanceKm`);
         }
+        if (!Array.isArray(w.runs)) {
+            throw new Error(`Week ${i + 1} is missing a runs array`);
+        }
+
+        const runs: TrainingPlanRun[] = w.runs.map((r: Record<string, unknown>, j: number) => {
+            const distanceKm = Number(r.distanceKm);
+            if (!Number.isFinite(distanceKm)) {
+                throw new Error(`Week ${i + 1}, run ${j + 1} has a non-numeric distanceKm`);
+            }
+            const count = Number(r.count);
+            return {
+                count: Number.isFinite(count) && count > 0 ? Math.round(count) : 1,
+                label: typeof r.label === 'string' && r.label ? r.label : 'Run',
+                distanceKm,
+                notes: typeof r.notes === 'string' ? r.notes : '',
+            };
+        });
+
         return {
             weekNumber: Number.isFinite(Number(w.weekNumber)) ? Number(w.weekNumber) : i + 1,
             totalDistanceKm,
-            longRunKm,
             focus: (['Base', 'Build', 'Peak', 'Taper', 'Race Week'].includes(w.focus as string)
                 ? w.focus
                 : 'Base') as TrainingPlanWeek['focus'],
-            description: typeof w.description === 'string' ? w.description : '',
+            runs,
         };
     });
 
