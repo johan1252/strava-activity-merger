@@ -99,6 +99,11 @@ function formatWeekRange(startDateStr: string): string {
     return `${start} – ${end}`;
 }
 
+function formatFullDate(dateStr: string): string {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
+    return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString(undefined, opts);
+}
+
 const cardStyle: React.CSSProperties = {
     background: '#fff',
     borderRadius: '10px',
@@ -407,9 +412,9 @@ const Training: React.FC<{ athlete: any }> = () => {
                 </form>
             ) : item?.plan && (
                 <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
-                            {item.request.raceDistance} — {item.request.raceDate}
+                            {item.request.raceDistance} — {formatFullDate(item.request.raceDate)}
                         </h2>
                         <button
                             onClick={() => openForm(item.request)}
@@ -417,6 +422,14 @@ const Training: React.FC<{ athlete: any }> = () => {
                         >
                             Edit Goal
                         </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', color: '#555', fontSize: '0.9rem', marginBottom: '16px' }}>
+                        <span><strong style={{ color: '#333' }}>Plan starts:</strong> {formatFullDate(weekStartDate(item.request.raceDate, item.plan.weeks.length, 1))}</span>
+                        <span><strong style={{ color: '#333' }}>Duration:</strong> {item.plan.weeks.length} weeks</span>
+                        <span>
+                            <strong style={{ color: '#333' }}>Target time:</strong>{' '}
+                            {item.request.targetTimeSeconds ? formatDuration(item.request.targetTimeSeconds) : 'Just finish'}
+                        </span>
                     </div>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
                         <ScoreCard
