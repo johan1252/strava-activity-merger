@@ -68,6 +68,8 @@ Also produce two distinct scores, each 0-100 with a one-sentence rationale:
 
 These two scores must be able to diverge. Example: an athlete already running 60km/week with a 40-day streak chasing a modest, statistically realistic PR should score high realism, low difficulty. An athlete with sporadic activity chasing that exact same realistic PR should score the same realism but high difficulty — the target is equally plausible on paper, but far harder for this athlete to actually execute.
 
+Write both rationales speaking directly to the athlete — use "you"/"your", never "the athlete" or third person. Whenever a rationale references a number (a time, a pace, a weekly distance, a week count), state the actual figure from the context rather than a vague qualifier — e.g. "your current pace predicts 52:00, and your target is 48:00" rather than "your target is somewhat faster than your current pace."
+
 If the context says hasBaseline is false (no recent effort at or near this distance to extrapolate from), say so in the rationale and caveat your confidence rather than inventing a precise-sounding number. If the athlete's data is sparse overall, design a conservative, safe base-building plan and note that explicitly.
 
 Respond with JSON matching the required schema — nothing else.`;
