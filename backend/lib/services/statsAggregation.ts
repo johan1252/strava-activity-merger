@@ -284,3 +284,29 @@ export function computeRacePredictions(activities: CachedActivity[]): RacePredic
     }
     return predictions;
 }
+
+export interface LongestRun {
+    distanceMeters: number;
+    movingTimeSeconds: number;
+    sourceActivityId: number;
+}
+
+// The single longest run in the same recency window used for race predictions — reveals
+// actual endurance readiness for a target distance, which a Riegel pace extrapolation
+// alone can't: a fast 5K doesn't mean the athlete has ever covered a half marathon.
+export function computeLongestRun(activities: CachedActivity[]): LongestRun | null {
+    const cutoff = Date.now() - RACE_PREDICTION_LOOKBACK_DAYS * MS_PER_DAY;
+    const eligible = activities.filter(a =>
+        a.sport_type === 'Run'
+        && !!(a.moving_time ?? a.elapsed_time)
+        && new Date(a.start_date).getTime() >= cutoff,
+    );
+    if (eligible.length === 0) return null;
+
+    const longest = eligible.reduce((a, b) => (b.distance > a.distance ? b : a));
+    return {
+        distanceMeters: longest.distance,
+        movingTimeSeconds: (longest.moving_time ?? longest.elapsed_time) as number,
+        sourceActivityId: longest.id,
+    };
+}

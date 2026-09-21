@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import OpenAI, { BedrockOpenAI } from 'openai';
 import { getTokenProvider } from '@aws/bedrock-token-generator';
-import { queryActivities, getCachedTrainingSummary, saveTrainingSummary } from '../services/activityCache';
+import { queryActivities, getCachedTrainingSummary, saveTrainingSummary, getSyncMeta } from '../services/activityCache';
 import { resolveAthleteId } from '../utils/resolveAthlete';
 import {
     computeVolumeTrend,
@@ -45,6 +45,20 @@ const getTrainingSummary = async (event: APIGatewayProxyEvent): Promise<APIGatew
         const accessToken = event.headers.Authorization.split(' ')[1];
         const athleteId = await resolveAthleteId(accessToken);
         logger.appendKeys({ athleteId });
+
+        // A brand-new athlete's cache may only have a partial/first page of activities
+        // while the background full sync (triggered by the Activities tab) is still
+        // running. Don't spend a Bedrock call summarizing incomplete data — it's
+        // indistinguishable from a genuinely low-volume athlete to the model, and the
+        // result would sit cached (up to 24h) even after the real history lands.
+        const syncMeta = await getSyncMeta(athleteId);
+        if (!syncMeta || !syncMeta.fullSyncDone) {
+            logger.info('Skipping training summary — full activity sync not complete yet', { hasSyncMeta: !!syncMeta });
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ summary: null, syncStatus: syncMeta ? 'in_progress' : 'not_started' }),
+            };
+        }
 
         const nowEpoch = Math.floor(Date.now() / 1000);
         const cached = await getCachedTrainingSummary(athleteId);

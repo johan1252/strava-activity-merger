@@ -23,8 +23,16 @@ const InlineSpinner: React.FC = () => (
     </>
 );
 
+type SyncStatus = 'in_progress' | 'not_started';
+
+const SYNC_STATUS_MESSAGE: Record<SyncStatus, string> = {
+    in_progress: "We're still importing your Strava history — check back in a few minutes.",
+    not_started: 'Visit the Activities tab to start importing your Strava history, then check back here.',
+};
+
 const TrainingSummary: React.FC = () => {
     const [summary, setSummary] = useState<string | null>(null);
+    const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [failed, setFailed] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
@@ -34,7 +42,10 @@ const TrainingSummary: React.FC = () => {
         const load = async () => {
             try {
                 const data = await fetchWithAuth('/stats/training-summary');
-                if (!cancelled) setSummary(data.summary || null);
+                if (!cancelled) {
+                    setSummary(data.summary || null);
+                    setSyncStatus(data.syncStatus ?? null);
+                }
             } catch (err) {
                 console.error('Error fetching training summary:', err);
                 if (!cancelled) setFailed(true);
@@ -47,14 +58,16 @@ const TrainingSummary: React.FC = () => {
     }, []);
 
     // Fails silently — the deterministic stats below stand on their own, and this can
-    // fail until Bedrock/Grok access is configured for the environment.
-    if (failed || (!isLoading && !summary)) return null;
+    // fail until Bedrock/Grok access is configured for the environment. A sync-status
+    // response is different: still show something, so the user knows to check back.
+    if (failed || (!isLoading && !summary && !syncStatus)) return null;
 
     // Show the paragraph only once loaded and not manually minimized. While loading,
     // the card stays a thin header bar with just an inline spinner — no need to reserve
     // space for the eventual text before it exists.
     const canToggle = !isLoading && !!summary;
     const showBody = canToggle && !isMinimized;
+    const showSyncMessage = !isLoading && !summary && !!syncStatus;
 
     const toggle = () => {
         if (canToggle) setIsMinimized(m => !m);
@@ -81,7 +94,7 @@ const TrainingSummary: React.FC = () => {
                 cursor: canToggle ? 'pointer' : 'default',
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: showBody ? '8px' : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: showBody || showSyncMessage ? '8px' : 0 }}>
                 <span
                     style={{
                         fontSize: '0.65rem',
@@ -105,6 +118,9 @@ const TrainingSummary: React.FC = () => {
             </div>
             {showBody && (
                 <p style={{ margin: 0, color: '#333', lineHeight: 1.5, fontSize: '0.95rem' }}>{summary}</p>
+            )}
+            {showSyncMessage && (
+                <p style={{ margin: 0, color: '#888', lineHeight: 1.5, fontSize: '0.9rem' }}>{SYNC_STATUS_MESSAGE[syncStatus!]}</p>
             )}
         </div>
     );

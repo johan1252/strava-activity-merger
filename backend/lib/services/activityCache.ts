@@ -8,11 +8,18 @@ import {
     QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
 import type { StravaActivity, CachedActivity, ActivityFilters, SyncMeta } from '../types/activity';
+import type { TrainingPlanItem, TrainingPlanRequest, TrainingPlan } from '../types/trainingPlan';
 
 const TABLE_NAME = process.env.ACTIVITY_CACHE_TABLE_NAME!;
 const STALE_SYNC_THRESHOLD_SECONDS = 30 * 60;
 
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+// removeUndefinedValues: optional fields (e.g. TrainingPlanRequest.daysPerWeek) are
+// often built as object literals with an explicit `undefined` value rather than the
+// key being omitted — DynamoDB has no concept of `undefined`, and the client rejects
+// it by default instead of silently dropping it.
+const client = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
+    marshallOptions: { removeUndefinedValues: true },
+});
 
 // --- Key helpers ---
 
@@ -182,6 +189,61 @@ export async function saveTrainingSummary(athleteId: number, summary: string): P
             SK: 'TRAINING_SUMMARY',
             summary,
             generatedAt: Math.floor(Date.now() / 1000),
+        },
+    }));
+}
+
+// --- Training plan (one active plan per athlete, generated asynchronously) ---
+
+export async function getTrainingPlanItem(athleteId: number): Promise<TrainingPlanItem | null> {
+    const result = await client.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+    }));
+    if (!result.Item) return null;
+    return result.Item as unknown as TrainingPlanItem;
+}
+
+// Marks a new generation as in-progress without touching any previously
+// generated `plan` — so a stale-but-valid plan stays visible while a new one
+// generates, and isn't lost if the new generation fails.
+export async function startTrainingPlanGeneration(athleteId: number, request: TrainingPlanRequest): Promise<void> {
+    await client.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        UpdateExpression: 'SET #status = :generating, #request = :request, requestedAt = :now REMOVE errorMessage',
+        ExpressionAttributeNames: { '#status': 'status', '#request': 'request' },
+        ExpressionAttributeValues: {
+            ':generating': 'generating',
+            ':request': request,
+            ':now': Math.floor(Date.now() / 1000),
+        },
+    }));
+}
+
+export async function completeTrainingPlanGeneration(athleteId: number, plan: TrainingPlan): Promise<void> {
+    await client.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        UpdateExpression: 'SET #status = :complete, #plan = :plan, generatedAt = :now REMOVE errorMessage',
+        ExpressionAttributeNames: { '#status': 'status', '#plan': 'plan' },
+        ExpressionAttributeValues: {
+            ':complete': 'complete',
+            ':plan': plan,
+            ':now': Math.floor(Date.now() / 1000),
+        },
+    }));
+}
+
+export async function failTrainingPlanGeneration(athleteId: number, errorMessage: string): Promise<void> {
+    await client.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        UpdateExpression: 'SET #status = :failed, errorMessage = :errorMessage',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':failed': 'failed',
+            ':errorMessage': errorMessage,
         },
     }));
 }
