@@ -364,7 +364,7 @@ const Training: React.FC<{ athlete: any }> = () => {
                             max={maxDateString()}
                             onChange={e => setRaceDate(e.target.value)}
                             required
-                            style={{ border: '1.5px solid #FC4C02', borderRadius: 8, padding: '8px 12px', fontSize: '0.9rem' }}
+                            style={{ border: raceDate ? '1px solid #ddd' : '1.5px solid #FC4C02', borderRadius: 8, padding: '8px 12px', fontSize: '0.9rem' }}
                         />
                     </div>
 
