@@ -102,12 +102,12 @@ function gaugeArcPath(startAngle: number, endAngle: number): string {
     return `M ${start.x} ${start.y} A ${GAUGE_RADIUS} ${GAUGE_RADIUS} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
 }
 
-// Five equal 0-100 bands, lowest to highest score.
-type GaugeScale = [string, string, string, string, string];
+// Four equal 0-100 bands, lowest to highest score.
+type GaugeScale = [string, string, string, string];
 
 function scoreToWord(score: number, scale: GaugeScale): string {
     const clamped = Math.max(0, Math.min(100, score));
-    return scale[Math.min(4, Math.floor(clamped / 20))];
+    return scale[Math.min(3, Math.floor(clamped / 25))];
 }
 
 const ScoreCard: React.FC<{ label: string; score: number; rationale: string; scale: GaugeScale }> = ({ label, score, rationale, scale }) => {
@@ -392,13 +392,13 @@ const Training: React.FC<{ athlete: any }> = () => {
                             label="Realism"
                             score={item.plan.realismScore}
                             rationale={item.plan.realismRationale}
-                            scale={['Unrealistic', 'Unlikely', 'Uncertain', 'Likely', 'Highly Realistic']}
+                            scale={['Unrealistic', 'Uncertain', 'Likely', 'Highly Realistic']}
                         />
                         <ScoreCard
                             label="Difficulty"
                             score={item.plan.difficultyScore}
                             rationale={item.plan.difficultyRationale}
-                            scale={['Easy', 'Moderate', 'Challenging', 'Hard', 'Very Hard']}
+                            scale={['Easy', 'Moderate', 'Hard', 'Very Hard']}
                         />
                     </div>
                     {item.plan.weeks.map(week => (
