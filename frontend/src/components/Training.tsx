@@ -80,13 +80,47 @@ const cardStyle: React.CSSProperties = {
     boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
 };
 
-const ScoreCard: React.FC<{ label: string; score: number; rationale: string }> = ({ label, score, rationale }) => (
-    <div style={{ ...cardStyle, flex: '1 1 220px', textAlign: 'center' }}>
-        <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
-        <div style={{ fontSize: '2rem', fontWeight: 700, color: '#FC4C02' }}>{score}</div>
-        <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '6px' }}>{rationale}</div>
-    </div>
-);
+// Semicircular gauge — angle measured clockwise from the top (0°), so -90°/+90°
+// land on the left/right ends and the arc sweeps over the top, dome-shaped.
+const GAUGE_SIZE = 140;
+const GAUGE_STROKE = 14;
+const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_STROKE) / 2;
+const GAUGE_CENTER = GAUGE_SIZE / 2;
+
+function gaugePoint(angleDeg: number): { x: number; y: number } {
+    const angleRad = ((angleDeg - 90) * Math.PI) / 180;
+    return {
+        x: GAUGE_CENTER + GAUGE_RADIUS * Math.cos(angleRad),
+        y: GAUGE_CENTER + GAUGE_RADIUS * Math.sin(angleRad),
+    };
+}
+
+function gaugeArcPath(startAngle: number, endAngle: number): string {
+    const start = gaugePoint(endAngle);
+    const end = gaugePoint(startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+    return `M ${start.x} ${start.y} A ${GAUGE_RADIUS} ${GAUGE_RADIUS} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+}
+
+const ScoreCard: React.FC<{ label: string; score: number; rationale: string }> = ({ label, score, rationale }) => {
+    const clamped = Math.max(0, Math.min(100, score));
+    const scoreAngle = -90 + (clamped / 100) * 180;
+    const viewHeight = GAUGE_CENTER + GAUGE_STROKE / 2;
+
+    return (
+        <div style={{ ...cardStyle, flex: '1 1 220px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
+            <svg width={GAUGE_SIZE} height={viewHeight} viewBox={`0 0 ${GAUGE_SIZE} ${viewHeight}`}>
+                <path d={gaugeArcPath(-90, 90)} fill="none" stroke="#f0f0f0" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
+                <path d={gaugeArcPath(-90, scoreAngle)} fill="none" stroke="#FC4C02" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
+                <text x={GAUGE_CENTER} y={GAUGE_CENTER - 4} textAnchor="middle" fontSize="26" fontWeight="700" fill="#333">
+                    {clamped}
+                </text>
+            </svg>
+            <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '2px' }}>{rationale}</div>
+        </div>
+    );
+};
 
 const WeekCard: React.FC<{ week: TrainingPlanWeek }> = ({ week }) => (
     <div style={{ ...cardStyle, marginBottom: '10px' }}>
