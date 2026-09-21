@@ -435,22 +435,42 @@ const Training: React.FC<{ athlete: any }> = () => {
                         <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', fontWeight: 600, marginBottom: '6px' }}>
                             Race date
                         </label>
-                        <input
-                            type="date"
-                            value={raceDate}
-                            min={tomorrowDateString()}
-                            max={maxDateString()}
-                            onChange={e => setRaceDate(e.target.value)}
-                            required
-                            style={{
-                                border: raceDate ? '1px solid #ddd' : '1.5px solid #FC4C02',
-                                borderRadius: 8,
-                                padding: '8px 12px',
-                                fontSize: '0.9rem',
-                                background: '#fff',
-                                color: '#333',
-                            }}
-                        />
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <input
+                                type="date"
+                                value={raceDate}
+                                min={tomorrowDateString()}
+                                max={maxDateString()}
+                                onChange={e => setRaceDate(e.target.value)}
+                                required
+                                style={{
+                                    border: raceDate ? '1px solid #ddd' : '1.5px solid #FC4C02',
+                                    borderRadius: 8,
+                                    padding: '8px 12px',
+                                    fontSize: '0.9rem',
+                                    background: '#fff',
+                                    // Some mobile browsers (Android Chrome) don't render the native
+                                    // empty-state "dd/mm/yyyy" hint at all — hide it either way and
+                                    // show our own overlay text below instead, for a consistent look.
+                                    color: raceDate ? '#333' : 'transparent',
+                                }}
+                            />
+                            {!raceDate && (
+                                <span
+                                    style={{
+                                        position: 'absolute',
+                                        left: 12,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        color: '#888',
+                                        fontSize: '0.9rem',
+                                        pointerEvents: 'none',
+                                    }}
+                                >
+                                    Select a date
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <div style={{ marginBottom: '16px' }}>
