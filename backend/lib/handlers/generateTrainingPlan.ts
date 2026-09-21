@@ -83,7 +83,7 @@ For example, a week's runs might be:
 Make sure totalDistanceKm for the week is consistent with summing (count × distanceKm) across that week's runs.
 
 Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
-- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. If the current predicted time already matches or beats the target time, the goal is already within reach — score this 90-100, not low, regardless of how much time is available. If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
+- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. When a targetTime was given, use the precomputed paceComparison field directly rather than comparing currentPredictedTimeForThisDistance and targetTime yourself: if paceComparison.targetAlreadyAchieved is true, the goal is already within reach by paceComparison.differenceFromTarget — score this 90-100, not low, regardless of how much time is available, and say so plainly (the target is already met, not something to "improve" toward). If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
 - difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — specifically their recent weekly running volume (last3MonthsWeeklyRunVolumeKm) compared to what the plan's weekly distances ask for, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism. Do not factor in consistency streaks — base this purely on running volume and pace trend.
 
 Before responding, check that each score's direction matches its own rationale — e.g. a realismRationale that describes the target as already met, trivial, or easily achievable must pair with a high realismScore (90+), never a low one.
@@ -110,12 +110,25 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         const racePredictions = computeRacePredictions(activities);
         const baseline = racePredictions.find(p => p.distanceLabel === request.raceDistance);
 
+        // Precomputed here rather than left for the model to work out from the two
+        // formatted duration strings — with reasoning disabled (see below), asking it to
+        // parse "1h55m" vs "1h40m" and subtract them itself is exactly the kind of small
+        // arithmetic step that was producing self-contradictory rationale text in
+        // practice (correctly stating the current time was faster, then in the same
+        // breath describing the target as needing an "improvement"). Handing it the
+        // already-computed answer removes the need for it to derive this at all.
+        const paceComparison = baseline && request.targetTimeSeconds ? {
+            targetAlreadyAchieved: baseline.predictedSeconds <= request.targetTimeSeconds,
+            differenceFromTarget: formatDuration(Math.abs(request.targetTimeSeconds - baseline.predictedSeconds)),
+        } : null;
+
         const trainingContext = {
             raceDistance: request.raceDistance,
             weeksUntilRace,
             targetTime: request.targetTimeSeconds ? formatDuration(request.targetTimeSeconds) : null,
             hasBaseline: !!baseline,
             currentPredictedTimeForThisDistance: baseline ? formatDuration(baseline.predictedSeconds) : null,
+            paceComparison,
             // Run-only — difficultyScore is meant to weigh running volume specifically,
             // not a mix of other sports that don't stress the same running fitness.
             last3MonthsWeeklyRunVolumeKm: computeVolumeTrend(activities.filter(a => a.sport_type === 'Run'), '3m').map(w => ({
