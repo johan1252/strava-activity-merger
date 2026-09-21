@@ -72,6 +72,33 @@ function maxDateString(): string {
     return d.toISOString().slice(0, 10);
 }
 
+function addDays(dateStr: string, days: number): string {
+    const d = new Date(`${dateStr}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+}
+
+function mondayOf(dateStr: string): string {
+    const d = new Date(`${dateStr}T00:00:00Z`);
+    const day = d.getUTCDay(); // 0 = Sunday
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    return addDays(dateStr, -diffToMonday);
+}
+
+// The plan's last week is the one containing race day — count backward in 7-day
+// increments from that week's Monday to find where any earlier week starts.
+function weekStartDate(raceDate: string, totalWeeks: number, weekNumber: number): string {
+    return addDays(mondayOf(raceDate), -7 * (totalWeeks - weekNumber));
+}
+
+function formatWeekRange(startDateStr: string): string {
+    const endDateStr = addDays(startDateStr, 6);
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', timeZone: 'UTC' };
+    const start = new Date(`${startDateStr}T00:00:00Z`).toLocaleDateString(undefined, opts);
+    const end = new Date(`${endDateStr}T00:00:00Z`).toLocaleDateString(undefined, opts);
+    return `${start} – ${end}`;
+}
+
 const cardStyle: React.CSSProperties = {
     background: '#fff',
     borderRadius: '10px',
@@ -130,10 +157,13 @@ const ScoreCard: React.FC<{ label: string; score: number; rationale: string; sca
     );
 };
 
-const WeekCard: React.FC<{ week: TrainingPlanWeek }> = ({ week }) => (
+const WeekCard: React.FC<{ week: TrainingPlanWeek; dateRange: string }> = ({ week, dateRange }) => (
     <div style={{ ...cardStyle, marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontWeight: 700 }}>Week {week.weekNumber}</span>
+            <span>
+                <span style={{ fontWeight: 700 }}>Week {week.weekNumber}</span>
+                <span style={{ color: '#888', fontSize: '0.85rem', marginLeft: '8px' }}>{dateRange}</span>
+            </span>
             <span
                 style={{
                     fontSize: '0.75rem',
@@ -403,9 +433,10 @@ const Training: React.FC<{ athlete: any }> = () => {
                             scale={['Easy', 'Moderate', 'Hard', 'Very Hard']}
                         />
                     </div>
-                    {item.plan.weeks.map(week => (
-                        <WeekCard key={week.weekNumber} week={week} />
-                    ))}
+                    {item.plan.weeks.map(week => {
+                        const startDate = weekStartDate(item.request.raceDate, item.plan!.weeks.length, week.weekNumber);
+                        return <WeekCard key={week.weekNumber} week={week} dateRange={formatWeekRange(startDate)} />;
+                    })}
                 </>
             )}
         </div>
