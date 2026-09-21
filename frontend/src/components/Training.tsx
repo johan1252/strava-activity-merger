@@ -102,7 +102,15 @@ function gaugeArcPath(startAngle: number, endAngle: number): string {
     return `M ${start.x} ${start.y} A ${GAUGE_RADIUS} ${GAUGE_RADIUS} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
 }
 
-const ScoreCard: React.FC<{ label: string; score: number; rationale: string }> = ({ label, score, rationale }) => {
+// Five equal 0-100 bands, lowest to highest score.
+type GaugeScale = [string, string, string, string, string];
+
+function scoreToWord(score: number, scale: GaugeScale): string {
+    const clamped = Math.max(0, Math.min(100, score));
+    return scale[Math.min(4, Math.floor(clamped / 20))];
+}
+
+const ScoreCard: React.FC<{ label: string; score: number; rationale: string; scale: GaugeScale }> = ({ label, score, rationale, scale }) => {
     const clamped = Math.max(0, Math.min(100, score));
     const scoreAngle = -90 + (clamped / 100) * 180;
     const viewHeight = GAUGE_CENTER + GAUGE_STROKE / 2;
@@ -113,11 +121,9 @@ const ScoreCard: React.FC<{ label: string; score: number; rationale: string }> =
             <svg width={GAUGE_SIZE} height={viewHeight} viewBox={`0 0 ${GAUGE_SIZE} ${viewHeight}`}>
                 <path d={gaugeArcPath(-90, 90)} fill="none" stroke="#f0f0f0" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
                 <path d={gaugeArcPath(-90, scoreAngle)} fill="none" stroke="#FC4C02" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
-                <text x={GAUGE_CENTER} y={GAUGE_CENTER - 4} textAnchor="middle" fontSize="26" fontWeight="700" fill="#333">
-                    {clamped}
-                </text>
             </svg>
-            <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '2px' }}>{rationale}</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FC4C02' }}>{scoreToWord(clamped, scale)}</div>
+            <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '4px' }}>{rationale}</div>
         </div>
     );
 };
@@ -382,8 +388,18 @@ const Training: React.FC<{ athlete: any }> = () => {
                         </button>
                     </div>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                        <ScoreCard label="Realism" score={item.plan.realismScore} rationale={item.plan.realismRationale} />
-                        <ScoreCard label="Difficulty" score={item.plan.difficultyScore} rationale={item.plan.difficultyRationale} />
+                        <ScoreCard
+                            label="Realism"
+                            score={item.plan.realismScore}
+                            rationale={item.plan.realismRationale}
+                            scale={['Unrealistic', 'Unlikely', 'Uncertain', 'Likely', 'Highly Realistic']}
+                        />
+                        <ScoreCard
+                            label="Difficulty"
+                            score={item.plan.difficultyScore}
+                            rationale={item.plan.difficultyRationale}
+                            scale={['Easy', 'Moderate', 'Challenging', 'Hard', 'Very Hard']}
+                        />
                     </div>
                     {item.plan.weeks.map(week => (
                         <WeekCard key={week.weekNumber} week={week} />
