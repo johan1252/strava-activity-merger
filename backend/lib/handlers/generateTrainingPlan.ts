@@ -9,8 +9,6 @@ import {
 import {
     computeVolumeTrend,
     computePaceTrend,
-    computeStreak,
-    computeWeekStreak,
     computeRacePredictions,
 } from '../services/statsAggregation';
 import type { GenerateTrainingPlanEvent, TrainingPlan, TrainingPlanWeek } from '../types/trainingPlan';
@@ -58,17 +56,17 @@ const planSchema = {
     },
 };
 
-const SYSTEM_PROMPT = `You are an experienced running and endurance coach designing a personalized week-by-week training plan. You will be given a compact JSON summary of an athlete's current fitness (recent weekly volume, running pace trend, consistency streaks) and their race goal (distance, weeks available until race day, and optionally a target finish time with the athlete's current Riegel-predicted time for that distance for comparison).
+const SYSTEM_PROMPT = `You are an experienced running and endurance coach designing a personalized week-by-week training plan. You will be given a compact JSON summary of an athlete's current fitness (recent weekly running volume, running pace trend) and their race goal (distance, weeks available until race day, and optionally a target finish time with the athlete's current Riegel-predicted time for that distance for comparison).
 
 Design a training plan from now until race day, broken into weeks. Each week needs a total distance (km), a long-run distance (km), a focus tag (one of: Base, Build, Peak, Taper, Race Week — the plan should progress through these in a sensible order, ending with Taper then Race Week), and a short 1-2 sentence description of that week's key workout(s). Keep descriptions brief — this is a weekly overview, not a daily schedule.
 
 Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
 - realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. If the current predicted time already matches or beats the target time, the goal is already within reach — score this 90-100, not low, regardless of how much time is available. If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
-- difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — their current weekly volume, consistency/streaks, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism.
+- difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — specifically their recent weekly running volume (last3MonthsWeeklyRunVolumeKm) compared to what the plan's weekly distances ask for, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism. Do not factor in consistency streaks — base this purely on running volume and pace trend.
 
 Before responding, check that each score's direction matches its own rationale — e.g. a realismRationale that describes the target as already met, trivial, or easily achievable must pair with a high realismScore (90+), never a low one.
 
-These two scores must be able to diverge. Example: an athlete already running 60km/week with a 40-day streak chasing a modest, statistically realistic PR should score high realism, low difficulty. An athlete with sporadic activity chasing that exact same realistic PR should score the same realism but high difficulty — the target is equally plausible on paper, but far harder for this athlete to actually execute.
+These two scores must be able to diverge. Example: an athlete already running 60km/week chasing a modest, statistically realistic PR should score high realism, low difficulty. An athlete running just 15km/week chasing that exact same realistic PR should score the same realism but high difficulty — the target is equally plausible on paper, but far harder for this athlete to actually execute given their current running volume.
 
 Write both rationales speaking directly to the athlete — use "you"/"your", never "the athlete" or third person. Whenever a rationale references a number (a time, a pace, a weekly distance, a week count), state the actual figure from the context rather than a vague qualifier — e.g. "your current pace predicts 52:00, and your target is 48:00" rather than "your target is somewhat faster than your current pace."
 
@@ -96,7 +94,9 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
             targetTime: request.targetTimeSeconds ? formatDuration(request.targetTimeSeconds) : null,
             hasBaseline: !!baseline,
             currentPredictedTimeForThisDistance: baseline ? formatDuration(baseline.predictedSeconds) : null,
-            last3MonthsWeeklyVolumeKm: computeVolumeTrend(activities, '3m').map(w => ({
+            // Run-only — difficultyScore is meant to weigh running volume specifically,
+            // not a mix of other sports that don't stress the same running fitness.
+            last3MonthsWeeklyRunVolumeKm: computeVolumeTrend(activities.filter(a => a.sport_type === 'Run'), '3m').map(w => ({
                 weekStart: w.periodStart,
                 km: Math.round(w.distance / 100) / 10,
                 activityCount: w.count,
@@ -105,8 +105,6 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
                 weekStart: p.periodStart,
                 avgPaceMinPerKm: Math.round((p.avgPaceSecPerKm / 60) * 10) / 10,
             })),
-            currentDayStreak: computeStreak(activities).current,
-            currentWeekStreak: computeWeekStreak(activities).current,
         };
 
         const client = new BedrockOpenAI({ bedrockTokenProvider: provideBedrockToken, awsRegion: process.env.AWS_REGION });
