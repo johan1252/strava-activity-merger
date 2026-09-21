@@ -13,7 +13,13 @@ import type { TrainingPlanItem, TrainingPlanRequest, TrainingPlan } from '../typ
 const TABLE_NAME = process.env.ACTIVITY_CACHE_TABLE_NAME!;
 const STALE_SYNC_THRESHOLD_SECONDS = 30 * 60;
 
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+// removeUndefinedValues: optional fields (e.g. TrainingPlanRequest.daysPerWeek) are
+// often built as object literals with an explicit `undefined` value rather than the
+// key being omitted — DynamoDB has no concept of `undefined`, and the client rejects
+// it by default instead of silently dropping it.
+const client = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
+    marshallOptions: { removeUndefinedValues: true },
+});
 
 // --- Key helpers ---
 
