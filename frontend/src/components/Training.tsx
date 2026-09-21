@@ -114,6 +114,13 @@ const WeekCard: React.FC<{ week: TrainingPlanWeek }> = ({ week }) => (
     </div>
 );
 
+type SyncStatus = 'ready' | 'in_progress' | 'not_started';
+
+const SYNC_STATUS_MESSAGE: Record<Exclude<SyncStatus, 'ready'>, string> = {
+    in_progress: "We're still importing your Strava history — check back in a few minutes to set a race goal.",
+    not_started: 'Visit the Activities tab to start importing your Strava history, then come back here to set a race goal.',
+};
+
 const Banner: React.FC<{ children: React.ReactNode; tone?: 'info' | 'error' }> = ({ children, tone = 'info' }) => (
     <div
         style={{
@@ -130,6 +137,7 @@ const Banner: React.FC<{ children: React.ReactNode; tone?: 'info' | 'error' }> =
 
 const Training: React.FC<{ athlete: any }> = () => {
     const [item, setItem] = useState<TrainingPlanItem | null>(null);
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>('ready');
     const [isLoadingInitial, setIsLoadingInitial] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,6 +151,7 @@ const Training: React.FC<{ athlete: any }> = () => {
         try {
             const data = await fetchWithAuth('/training-plan');
             setItem(data.item);
+            setSyncStatus(data.syncStatus ?? 'ready');
         } catch (err) {
             console.error('Error fetching training plan:', err);
         } finally {
@@ -190,10 +199,15 @@ const Training: React.FC<{ athlete: any }> = () => {
 
         setIsSubmitting(true);
         try {
-            await fetchWithAuth('/training-plan', {
+            const data = await fetchWithAuth('/training-plan', {
                 method: 'POST',
                 body: JSON.stringify({ raceDistance, raceDate, targetTimeSeconds }),
             });
+            if (data.status === 'not_synced') {
+                setSyncStatus(data.syncStatus ?? 'in_progress');
+                setSubmitError(null);
+                return;
+            }
             setShowForm(false);
             await loadPlan();
         } catch (err) {
@@ -216,10 +230,12 @@ const Training: React.FC<{ athlete: any }> = () => {
         return <LoadingIndicator message="Designing your training plan... this can take up to a minute." />;
     }
 
-    const displayForm = showForm || (!hasPlan && !isGenerating);
+    const notSynced = syncStatus !== 'ready';
+    const displayForm = !notSynced && (showForm || (!hasPlan && !isGenerating));
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
+            {notSynced && <Banner>{SYNC_STATUS_MESSAGE[syncStatus as Exclude<SyncStatus, 'ready'>]}</Banner>}
             {isGenerating && hasPlan && <Banner>Updating your plan with your new goal...</Banner>}
             {isFailed && (
                 <Banner tone="error">

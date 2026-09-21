@@ -5,9 +5,12 @@ import {
     getTrainingPlanItem,
     startTrainingPlanGeneration,
     failTrainingPlanGeneration,
+    getSyncMeta,
 } from '../services/activityCache';
 import { resolveAthleteId } from '../utils/resolveAthlete';
 import type { RaceDistance, TrainingPlanRequest } from '../types/trainingPlan';
+
+type SyncStatus = 'ready' | 'in_progress' | 'not_started';
 
 const logger = new Logger({ serviceName: 'trainingPlan' });
 const lambdaClient = new LambdaClient({});
@@ -73,6 +76,13 @@ const trainingPlan = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
         const athleteId = await resolveAthleteId(accessToken);
         logger.appendKeys({ athleteId });
 
+        // A brand-new athlete's cache may only hold a partial/first page of activities
+        // while the background full sync (triggered by the Activities tab) is still
+        // running — surfaced to the frontend so it can show a "come back later" state
+        // instead of letting the user generate a plan from incomplete data.
+        const syncMeta = await getSyncMeta(athleteId);
+        const syncStatus: SyncStatus = !syncMeta ? 'not_started' : !syncMeta.fullSyncDone ? 'in_progress' : 'ready';
+
         if (event.httpMethod === 'GET') {
             let item = await getTrainingPlanItem(athleteId);
 
@@ -83,14 +93,19 @@ const trainingPlan = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
             }
 
             if (!item) {
-                return { statusCode: 200, body: JSON.stringify({ item: null }) };
+                return { statusCode: 200, body: JSON.stringify({ item: null, syncStatus }) };
             }
 
             const isPast = item.request.raceDate < todayDateString();
-            return { statusCode: 200, body: JSON.stringify({ item: { ...item, isPast } }) };
+            return { statusCode: 200, body: JSON.stringify({ item: { ...item, isPast }, syncStatus }) };
         }
 
         if (event.httpMethod === 'POST') {
+            if (syncStatus !== 'ready') {
+                logger.info('Rejecting plan generation — full activity sync not complete yet', { syncStatus });
+                return { statusCode: 200, body: JSON.stringify({ status: 'not_synced', syncStatus }) };
+            }
+
             if (!event.body) throw new Error('Missing request body');
             const request = validateRequest(JSON.parse(event.body));
 
