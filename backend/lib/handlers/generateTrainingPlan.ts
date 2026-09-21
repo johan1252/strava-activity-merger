@@ -10,6 +10,7 @@ import {
     computeVolumeTrend,
     computePaceTrend,
     computeRacePredictions,
+    computeLongestRun,
 } from '../services/statsAggregation';
 import type { GenerateTrainingPlanEvent, TrainingPlan, TrainingPlanWeek, TrainingPlanRun } from '../types/trainingPlan';
 
@@ -83,7 +84,10 @@ For example, a week's runs might be:
 Make sure totalDistanceKm for the week is consistent with summing (count × distanceKm) across that week's runs. The number of running days in a week is the sum of count across its runs (each run instance is its own day, never doubled up with another run the same day) — if preferredRunDaysPerWeek is given (non-null), keep every week within ±1 of that number (Race Week and any very light recovery week are the natural exceptions); if it's null, use your own judgment (commonly 4-5 days/week for these distances).
 
 Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
-- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. Use the precomputed paceComparison field directly rather than comparing currentPredictedTimeForThisDistance and targetTime yourself: if paceComparison.targetAlreadyAchieved is true, the goal is already within reach by paceComparison.differenceFromTarget — score this 90-100, not low, regardless of how much time is available, and say so plainly (the target is already met, not something to "improve" toward). If hasBaseline is false, paceComparison will be null — base realism on whether the timeframe is reasonable to safely reach that target from scratch instead.
+- realismScore: whether the target time is achievable in the weeks available — weigh TWO separate things, not just pace math:
+  1. Pace plausibility: use the precomputed paceComparison field directly rather than comparing currentPredictedTimeForThisDistance and targetTime yourself. currentPredictedTimeForThisDistance is a Riegel extrapolation from baselineBasedOn (a real run at a possibly very different distance) — the larger the gap between baselineBasedOn's distance and the target race distance, the less this extrapolation alone proves.
+  2. Endurance readiness: compare longestRecentRun to the race distance. A pace prediction extrapolated from a short race (e.g. a 5K) does not mean a marathon is "already achieved" if the athlete has never run anywhere close to marathon distance — completing the distance at all is then a bigger open question than hitting a pace, and that must pull realism down even when paceComparison looks favorable. More weeksUntilRace gives more room to build that endurance base safely, which should raise realism back up; very few weeks with a large endurance gap should score low regardless of pace.
+  Only treat the goal as unambiguously "already within reach" (90-100) when BOTH pace already meets target AND longestRecentRun is reasonably close to the race distance already (e.g. at least ~80% of it) — otherwise this is a judgment call, not a given, so say so in the rationale rather than declaring it trivial.
 - difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — specifically their recent weekly running volume (last3MonthsWeeklyRunVolumeKm) compared to what the plan's weekly distances ask for, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism. Do not factor in consistency streaks — base this purely on running volume and pace trend.
 
 Before responding, check that each score's direction matches its own rationale — e.g. a realismRationale that describes the target as already met, trivial, or easily achievable must pair with a high realismScore (90+), never a low one.
@@ -109,6 +113,15 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
 
         const racePredictions = computeRacePredictions(activities);
         const baseline = racePredictions.find(p => p.distanceLabel === request.raceDistance);
+        // The specific run computeRacePredictions extrapolated the baseline from — exposed
+        // so the model can judge how much distance-gap risk that extrapolation carries,
+        // rather than treating the resulting pace as unconditionally trustworthy.
+        const baselineSourceActivity = baseline ? activities.find(a => a.id === baseline.sourceActivityId) : undefined;
+        // Longest actual run in the same recency window — the direct answer to "has this
+        // athlete ever covered anywhere near the target distance," which pace math alone
+        // can't tell you (requested per user feedback: realism was assuming a Riegel
+        // extrapolation from a short effort meant the goal was already "achieved").
+        const longestRun = computeLongestRun(activities);
 
         // Precomputed here rather than left for the model to work out from the two
         // formatted duration strings — with reasoning disabled (see below), asking it to
@@ -128,6 +141,16 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
             targetTime: formatDuration(request.targetTimeSeconds),
             hasBaseline: !!baseline,
             currentPredictedTimeForThisDistance: baseline ? formatDuration(baseline.predictedSeconds) : null,
+            // The real run the prediction above was extrapolated from via Riegel's formula.
+            baselineBasedOn: baselineSourceActivity ? {
+                distanceKm: Math.round(baselineSourceActivity.distance / 100) / 10,
+                time: formatDuration((baselineSourceActivity.moving_time ?? baselineSourceActivity.elapsed_time) as number),
+            } : null,
+            // The longest run the athlete has actually completed recently, regardless of pace.
+            longestRecentRun: longestRun ? {
+                distanceKm: Math.round(longestRun.distanceMeters / 100) / 10,
+                time: formatDuration(longestRun.movingTimeSeconds),
+            } : null,
             paceComparison,
             preferredRunDaysPerWeek: request.daysPerWeek ?? null,
             // Run-only — difficultyScore is meant to weigh running volume specifically,
@@ -171,12 +194,17 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
 
         const plan = parseAndValidatePlan(rawContent);
 
-        // Deterministic safety net for one unambiguous case: if the athlete's current
-        // predicted time already meets or beats the target, realism is mathematically
-        // guaranteed to be high — this isn't a judgment call the model can get "wrong" in
-        // a defensible way. Guards against exactly the inconsistency seen in practice: a
-        // rationale describing the goal as already beaten, paired with a low score.
-        if (baseline && baseline.predictedSeconds <= request.targetTimeSeconds) {
+        // Deterministic safety net for the one truly unambiguous case: the athlete's
+        // pace already meets the target AND they've recently covered most of the race
+        // distance already — at that point there's no real endurance question left
+        // either, so realism is guaranteed high regardless of what the model said.
+        // Deliberately narrower than pace-alone: a fast 5K extrapolated via Riegel to a
+        // marathon target doesn't mean the marathon is "already achieved" if the athlete
+        // has never run anywhere near that far — that case is left to the model's
+        // judgment (now informed by longestRecentRun/baselineBasedOn) rather than forced.
+        const ENDURANCE_PROVEN_RATIO = 0.8;
+        const enduranceProven = !!baseline && !!longestRun && longestRun.distanceMeters >= baseline.distanceMeters * ENDURANCE_PROVEN_RATIO;
+        if (baseline && baseline.predictedSeconds <= request.targetTimeSeconds && enduranceProven) {
             plan.realismScore = Math.max(plan.realismScore, 90);
         }
 
