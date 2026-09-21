@@ -80,10 +80,10 @@ For example, a week's runs might be:
 2. Long run — 12km, notes: "with 4-5km of race pace"
 3. Tempo run — 5km, count: 2 ("two tempo runs")
 
-Make sure totalDistanceKm for the week is consistent with summing (count × distanceKm) across that week's runs.
+Make sure totalDistanceKm for the week is consistent with summing (count × distanceKm) across that week's runs. The number of running days in a week is the sum of count across its runs (each run instance is its own day, never doubled up with another run the same day) — if preferredRunDaysPerWeek is given (non-null), keep every week within ±1 of that number (Race Week and any very light recovery week are the natural exceptions); if it's null, use your own judgment (commonly 4-5 days/week for these distances).
 
 Also produce two distinct scores, each 0-100, where 100 always means the best possible outcome for that score (100 realism = fully achievable/already within reach; 100 difficulty = extremely hard) — never invert this scale. Each needs a one-sentence rationale:
-- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. When a targetTime was given, use the precomputed paceComparison field directly rather than comparing currentPredictedTimeForThisDistance and targetTime yourself: if paceComparison.targetAlreadyAchieved is true, the goal is already within reach by paceComparison.differenceFromTarget — score this 90-100, not low, regardless of how much time is available, and say so plainly (the target is already met, not something to "improve" toward). If no target time was given, base this on whether the timeframe is reasonable to safely build up to completing the distance.
+- realismScore: purely about whether the target time is mathematically plausible given the current predicted time and the weeks available — a pure "is this achievable in this timeframe" question. Use the precomputed paceComparison field directly rather than comparing currentPredictedTimeForThisDistance and targetTime yourself: if paceComparison.targetAlreadyAchieved is true, the goal is already within reach by paceComparison.differenceFromTarget — score this 90-100, not low, regardless of how much time is available, and say so plainly (the target is already met, not something to "improve" toward). If hasBaseline is false, paceComparison will be null — base realism on whether the timeframe is reasonable to safely reach that target from scratch instead.
 - difficultyScore: about how much the plan demands relative to the athlete's *current lived training pattern* — specifically their recent weekly running volume (last3MonthsWeeklyRunVolumeKm) compared to what the plan's weekly distances ask for, and whether their pace is already improving or flat. This is a "how much lifestyle disruption/effort" question, independent of realism. Do not factor in consistency streaks — base this purely on running volume and pace trend.
 
 Before responding, check that each score's direction matches its own rationale — e.g. a realismRationale that describes the target as already met, trivial, or easily achievable must pair with a high realismScore (90+), never a low one.
@@ -117,7 +117,7 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         // practice (correctly stating the current time was faster, then in the same
         // breath describing the target as needing an "improvement"). Handing it the
         // already-computed answer removes the need for it to derive this at all.
-        const paceComparison = baseline && request.targetTimeSeconds ? {
+        const paceComparison = baseline ? {
             targetAlreadyAchieved: baseline.predictedSeconds <= request.targetTimeSeconds,
             differenceFromTarget: formatDuration(Math.abs(request.targetTimeSeconds - baseline.predictedSeconds)),
         } : null;
@@ -125,10 +125,11 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         const trainingContext = {
             raceDistance: request.raceDistance,
             weeksUntilRace,
-            targetTime: request.targetTimeSeconds ? formatDuration(request.targetTimeSeconds) : null,
+            targetTime: formatDuration(request.targetTimeSeconds),
             hasBaseline: !!baseline,
             currentPredictedTimeForThisDistance: baseline ? formatDuration(baseline.predictedSeconds) : null,
             paceComparison,
+            preferredRunDaysPerWeek: request.daysPerWeek ?? null,
             // Run-only — difficultyScore is meant to weigh running volume specifically,
             // not a mix of other sports that don't stress the same running fitness.
             last3MonthsWeeklyRunVolumeKm: computeVolumeTrend(activities.filter(a => a.sport_type === 'Run'), '3m').map(w => ({
@@ -175,7 +176,7 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         // guaranteed to be high — this isn't a judgment call the model can get "wrong" in
         // a defensible way. Guards against exactly the inconsistency seen in practice: a
         // rationale describing the goal as already beaten, paired with a low score.
-        if (baseline && request.targetTimeSeconds && baseline.predictedSeconds <= request.targetTimeSeconds) {
+        if (baseline && baseline.predictedSeconds <= request.targetTimeSeconds) {
             plan.realismScore = Math.max(plan.realismScore, 90);
         }
 

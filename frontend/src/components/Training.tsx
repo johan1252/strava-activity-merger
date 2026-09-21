@@ -7,10 +7,25 @@ type RaceDistance = '5K' | '10K' | 'Half Marathon' | 'Marathon';
 const RACE_DISTANCES: RaceDistance[] = ['5K', '10K', 'Half Marathon', 'Marathon'];
 const MAX_WEEKS_OUT = 52;
 
+// Floors roughly in line with current world-record pace for each distance — anything
+// faster isn't a realistic target for this app's users. Mirrored server-side.
+const MIN_TARGET_TIME_SECONDS: Record<RaceDistance, number> = {
+    '5K': 12 * 60,
+    '10K': 25 * 60,
+    'Half Marathon': 60 * 60,
+    'Marathon': 2 * 60 * 60,
+};
+
+const HOUR_OPTIONS = Array.from({ length: 9 }, (_, i) => i); // 0-8
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i); // 0-59
+const SECOND_OPTIONS = Array.from({ length: 12 }, (_, i) => i * 5); // 0,5,...,55
+const DAYS_PER_WEEK_OPTIONS = [2, 3, 4, 5, 6, 7];
+
 interface TrainingPlanRequest {
     raceDistance: RaceDistance;
     raceDate: string;
-    targetTimeSeconds?: number;
+    targetTimeSeconds: number;
+    daysPerWeek?: number;
 }
 
 interface TrainingPlanRun {
@@ -73,16 +88,23 @@ function formatDuration(totalSeconds: number): string {
     return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-// Accepts "mm:ss" or "hh:mm:ss". Returns undefined for an empty string (no target
-// time given), or throws if the text is non-empty but not a valid duration.
-function parseTargetTime(input: string): number | undefined {
-    const trimmed = input.trim();
-    if (!trimmed) return undefined;
-    const parts = trimmed.split(':');
-    if (parts.length < 2 || parts.length > 3 || parts.some(p => !/^\d{1,2}$/.test(p))) {
-        throw new Error('Target time must be in mm:ss or hh:mm:ss format');
-    }
-    return parts.map(Number).reduce((seconds, n) => seconds * 60 + n, 0);
+function hmsToSeconds(h: number, m: number, s: number): number {
+    return h * 3600 + m * 60 + s;
+}
+
+function secondsToHms(totalSeconds: number): { h: number; m: number; s: number } {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return { h, m, s };
+}
+
+// Snaps a h/m/s selection up to the distance's minimum whenever the combination
+// (or a distance change) would otherwise put it below the floor.
+function clampTargetTime(h: number, m: number, s: number, distance: RaceDistance): { h: number; m: number; s: number } {
+    const totalSeconds = hmsToSeconds(h, m, s);
+    const min = MIN_TARGET_TIME_SECONDS[distance];
+    return totalSeconds < min ? secondsToHms(min) : { h, m, s };
 }
 
 function tomorrowDateString(): string {
@@ -135,6 +157,14 @@ const cardStyle: React.CSSProperties = {
     padding: '16px',
     marginBottom: '16px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+};
+
+const selectStyle: React.CSSProperties = {
+    border: '1px solid #ddd',
+    borderRadius: 8,
+    padding: '8px 10px',
+    fontSize: '0.9rem',
+    background: '#fff',
 };
 
 // Semicircular gauge — angle measured clockwise from the top (0°), so -90°/+90°
@@ -250,7 +280,27 @@ const Training: React.FC<{ athlete: any }> = () => {
 
     const [raceDistance, setRaceDistance] = useState<RaceDistance>('10K');
     const [raceDate, setRaceDate] = useState('');
-    const [targetTimeInput, setTargetTimeInput] = useState('');
+    const initialTargetTime = secondsToHms(MIN_TARGET_TIME_SECONDS['10K']);
+    const [targetHours, setTargetHours] = useState(initialTargetTime.h);
+    const [targetMinutes, setTargetMinutes] = useState(initialTargetTime.m);
+    const [targetSeconds, setTargetSeconds] = useState(initialTargetTime.s);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [daysPerWeek, setDaysPerWeek] = useState<number | undefined>(undefined);
+
+    const updateTargetTime = (h: number, m: number, s: number) => {
+        const clamped = clampTargetTime(h, m, s, raceDistance);
+        setTargetHours(clamped.h);
+        setTargetMinutes(clamped.m);
+        setTargetSeconds(clamped.s);
+    };
+
+    const selectRaceDistance = (d: RaceDistance) => {
+        setRaceDistance(d);
+        const clamped = clampTargetTime(targetHours, targetMinutes, targetSeconds, d);
+        setTargetHours(clamped.h);
+        setTargetMinutes(clamped.m);
+        setTargetSeconds(clamped.s);
+    };
 
     const loadPlan = useCallback(async () => {
         try {
@@ -279,7 +329,12 @@ const Training: React.FC<{ athlete: any }> = () => {
         if (prefill) {
             setRaceDistance(prefill.raceDistance);
             setRaceDate(prefill.raceDate);
-            setTargetTimeInput(prefill.targetTimeSeconds ? formatDuration(prefill.targetTimeSeconds) : '');
+            const hms = secondsToHms(prefill.targetTimeSeconds);
+            setTargetHours(hms.h);
+            setTargetMinutes(hms.m);
+            setTargetSeconds(hms.s);
+            setDaysPerWeek(prefill.daysPerWeek);
+            setShowAdvanced(!!prefill.daysPerWeek);
         }
         setSubmitError(null);
         setShowForm(true);
@@ -294,19 +349,13 @@ const Training: React.FC<{ athlete: any }> = () => {
             return;
         }
 
-        let targetTimeSeconds: number | undefined;
-        try {
-            targetTimeSeconds = parseTargetTime(targetTimeInput);
-        } catch (err) {
-            setSubmitError((err as Error).message);
-            return;
-        }
+        const targetTimeSeconds = hmsToSeconds(targetHours, targetMinutes, targetSeconds);
 
         setIsSubmitting(true);
         try {
             const data = await fetchWithAuth('/training-plan', {
                 method: 'POST',
-                body: JSON.stringify({ raceDistance, raceDate, targetTimeSeconds }),
+                body: JSON.stringify({ raceDistance, raceDate, targetTimeSeconds, daysPerWeek }),
             });
             if (data.status === 'not_synced') {
                 setSyncStatus(data.syncStatus ?? 'in_progress');
@@ -364,7 +413,7 @@ const Training: React.FC<{ athlete: any }> = () => {
                                 <button
                                     key={d}
                                     type="button"
-                                    onClick={() => setRaceDistance(d)}
+                                    onClick={() => selectRaceDistance(d)}
                                     style={{
                                         padding: '6px 14px',
                                         borderRadius: '20px',
@@ -399,15 +448,56 @@ const Training: React.FC<{ athlete: any }> = () => {
 
                     <div style={{ marginBottom: '16px' }}>
                         <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', fontWeight: 600, marginBottom: '6px' }}>
-                            Target finish time (optional)
+                            Target finish time
                         </label>
-                        <input
-                            type="text"
-                            placeholder="hh:mm:ss or mm:ss"
-                            value={targetTimeInput}
-                            onChange={e => setTargetTimeInput(e.target.value)}
-                            style={{ border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: '0.9rem', width: '160px' }}
-                        />
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            <select
+                                value={targetHours}
+                                onChange={e => updateTargetTime(Number(e.target.value), targetMinutes, targetSeconds)}
+                                style={selectStyle}
+                            >
+                                {HOUR_OPTIONS.map(h => <option key={h} value={h}>{h}h</option>)}
+                            </select>
+                            <select
+                                value={targetMinutes}
+                                onChange={e => updateTargetTime(targetHours, Number(e.target.value), targetSeconds)}
+                                style={selectStyle}
+                            >
+                                {MINUTE_OPTIONS.map(m => <option key={m} value={m}>{String(m).padStart(2, '0')}m</option>)}
+                            </select>
+                            <select
+                                value={targetSeconds}
+                                onChange={e => updateTargetTime(targetHours, targetMinutes, Number(e.target.value))}
+                                style={selectStyle}
+                            >
+                                {SECOND_OPTIONS.map(s => <option key={s} value={s}>{String(s).padStart(2, '0')}s</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={{ marginBottom: '16px' }}>
+                        <button
+                            type="button"
+                            onClick={() => setShowAdvanced(v => !v)}
+                            style={{ background: 'none', border: 'none', color: '#888', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}
+                        >
+                            {showAdvanced ? '▾' : '▸'} Advanced
+                        </button>
+                        {showAdvanced && (
+                            <div style={{ marginTop: '10px' }}>
+                                <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', fontWeight: 600, marginBottom: '6px' }}>
+                                    Preferred running days per week
+                                </label>
+                                <select
+                                    value={daysPerWeek ?? ''}
+                                    onChange={e => setDaysPerWeek(e.target.value ? Number(e.target.value) : undefined)}
+                                    style={selectStyle}
+                                >
+                                    <option value="">No preference</option>
+                                    {DAYS_PER_WEEK_OPTIONS.map(n => <option key={n} value={n}>{n} days/week</option>)}
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     {submitError && <div style={{ color: '#a33', fontSize: '0.85rem', marginBottom: '12px' }}>{submitError}</div>}
@@ -457,7 +547,7 @@ const Training: React.FC<{ athlete: any }> = () => {
                         <span><strong style={{ color: '#333' }}>Duration:</strong> {item.plan.weeks.length} weeks</span>
                         <span>
                             <strong style={{ color: '#333' }}>Target time:</strong>{' '}
-                            {item.request.targetTimeSeconds ? formatDuration(item.request.targetTimeSeconds) : 'Just finish'}
+                            {formatDuration(item.request.targetTimeSeconds)}
                         </span>
                     </div>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>

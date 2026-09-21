@@ -3,7 +3,8 @@ export type RaceDistance = '5K' | '10K' | 'Half Marathon' | 'Marathon';
 export interface TrainingPlanRequest {
     raceDistance: RaceDistance;
     raceDate: string; // 'YYYY-MM-DD'
-    targetTimeSeconds?: number;
+    targetTimeSeconds: number;
+    daysPerWeek?: number; // preferred number of running days per week, 2-7
 }
 
 export interface TrainingPlanRun {
