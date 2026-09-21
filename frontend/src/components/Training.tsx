@@ -239,13 +239,7 @@ const Training: React.FC<{ athlete: any }> = () => {
             {isGenerating && hasPlan && <Banner>Updating your plan with your new goal...</Banner>}
             {isFailed && (
                 <Banner tone="error">
-                    {item?.errorMessage || 'Something went wrong generating your plan.'}{' '}
-                    <button
-                        onClick={() => openForm(item?.request)}
-                        style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#a33', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                        Try again
-                    </button>
+                    {item?.errorMessage || 'Something went wrong generating your plan.'}
                 </Banner>
             )}
             {!displayForm && item?.isPast && (
