@@ -121,9 +121,11 @@ const ScoreCard: React.FC<{ label: string; score: number; rationale: string; sca
             <svg width={GAUGE_SIZE} height={viewHeight} viewBox={`0 0 ${GAUGE_SIZE} ${viewHeight}`}>
                 <path d={gaugeArcPath(-90, 90)} fill="none" stroke="#f0f0f0" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
                 <path d={gaugeArcPath(-90, scoreAngle)} fill="none" stroke="#FC4C02" strokeWidth={GAUGE_STROKE} strokeLinecap="round" />
+                <text x={GAUGE_CENTER} y={GAUGE_CENTER - 4} textAnchor="middle" fontSize="14" fontWeight="700" fill="#FC4C02">
+                    {scoreToWord(clamped, scale)}
+                </text>
             </svg>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FC4C02' }}>{scoreToWord(clamped, scale)}</div>
-            <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '4px' }}>{rationale}</div>
+            <div style={{ color: '#555', fontSize: '0.85rem', marginTop: '2px' }}>{rationale}</div>
         </div>
     );
 };
