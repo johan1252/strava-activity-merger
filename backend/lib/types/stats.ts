@@ -44,8 +44,13 @@ export interface RacePrediction {
     sourceActivityId: number; // the run this prediction was extrapolated from
 }
 
+// Precomputed server-side for a fixed set of sport types (matching the sport filter options
+// used elsewhere in the app) so the frontend can switch between them instantly, with no
+// extra round trip — 'All' is the unfiltered trend.
+export type VolumeTrendSportFilter = 'All' | 'Ride' | 'Run' | 'Walk' | 'Hike' | 'Swim';
+
 export interface StatsResponse {
-    volumeTrend: VolumeTrendPoint[];
+    volumeTrendBySport: Record<VolumeTrendSportFilter, VolumeTrendPoint[]>;
     paceTrend: PaceTrendPoint[];
     heartRateTrend: HeartRateTrendPoint[];
     trendBucketUnit: BucketUnit; // granularity used for volumeTrend/paceTrend/heartRateTrend, so the frontend can format axis labels appropriately

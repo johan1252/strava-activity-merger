@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
 import LoadingIndicator from './LoadingIndicator';
-import VolumeTrendChart from './stats/VolumeTrendChart';
+import VolumeTrendChart, { VolumeTrendSportFilter } from './stats/VolumeTrendChart';
 import PaceTrendChart from './stats/PaceTrendChart';
 import HeartRateTrendChart from './stats/HeartRateTrendChart';
 import StreakCard from './stats/StreakCard';
@@ -46,7 +46,7 @@ const Spinner: React.FC = () => (
 );
 
 interface StatsResponse {
-    volumeTrend: { periodStart: string; distance: number; count: number }[];
+    volumeTrendBySport: Record<VolumeTrendSportFilter, { periodStart: string; distance: number; count: number }[]>;
     paceTrend: { periodStart: string; avgPaceSecPerKm: number }[];
     heartRateTrend: { periodStart: string; avgHeartrate: number; maxHeartrate: number }[];
     trendBucketUnit: BucketUnit;
@@ -67,6 +67,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
         const requested = searchParams.get('timeframe');
         return TIMEFRAME_OPTIONS.some(opt => opt.value === requested) ? (requested as Timeframe) : '3m';
     });
+    const [volumeSportFilter, setVolumeSportFilter] = useState<VolumeTrendSportFilter>('All');
 
     // Keep the timeframe reflected in the URL so links/refreshes stay on the right view.
     useEffect(() => {
@@ -143,7 +144,12 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                     {isLoading && <Spinner />}
                 </div>
             </div>
-            <VolumeTrendChart data={stats.volumeTrend} bucketUnit={stats.trendBucketUnit} />
+            <VolumeTrendChart
+                volumeTrendBySport={stats.volumeTrendBySport}
+                bucketUnit={stats.trendBucketUnit}
+                sportFilter={volumeSportFilter}
+                onSportFilterChange={setVolumeSportFilter}
+            />
             <PaceTrendChart data={stats.paceTrend} bucketUnit={stats.trendBucketUnit} />
             <HeartRateTrendChart data={stats.heartRateTrend} bucketUnit={stats.trendBucketUnit} />
             <RacePredictions data={stats.racePredictions} />

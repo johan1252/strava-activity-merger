@@ -12,10 +12,13 @@ import {
     computeRacePredictions,
     getBucketUnitForTimeframe,
 } from '../services/statsAggregation';
-import type { StatsResponse, GearStat, Timeframe } from '../types/stats';
+import type { StatsResponse, GearStat, Timeframe, VolumeTrendSportFilter } from '../types/stats';
 
 const logger = new Logger({ serviceName: 'getStats' });
 const VALID_TIMEFRAMES: Timeframe[] = ['7d', '3m', '6m', '1y', '5y'];
+// Matches the sport filter options used elsewhere in the app (SportTypeDropdown) — exact
+// sport_type match, same convention as the Activities tab's own sport filter.
+const VOLUME_TREND_SPORT_FILTERS: VolumeTrendSportFilter[] = ['All', 'Ride', 'Run', 'Walk', 'Hike', 'Swim'];
 
 const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');
@@ -44,8 +47,15 @@ const getStats = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyRes
             ...(athlete.bikes ?? []).map(g => ({ id: g.id, name: g.name, type: 'bike' as const, distance: g.distance })),
         ];
 
+        const volumeTrendBySport = Object.fromEntries(
+            VOLUME_TREND_SPORT_FILTERS.map(sport => [
+                sport,
+                computeVolumeTrend(sport === 'All' ? activities : activities.filter(a => a.sport_type === sport), timeframe),
+            ]),
+        ) as StatsResponse['volumeTrendBySport'];
+
         const response: StatsResponse = {
-            volumeTrend: computeVolumeTrend(activities, timeframe),
+            volumeTrendBySport,
             paceTrend: computePaceTrend(activities, timeframe),
             heartRateTrend: computeHeartRateTrend(activities, timeframe),
             trendBucketUnit: getBucketUnitForTimeframe(timeframe),
