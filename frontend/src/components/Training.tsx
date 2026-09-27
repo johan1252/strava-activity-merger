@@ -523,7 +523,7 @@ const Training: React.FC<{ athlete: any }> = () => {
 
     if (isLoadingInitial) {
         return (
-            <div style={{ width: '100vw' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
                 <LoadingIndicator message="Loading your training plan..." />
             </div>
         );
@@ -535,7 +535,7 @@ const Training: React.FC<{ athlete: any }> = () => {
 
     if (isGenerating && !hasPlan) {
         return (
-            <div style={{ width: '100vw' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
                 <LoadingIndicator message="Designing your training plan... this can take up to a minute." />
             </div>
         );

@@ -402,7 +402,6 @@ const ActivityList: React.FC<{ athlete: any }> = ({ athlete }) => {
                 overflowY: 'auto',
                 width: '100vw',
                 padding: '10px',
-                borderTop: '1px solid #ddd',
                 borderBottom: '1px solid #ddd',
                 borderRadius: '8px',
                 boxSizing: 'border-box',
