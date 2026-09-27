@@ -71,12 +71,13 @@ function formatDistanceKm(distanceKm: number): string {
     return `${Number.isInteger(distanceKm) ? distanceKm : distanceKm.toFixed(1)}km`;
 }
 
-// Singular wording regardless of count — for count > 1, the individually-checkable
-// sub-bullets ("Run 1", "Run 2", ...) already convey the repetition, so no more
-// "Two tempo runs — 5km each" pluralization here.
+// Singular wording regardless of count — the individually-checkable sub-bullets
+// ("Run 1", "Run 2", ...) already convey the repetition, so no more "Two tempo runs"
+// pluralization of the label here, just an "each" after the distance for count > 1.
 function formatRun(run: TrainingPlanRun): string {
     const distance = formatDistanceKm(run.distanceKm);
-    return `${run.label} — ${distance}${run.notes ? `, ${run.notes}` : ''}`;
+    const distanceLabel = run.count > 1 ? `${distance} each` : distance;
+    return `${run.label} — ${distanceLabel}${run.notes ? `, ${run.notes}` : ''}`;
 }
 
 function countCompletions(runs: TrainingPlanRun[]): { done: number; total: number } {
