@@ -102,7 +102,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     // switching timeframe re-fetches in the background without blanking the charts.
     if (isLoading && !stats) {
         return (
-            <div style={{ width: '100vw' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
                 <LoadingIndicator message="Loading your stats..." />
             </div>
         );

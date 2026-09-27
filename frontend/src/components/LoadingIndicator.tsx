@@ -5,7 +5,7 @@ const LoadingIndicator: React.FC<{ message?: string; size?: number; padding?: st
     size = 40,
     padding = '60px 20px',
 }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding, color: '#888', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding, color: '#888', width: '100%', boxSizing: 'border-box' }}>
         <div
             style={{
                 width: `${size}px`,
