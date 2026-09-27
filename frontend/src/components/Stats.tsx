@@ -145,7 +145,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
                 </div>
             </div>
             <VolumeTrendChart
-                data={stats.volumeTrendBySport[volumeSportFilter]}
+                volumeTrendBySport={stats.volumeTrendBySport}
                 bucketUnit={stats.trendBucketUnit}
                 sportFilter={volumeSportFilter}
                 onSportFilterChange={setVolumeSportFilter}
