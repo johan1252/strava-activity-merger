@@ -28,11 +28,18 @@ interface TrainingPlanRequest {
     daysPerWeek?: number;
 }
 
+interface TrainingPlanRunCompletion {
+    completed: boolean;
+    manual: boolean;
+    autoActivity?: { id: number; name: string; date: string };
+}
+
 interface TrainingPlanRun {
     count: number;
     label: string;
     distanceKm: number;
     notes: string;
+    completions: TrainingPlanRunCompletion[];
 }
 
 interface TrainingPlanWeek {
@@ -60,23 +67,27 @@ interface TrainingPlanItem {
     isPast?: boolean;
 }
 
-const RUN_COUNT_WORDS: Record<number, string> = { 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six' };
-
-function pluralizeRunLabel(label: string): string {
-    return label.toLowerCase().endsWith('s') ? label : `${label}s`;
-}
-
 function formatDistanceKm(distanceKm: number): string {
     return `${Number.isInteger(distanceKm) ? distanceKm : distanceKm.toFixed(1)}km`;
 }
 
+// Singular wording regardless of count — the individually-checkable sub-bullets
+// ("Run 1", "Run 2", ...) already convey the repetition, so no more "Two tempo runs"
+// pluralization of the label here, just an "each" after the distance for count > 1.
 function formatRun(run: TrainingPlanRun): string {
     const distance = formatDistanceKm(run.distanceKm);
-    if (run.count > 1) {
-        const countLabel = RUN_COUNT_WORDS[run.count] ?? `${run.count}x`;
-        return `${countLabel} ${pluralizeRunLabel(run.label)} — ${distance} each${run.notes ? `, ${run.notes}` : ''}`;
-    }
-    return `${run.label} — ${distance}${run.notes ? `, ${run.notes}` : ''}`;
+    const distanceLabel = run.count > 1 ? `${distance} each` : distance;
+    return `${run.label} — ${distanceLabel}${run.notes ? `, ${run.notes}` : ''}`;
+}
+
+function countCompletions(runs: TrainingPlanRun[]): { done: number; total: number } {
+    return runs.reduce(
+        (acc, run) => ({
+            done: acc.done + run.completions.filter(c => c.completed).length,
+            total: acc.total + run.count,
+        }),
+        { done: 0, total: 0 },
+    );
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -105,6 +116,10 @@ function clampTargetTime(h: number, m: number, s: number, distance: RaceDistance
     const totalSeconds = hmsToSeconds(h, m, s);
     const min = MIN_TARGET_TIME_SECONDS[distance];
     return totalSeconds < min ? secondsToHms(min) : { h, m, s };
+}
+
+function todayDateString(): string {
+    return new Date().toISOString().slice(0, 10);
 }
 
 function tomorrowDateString(): string {
@@ -217,37 +232,137 @@ const ScoreCard: React.FC<{ label: string; score: number; rationale: string; sca
     );
 };
 
-const WeekCard: React.FC<{ week: TrainingPlanWeek; dateRange: string }> = ({ week, dateRange }) => (
-    <div style={{ ...cardStyle, marginBottom: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span>
-                <span style={{ fontWeight: 700 }}>Week {week.weekNumber}</span>
-                <span style={{ color: '#888', fontSize: '0.85rem', marginLeft: '8px' }}>{dateRange}</span>
-            </span>
-            <span
+function ordinal(n: number): string {
+    if (n % 100 >= 11 && n % 100 <= 13) return `${n}th`;
+    switch (n % 10) {
+        case 1: return `${n}st`;
+        case 2: return `${n}nd`;
+        case 3: return `${n}rd`;
+        default: return `${n}th`;
+    }
+}
+
+function formatCompletionDate(dateStr: string): string {
+    const d = new Date(`${dateStr}T00:00:00Z`);
+    const month = d.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
+    return `${ordinal(d.getUTCDate())} ${month}`;
+}
+
+const STRAVA_ACTIVITY_URL = 'https://www.strava.com/activities/';
+
+const RunCheckbox: React.FC<{ completion: TrainingPlanRunCompletion; onChange: (checked: boolean) => void; label: string }> = ({ completion, onChange, label }) => (
+    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+        <input
+            type="checkbox"
+            checked={completion.completed}
+            onChange={e => onChange(e.target.checked)}
+            style={{ width: '15px', height: '15px', cursor: 'pointer', flexShrink: 0 }}
+        />
+        <span style={{ color: completion.completed ? '#999' : '#333' }}>
+            <span style={{ textDecoration: completion.completed ? 'line-through' : 'none' }}>{label}</span>
+            {completion.completed && completion.manual && ' (Completed)'}
+            {completion.completed && !completion.manual && completion.autoActivity && (
+                <>
+                    {' '}(Completed on {formatCompletionDate(completion.autoActivity.date)} -{' '}
+                    <a
+                        href={`${STRAVA_ACTIVITY_URL}${completion.autoActivity.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ color: '#FC4C02', textDecoration: 'underline' }}
+                    >
+                        {completion.autoActivity.name}
+                    </a>)
+                </>
+            )}
+        </span>
+    </label>
+);
+
+const WeekCard: React.FC<{
+    week: TrainingPlanWeek;
+    dateRange: string;
+    isPast: boolean;
+    onToggle: (runIndex: number, instanceIndex: number, completed: boolean) => void;
+}> = ({ week, dateRange, isPast, onToggle }) => {
+    const { done, total } = countCompletions(week.runs);
+    // Past weeks start collapsed to keep the plan scannable, but the user can still
+    // expand one to check past runs — the click just flips a one-time override.
+    const [expandedOverride, setExpandedOverride] = useState<boolean | null>(null);
+    const expanded = expandedOverride ?? !isPast;
+
+    return (
+        <div style={{ ...cardStyle, marginBottom: '10px' }}>
+            <div
+                onClick={() => isPast && setExpandedOverride(!expanded)}
                 style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: '#FC4C02',
-                    background: '#fff7f2',
-                    border: '1px solid #ffd9c2',
-                    borderRadius: '10px',
-                    padding: '2px 8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: expanded ? '6px' : 0,
+                    cursor: isPast ? 'pointer' : 'default',
                 }}
             >
-                {week.focus}
-            </span>
+                <span>
+                    {isPast && <span style={{ color: '#888', fontSize: '0.8rem', marginRight: '6px' }}>{expanded ? '▾' : '▸'}</span>}
+                    <span style={{ fontWeight: 700 }}>Week {week.weekNumber}</span>
+                    <span style={{ color: '#888', fontSize: '0.85rem', marginLeft: '8px' }}>{dateRange}</span>
+                </span>
+                <span style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 600 }}>{done}/{total} done</span>
+                    <span
+                        style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#FC4C02',
+                            background: '#fff7f2',
+                            border: '1px solid #ffd9c2',
+                            borderRadius: '10px',
+                            padding: '2px 8px',
+                        }}
+                    >
+                        {week.focus}
+                    </span>
+                </span>
+            </div>
+            {expanded && (
+                <>
+                    <div style={{ color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
+                        {week.totalDistanceKm.toFixed(0)} km total
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#333', fontSize: '0.9rem', lineHeight: 1.5, listStyle: 'none' }}>
+                        {week.runs.map((run, runIndex) => (
+                            <li key={runIndex} style={{ marginBottom: '4px' }}>
+                                {run.count === 1 ? (
+                                    <RunCheckbox
+                                        completion={run.completions[0]}
+                                        onChange={completed => onToggle(runIndex, 0, completed)}
+                                        label={formatRun(run)}
+                                    />
+                                ) : (
+                                    <>
+                                        <div>{formatRun(run)}</div>
+                                        <ul style={{ margin: '2px 0 0', paddingLeft: '18px', listStyle: 'none' }}>
+                                            {Array.from({ length: run.count }, (_, instanceIndex) => (
+                                                <li key={instanceIndex} style={{ marginBottom: '2px' }}>
+                                                    <RunCheckbox
+                                                        completion={run.completions[instanceIndex]}
+                                                        onChange={completed => onToggle(runIndex, instanceIndex, completed)}
+                                                        label={`Run ${instanceIndex + 1}`}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            )}
         </div>
-        <div style={{ color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
-            {week.totalDistanceKm.toFixed(0)} km total
-        </div>
-        <ol style={{ margin: 0, paddingLeft: '20px', color: '#333', fontSize: '0.9rem', lineHeight: 1.5 }}>
-            {week.runs.map((run, i) => (
-                <li key={i}>{formatRun(run)}</li>
-            ))}
-        </ol>
-    </div>
-);
+    );
+};
 
 type SyncStatus = 'ready' | 'in_progress' | 'not_started';
 
@@ -324,6 +439,40 @@ const Training: React.FC<{ athlete: any }> = () => {
         const interval = setInterval(loadPlan, 3000);
         return () => clearInterval(interval);
     }, [item?.status, loadPlan]);
+
+    // Optimistic local update so the checkbox flips instantly, then reconciles with the
+    // server's response (which recomputes auto-detection alongside the manual override
+    // just written); falls back to a full reload on failure to resync ground truth.
+    const toggleRunCompletion = async (weekNumber: number, runIndex: number, instanceIndex: number, completed: boolean) => {
+        setItem(prev => {
+            if (!prev?.plan) return prev;
+            return {
+                ...prev,
+                plan: {
+                    ...prev.plan,
+                    weeks: prev.plan.weeks.map(week => week.weekNumber !== weekNumber ? week : {
+                        ...week,
+                        runs: week.runs.map((run, i) => i !== runIndex ? run : {
+                            ...run,
+                            completions: run.completions.map((c, j) => j === instanceIndex ? { completed, manual: true } : c),
+                        }),
+                    }),
+                },
+            };
+        });
+
+        try {
+            const data = await fetchWithAuth('/training-plan', {
+                method: 'PATCH',
+                body: JSON.stringify({ weekNumber, runIndex, instanceIndex, completed }),
+            });
+            setItem(data.item);
+            setSyncStatus(data.syncStatus ?? 'ready');
+        } catch (err) {
+            console.error('Error toggling run completion:', err);
+            await loadPlan();
+        }
+    };
 
     const openForm = (prefill?: TrainingPlanRequest) => {
         if (prefill) {
@@ -576,6 +725,10 @@ const Training: React.FC<{ athlete: any }> = () => {
                             <strong style={{ color: '#333' }}>Target time:</strong>{' '}
                             {formatDuration(item.request.targetTimeSeconds)}
                         </span>
+                        {(() => {
+                            const { done, total } = countCompletions(item.plan.weeks.flatMap(w => w.runs));
+                            return <span><strong style={{ color: '#333' }}>Progress:</strong> {done}/{total} runs done</span>;
+                        })()}
                     </div>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
                         <ScoreCard
@@ -593,7 +746,17 @@ const Training: React.FC<{ athlete: any }> = () => {
                     </div>
                     {item.plan.weeks.map(week => {
                         const startDate = weekStartDate(item.request.raceDate, item.plan!.weeks.length, week.weekNumber);
-                        return <WeekCard key={week.weekNumber} week={week} dateRange={formatWeekRange(startDate)} />;
+                        const weekEndDate = addDays(startDate, 6);
+                        return (
+                            <WeekCard
+                                key={week.weekNumber}
+                                week={week}
+                                dateRange={formatWeekRange(startDate)}
+                                isPast={weekEndDate < todayDateString()}
+                                onToggle={(runIndex, instanceIndex, completed) =>
+                                    toggleRunCompletion(week.weekNumber, runIndex, instanceIndex, completed)}
+                            />
+                        );
                     })}
                 </>
             )}

@@ -341,12 +341,14 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         }));
 
         // Request-facing handler — fast (no Grok call), just validates input, flips the
-        // plan status to "generating", and fires the worker above asynchronously.
+        // plan status to "generating", and fires the worker above asynchronously. GET/PATCH
+        // also query the activity cache to merge in auto-detected run completions, hence
+        // the higher memory/timeout than a pure validate-and-invoke handler would need.
         const trainingPlanLambda = new lambdaNodeJs.NodejsFunction(this, 'TrainingPlanHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
-            memorySize: 256,
+            memorySize: 512,
             entry: './lib/handlers/trainingPlan.ts',
-            timeout: cdk.Duration.seconds(10),
+            timeout: cdk.Duration.seconds(20),
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
                 GENERATE_TRAINING_PLAN_FUNCTION_ARN: generateTrainingPlanLambda.functionArn,
@@ -468,6 +470,7 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         const trainingPlanIntegration = new apigateway.LambdaIntegration(trainingPlanLambda);
         trainingPlanResource.addMethod('GET', trainingPlanIntegration);
         trainingPlanResource.addMethod('POST', trainingPlanIntegration);
+        trainingPlanResource.addMethod('PATCH', trainingPlanIntegration);
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {

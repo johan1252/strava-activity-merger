@@ -235,6 +235,27 @@ export async function completeTrainingPlanGeneration(athleteId: number, plan: Tr
     }));
 }
 
+// Replaces the whole manualCompletions array (computed by the caller from the run's
+// current state) rather than SET-ing a single index — an indexed SET requires the list
+// to already exist at that path, which isn't true for plans generated before this field
+// existed. List indices are interpolated directly into the expression string (DynamoDB
+// has no way to parameterize them) — safe here since callers validate both as bounded
+// integers before calling.
+export async function setRunManualCompletions(
+    athleteId: number,
+    weekIndex: number,
+    runIndex: number,
+    manualCompletions: (boolean | null)[],
+): Promise<void> {
+    await client.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        UpdateExpression: `SET #plan.weeks[${weekIndex}].runs[${runIndex}].manualCompletions = :manualCompletions`,
+        ExpressionAttributeNames: { '#plan': 'plan' },
+        ExpressionAttributeValues: { ':manualCompletions': manualCompletions },
+    }));
+}
+
 export async function failTrainingPlanGeneration(athleteId: number, errorMessage: string): Promise<void> {
     await client.send(new UpdateCommand({
         TableName: TABLE_NAME,

@@ -252,12 +252,13 @@ function parseAndValidatePlan(rawContent: string): TrainingPlan {
             if (!Number.isFinite(distanceKm)) {
                 throw new Error(`Week ${i + 1}, run ${j + 1} has a non-numeric distanceKm`);
             }
-            const count = Number(r.count);
+            const count = Number.isFinite(Number(r.count)) && Number(r.count) > 0 ? Math.round(Number(r.count)) : 1;
             return {
-                count: Number.isFinite(count) && count > 0 ? Math.round(count) : 1,
+                count,
                 label: typeof r.label === 'string' && r.label ? r.label : 'Run',
                 distanceKm,
                 notes: typeof r.notes === 'string' ? r.notes : '',
+                manualCompletions: Array(count).fill(null),
             };
         });
 

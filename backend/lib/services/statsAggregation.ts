@@ -9,6 +9,7 @@ import type {
     Timeframe,
     BucketUnit,
 } from '../types/stats';
+import type { TrainingPlanRun } from '../types/trainingPlan';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -309,4 +310,73 @@ export function computeLongestRun(activities: CachedActivity[]): LongestRun | nu
         movingTimeSeconds: (longest.moving_time ?? longest.elapsed_time) as number,
         sourceActivityId: longest.id,
     };
+}
+
+// Mirrors the frontend's weekStartDate exactly (Training.tsx) — count backward in
+// 7-day increments from the Monday of race week. Both sides must agree on week
+// boundaries independently, matching this codebase's existing duplication pattern
+// (formatDuration is already duplicated the same way across several files).
+export function trainingPlanWeekDateRange(raceDate: string, totalWeeks: number, weekNumber: number): { start: string; end: string } {
+    const start = addDays(mondayOf(raceDate), -7 * (totalWeeks - weekNumber));
+    return { start, end: addDays(start, 6) };
+}
+
+// An activity counts toward a planned run if it's at least this fraction of that
+// run's distance — leaves room for GPS/rounding slop without letting a much shorter
+// activity satisfy a longer objective.
+const RUN_MATCH_TOLERANCE = 0.95;
+
+interface RunObjective {
+    runIndex: number;
+    distanceMeters: number;
+}
+
+export interface AutoMatchedRun {
+    activityId: number;
+    activityName: string;
+    date: string; // 'YYYY-MM-DD', the activity's local date
+}
+
+// Greedy allocation: process plan objectives largest-to-smallest; each takes the
+// smallest available activity that still satisfies it (leaves bigger activities free
+// for bigger objectives). A single activity can satisfy at most one objective. Returned
+// aligned by run index — each entry is the (unordered) list of activities matched to
+// that run, one per auto-completed instance.
+export function computeAutoCompletedRunMatches(
+    weekRuns: TrainingPlanRun[],
+    weekStartDateStr: string,
+    weekEndDateStr: string,
+    activities: CachedActivity[],
+): AutoMatchedRun[][] {
+    const matches: AutoMatchedRun[][] = weekRuns.map(() => []);
+
+    const objectives: RunObjective[] = [];
+    weekRuns.forEach((run, runIndex) => {
+        for (let i = 0; i < run.count; i++) {
+            objectives.push({ runIndex, distanceMeters: run.distanceKm * 1000 });
+        }
+    });
+    objectives.sort((a, b) => b.distanceMeters - a.distanceMeters);
+
+    const pool = activities
+        .filter(a => a.sport_type === 'Run')
+        .filter(a => {
+            const date = localDate(a);
+            return date >= weekStartDateStr && date <= weekEndDateStr;
+        })
+        .sort((a, b) => a.distance - b.distance);
+
+    for (const objective of objectives) {
+        const threshold = objective.distanceMeters * RUN_MATCH_TOLERANCE;
+        const matchIndex = pool.findIndex(a => a.distance >= threshold);
+        if (matchIndex === -1) continue;
+        const [activity] = pool.splice(matchIndex, 1);
+        matches[objective.runIndex].push({
+            activityId: activity.id,
+            activityName: activity.name,
+            date: localDate(activity),
+        });
+    }
+
+    return matches;
 }

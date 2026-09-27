@@ -5,10 +5,14 @@ import {
     getTrainingPlanItem,
     startTrainingPlanGeneration,
     failTrainingPlanGeneration,
+    setRunManualCompletions,
     getSyncMeta,
+    queryActivities,
 } from '../services/activityCache';
+import { trainingPlanWeekDateRange, computeAutoCompletedRunMatches } from '../services/statsAggregation';
 import { resolveAthleteId } from '../utils/resolveAthlete';
-import type { RaceDistance, TrainingPlanRequest } from '../types/trainingPlan';
+import type { RaceDistance, TrainingPlanRequest, TrainingPlan, TrainingPlanItem, TrainingPlanRunCompletion } from '../types/trainingPlan';
+import type { CachedActivity } from '../types/activity';
 
 type SyncStatus = 'ready' | 'in_progress' | 'not_started';
 
@@ -36,6 +40,48 @@ const MAX_DAYS_PER_WEEK = 7;
 
 function todayDateString(): string {
     return new Date().toISOString().slice(0, 10);
+}
+
+// Recomputes auto-detection fresh from currently-cached activities (never persisted, so
+// a plan never needs "refreshing" as new activities sync in) and merges it with each
+// run's stored, permanent manual overrides. `manualCompletions` itself is never sent to
+// the frontend — only the merged, effective `completions` array.
+function buildEffectivePlan(plan: TrainingPlan, raceDate: string, activities: CachedActivity[]) {
+    const totalWeeks = plan.weeks.length;
+    return {
+        ...plan,
+        weeks: plan.weeks.map(week => {
+            const { start, end } = trainingPlanWeekDateRange(raceDate, totalWeeks, week.weekNumber);
+            const autoMatches = computeAutoCompletedRunMatches(week.runs, start, end, activities);
+            return {
+                ...week,
+                runs: week.runs.map((run, i) => {
+                    const runAutoMatches = autoMatches[i];
+                    const { manualCompletions, ...rest } = run;
+                    // Plans generated before this field existed have no manualCompletions
+                    // stored — treat every instance as having no manual override yet.
+                    const effectiveManualCompletions = manualCompletions ?? Array(run.count).fill(null);
+                    const completions: TrainingPlanRunCompletion[] = effectiveManualCompletions.map((manual, instanceIndex) => {
+                        if (manual !== null) return { completed: manual, manual: true };
+                        const match = runAutoMatches[instanceIndex];
+                        if (!match) return { completed: false, manual: false };
+                        return {
+                            completed: true,
+                            manual: false,
+                            autoActivity: { id: match.activityId, name: match.activityName, date: match.date },
+                        };
+                    });
+                    return { ...rest, completions };
+                }),
+            };
+        }),
+    };
+}
+
+async function buildResponseItem(athleteId: number, item: TrainingPlanItem) {
+    if (!item.plan) return item;
+    const activities = await queryActivities(athleteId, {});
+    return { ...item, plan: buildEffectivePlan(item.plan, item.request.raceDate, activities) };
 }
 
 function validateRequest(body: unknown): TrainingPlanRequest {
@@ -117,7 +163,34 @@ const trainingPlan = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
             }
 
             const isPast = item.request.raceDate < todayDateString();
-            return { statusCode: 200, body: JSON.stringify({ item: { ...item, isPast }, syncStatus }) };
+            const responseItem = await buildResponseItem(athleteId, item);
+            return { statusCode: 200, body: JSON.stringify({ item: { ...responseItem, isPast }, syncStatus }) };
+        }
+
+        if (event.httpMethod === 'PATCH') {
+            const item = await getTrainingPlanItem(athleteId);
+            if (!item?.plan) throw new Error('No training plan exists to update');
+
+            if (!event.body) throw new Error('Missing request body');
+            const { weekNumber, runIndex, instanceIndex, completed } = JSON.parse(event.body) as Record<string, unknown>;
+
+            const weekIndex = item.plan.weeks.findIndex(w => w.weekNumber === weekNumber);
+            if (weekIndex === -1) throw new Error(`No week with weekNumber ${weekNumber}`);
+            const run = item.plan.weeks[weekIndex].runs[runIndex as number];
+            if (typeof runIndex !== 'number' || !run) throw new Error(`Invalid runIndex ${runIndex}`);
+            if (typeof instanceIndex !== 'number' || instanceIndex < 0 || instanceIndex >= run.count) {
+                throw new Error(`Invalid instanceIndex ${instanceIndex}`);
+            }
+            if (typeof completed !== 'boolean') throw new Error('completed must be a boolean');
+
+            const existingManualCompletions = run.manualCompletions ?? Array(run.count).fill(null);
+            const manualCompletions = existingManualCompletions.map((m, i) => i === instanceIndex ? completed : m);
+            await setRunManualCompletions(athleteId, weekIndex, runIndex, manualCompletions);
+
+            const updatedItem = await getTrainingPlanItem(athleteId);
+            const isPast = updatedItem!.request.raceDate < todayDateString();
+            const responseItem = await buildResponseItem(athleteId, updatedItem!);
+            return { statusCode: 200, body: JSON.stringify({ item: { ...responseItem, isPast }, syncStatus }) };
         }
 
         if (event.httpMethod === 'POST') {
