@@ -12,6 +12,15 @@ export interface TrainingPlanRun {
     label: string; // e.g. "Easy run", "Long run", "Tempo run", "Rest"
     distanceKm: number; // distance per single instance
     notes: string; // e.g. "with 4-5km at race pace" — empty string if nothing extra to add
+    manualCompletions: (boolean | null)[]; // length === count; null = no manual override at this index, defer to auto-detection
+}
+
+// Wire-format only — never stored. Merges a run instance's persisted manual override
+// with fresh auto-detection at read time (see trainingPlan.ts's buildEffectivePlan).
+export interface TrainingPlanRunCompletion {
+    completed: boolean;
+    manual: boolean; // true once the user has ever explicitly toggled this instance
+    autoActivity?: { id: number; name: string; date: string }; // present only when completed via auto-detection (never alongside manual)
 }
 
 export interface TrainingPlanWeek {
