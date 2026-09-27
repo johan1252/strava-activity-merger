@@ -522,7 +522,11 @@ const Training: React.FC<{ athlete: any }> = () => {
     };
 
     if (isLoadingInitial) {
-        return <LoadingIndicator message="Loading your training plan..." />;
+        return (
+            <div style={{ width: '100vw' }}>
+                <LoadingIndicator message="Loading your training plan..." />
+            </div>
+        );
     }
 
     const hasPlan = !!item?.plan;
@@ -530,7 +534,11 @@ const Training: React.FC<{ athlete: any }> = () => {
     const isFailed = item?.status === 'failed';
 
     if (isGenerating && !hasPlan) {
-        return <LoadingIndicator message="Designing your training plan... this can take up to a minute." />;
+        return (
+            <div style={{ width: '100vw' }}>
+                <LoadingIndicator message="Designing your training plan... this can take up to a minute." />
+            </div>
+        );
     }
 
     const notSynced = syncStatus !== 'ready';

@@ -101,7 +101,11 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     // Only show the full-page loading state before we have any data at all —
     // switching timeframe re-fetches in the background without blanking the charts.
     if (isLoading && !stats) {
-        return <LoadingIndicator message="Loading your stats..." />;
+        return (
+            <div style={{ width: '100vw' }}>
+                <LoadingIndicator message="Loading your stats..." />
+            </div>
+        );
     }
 
     if (error && !stats) {
