@@ -1,6 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Logger } from '@aws-lambda-powertools/logger';
 import strava from 'strava-v3';
+import { resolveAthleteId } from '../utils/resolveAthlete';
+import { saveAthleteTokens } from '../services/athleteToken';
 
 const logger = new Logger({ serviceName: 'refreshToken' });
 
@@ -38,6 +40,17 @@ const refreshToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
 
         const payload = await strava.oauth.refreshToken(refreshToken)
         logger.info({ message: "payload", payload });
+
+        try {
+            const athleteId = await resolveAthleteId(payload.access_token);
+            await saveAthleteTokens(athleteId, {
+                accessToken: payload.access_token,
+                refreshToken: payload.refresh_token,
+                expiresAt: payload.expires_at,
+            });
+        } catch (storeError) {
+            logger.error({ message: "Failed to store athlete tokens", error: storeError });
+        }
 
         return {
             statusCode: 200,

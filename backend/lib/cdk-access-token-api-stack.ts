@@ -12,7 +12,17 @@ import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+
+// Fails the deploy instead of shipping a Lambda with an empty value
+function requireEnv(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`Missing required env var ${name}. Set it in backend/.env.<stage> or backend/.env.`);
+    }
+    return value;
+}
 
 interface CdkAccessTokenApiStackProps extends cdk.StackProps {
     stage: string;
@@ -163,11 +173,11 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_22_X,
             entry: './lib/handlers/getAccessToken.ts',
             environment: {
-                STRAVA_CLIENT_ID: process.env.STRAVA_CLIENT_ID || '',
-                STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET || '',
-                STRAVA_ACCESS_TOKEN: process.env.STRAVA_ACCESS_TOKEN || '',
-                STRAVA_REFRESH_TOKEN: process.env.STRAVA_REFRESH_TOKEN || '',
-                STRAVA_REDIRECT_URI: process.env.STRAVA_REDIRECT_URI || '',
+                STRAVA_CLIENT_ID: requireEnv('STRAVA_CLIENT_ID'),
+                STRAVA_CLIENT_SECRET: requireEnv('STRAVA_CLIENT_SECRET'),
+                STRAVA_ACCESS_TOKEN: requireEnv('STRAVA_ACCESS_TOKEN'),
+                STRAVA_REFRESH_TOKEN: requireEnv('STRAVA_REFRESH_TOKEN'),
+                STRAVA_REDIRECT_URI: requireEnv('STRAVA_REDIRECT_URI'),
             },
         });
 
@@ -175,11 +185,11 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_22_X,
             entry: './lib/handlers/refreshToken.ts',
             environment: {
-                STRAVA_CLIENT_ID: process.env.STRAVA_CLIENT_ID || '',
-                STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET || '',
-                STRAVA_ACCESS_TOKEN: process.env.STRAVA_ACCESS_TOKEN || '',
-                STRAVA_REFRESH_TOKEN: process.env.STRAVA_REFRESH_TOKEN || '',
-                STRAVA_REDIRECT_URI: process.env.STRAVA_REDIRECT_URI || '',
+                STRAVA_CLIENT_ID: requireEnv('STRAVA_CLIENT_ID'),
+                STRAVA_CLIENT_SECRET: requireEnv('STRAVA_CLIENT_SECRET'),
+                STRAVA_ACCESS_TOKEN: requireEnv('STRAVA_ACCESS_TOKEN'),
+                STRAVA_REFRESH_TOKEN: requireEnv('STRAVA_REFRESH_TOKEN'),
+                STRAVA_REDIRECT_URI: requireEnv('STRAVA_REDIRECT_URI'),
             },
         });
 
@@ -223,6 +233,19 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
                 },
             ],
         });
+
+        // KMS key encrypting stored Strava OAuth tokens
+        const athleteTokenKey = new kms.Key(this, 'AthleteTokenKey', {
+            enableKeyRotation: true,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+
+        for (const tokenLambda of [getAccessTokenLambda, refreshTokenLambda]) {
+            tokenLambda.addEnvironment('ACTIVITY_CACHE_TABLE_NAME', activityCacheTable.tableName);
+            tokenLambda.addEnvironment('ATHLETE_TOKEN_KMS_KEY_ID', athleteTokenKey.keyId);
+            activityCacheTable.grantReadWriteData(tokenLambda);
+            athleteTokenKey.grantEncryptDecrypt(tokenLambda);
+        }
 
         // Background Lambda for full activity sync (invoked async by getActivitiesLambda)
         const syncActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'SyncActivitiesHandler', {
@@ -481,6 +504,25 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             },
         });
 
+        // Fetches one activity with the athlete's stored token and upserts it (invoked async by the webhook)
+        const upsertWebhookActivityLambda = new lambdaNodeJs.NodejsFunction(this, 'UpsertWebhookActivityHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 256,
+            entry: './lib/handlers/upsertWebhookActivity.ts',
+            timeout: cdk.Duration.seconds(30),
+            retryAttempts: 1,
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                ATHLETE_TOKEN_KMS_KEY_ID: athleteTokenKey.keyId,
+                STRAVA_CLIENT_ID: requireEnv('STRAVA_CLIENT_ID'),
+                STRAVA_CLIENT_SECRET: requireEnv('STRAVA_CLIENT_SECRET'),
+                STRAVA_REDIRECT_URI: requireEnv('STRAVA_REDIRECT_URI'),
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(upsertWebhookActivityLambda);
+        athleteTokenKey.grantEncryptDecrypt(upsertWebhookActivityLambda);
+
         // Strava webhook handler — receives real-time activity create/update/delete events
         const stravaWebhookLambda = new lambdaNodeJs.NodejsFunction(this, 'StravaWebhookHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -490,11 +532,13 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
                 STRAVA_WEBHOOK_VERIFY_TOKEN_SECRET_ARN: webhookVerifyTokenSecret.secretArn,
+                UPSERT_ACTIVITY_FUNCTION_ARN: upsertWebhookActivityLambda.functionArn,
             },
         });
 
         activityCacheTable.grantReadWriteData(stravaWebhookLambda);
         webhookVerifyTokenSecret.grantRead(stravaWebhookLambda);
+        upsertWebhookActivityLambda.grantInvoke(stravaWebhookLambda);
 
         // Create the /webhook/strava endpoint (GET for validation, POST for events)
         const webhookResource = apiResource.addResource('webhook');

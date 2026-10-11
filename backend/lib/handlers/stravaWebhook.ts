@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import {
     getLookupItem,
@@ -22,6 +23,8 @@ async function getVerifyToken(): Promise<string> {
 }
 
 const logger = new Logger({ serviceName: 'stravaWebhook' });
+
+const lambdaClient = new LambdaClient({});
 
 interface WebhookEvent {
     aspect_type: 'create' | 'update' | 'delete';
@@ -77,8 +80,8 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
 
     // Strava does not sign webhook event POSTs (no X-Hub-Signature or equivalent) —
     // the verify_token is only used during the one-time GET subscription handshake.
-    // Blast radius is bounded: unknown activityIds are no-ops (see getLookupItem below),
-    // so a forged event can only affect an activity already present in our own cache.
+    // Blast radius is bounded: we only act on events by fetching the activity from Strava with
+    // the owner's own token, so a forged event can't write data Strava doesn't return for that athlete.
     const payload: WebhookEvent = JSON.parse(event.body);
     const { aspect_type, object_type, object_id: activityId, owner_id: athleteId, updates } = payload;
     logger.appendKeys({ activityId, athleteId, aspect_type });
@@ -89,14 +92,15 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     }
 
     if (aspect_type === 'create') {
-        // New activities are picked up by the incremental sync on the next user visit
-        logger.info('Create event — no-op (incremental sync will handle it)');
+        await queueUpsert(athleteId, activityId);
         return { statusCode: 200, body: 'OK' };
     }
 
     const lookup = await getLookupItem(activityId);
     if (!lookup) {
-        logger.info('Activity not in cache — no-op');
+        // Covers updates arriving for activities the incremental sync missed
+        if (aspect_type === 'update') await queueUpsert(athleteId, activityId);
+        else logger.info('Activity not in cache — no-op');
         return { statusCode: 200, body: 'OK' };
     }
 
@@ -120,6 +124,19 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     }
 
     return { statusCode: 200, body: 'OK' };
+}
+
+// Strava expects a 200 within about 2 seconds, so the fetch and upsert run in a separate Lambda
+async function queueUpsert(athleteId: number, activityId: number): Promise<void> {
+    try {
+        await lambdaClient.send(new InvokeCommand({
+            FunctionName: process.env.UPSERT_ACTIVITY_FUNCTION_ARN,
+            InvocationType: 'Event',
+            Payload: Buffer.from(JSON.stringify({ athleteId, activityId })),
+        }));
+    } catch (error) {
+        logger.error({ message: 'Failed to queue activity upsert', error });
+    }
 }
 
 const handler = stravaWebhook;
