@@ -16,6 +16,9 @@ import type { ActivityFilters } from '../types/activity';
 const logger = new Logger({ serviceName: 'getActivities' });
 const lambdaClient = new LambdaClient({});
 const PAGE_SIZE = 25;
+// Strava's `after` filters by start time, so activities uploaded late would be missed without this
+// TODO: Remove once all athletes have webhook token refresh working
+const LOOKBACK_SECONDS = 48 * 60 * 60;
 
 const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Entered handler');
@@ -74,11 +77,11 @@ const getActivities = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         logger.info('Cache hit — checking for new activities since last sync');
         if (syncMeta.lastSyncCompletedAt) {
             const newActivities = await strava.athlete.listActivities({
-                after: syncMeta.lastSyncCompletedAt,
+                after: syncMeta.lastSyncCompletedAt - LOOKBACK_SECONDS,
                 per_page: 100,
             });
             if (Array.isArray(newActivities) && newActivities.length) {
-                logger.info(`Found ${newActivities.length} new activities — upserting`);
+                logger.info(`Found ${newActivities.length} activities since last sync — upserting`);
                 await upsertActivities(athleteId, newActivities);
                 await updateLastSyncCompletedAt(athleteId);
             }
