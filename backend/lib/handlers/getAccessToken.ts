@@ -38,7 +38,7 @@ const getAccessToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
 
         const payload = await strava.oauth.getToken(authorizationCode)
-        logger.info({ message: "athlete payload", athlete: payload.athlete });
+        logger.info({ message: "Authorization code exchanged", athleteId: payload.athlete.id });
 
         try {
             await saveAthleteTokens(payload.athlete.id, {
