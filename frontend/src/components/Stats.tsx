@@ -116,7 +116,7 @@ const Stats: React.FC<{ athlete: any }> = ({ athlete }) => {
     if (!stats) return null;
 
     return (
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '4px 16px 16px', textAlign: 'left' }}>
             <TrainingSummary />
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
                 {TIMEFRAME_OPTIONS.map(opt => (

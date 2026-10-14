@@ -363,6 +363,46 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             resources: [`arn:aws:bedrock-mantle:${this.region}:${this.account}:project/default`],
         }));
 
+        // Async worker that revises an existing plan from the athlete's chat message
+        // (invoked by trainingPlanLambda). Same Bedrock grants as the generator above; no
+        // retries, since a rerun would add a duplicate assistant reply to the chat.
+        const reviseTrainingPlanName = `ReviseTrainingPlan${suffix}`;
+        const reviseTrainingPlanLambda = new lambdaNodeJs.NodejsFunction(this, 'ReviseTrainingPlanHandler', {
+            functionName: reviseTrainingPlanName,
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 512,
+            entry: './lib/handlers/reviseTrainingPlan.ts',
+            timeout: cdk.Duration.seconds(120),
+            retryAttempts: 0,
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                GENERATE_TRAINING_PLAN_FUNCTION_ARN: generateTrainingPlanLambda.functionArn,
+            },
+            bundling: {
+                externalModules: [],
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(reviseTrainingPlanLambda);
+        generateTrainingPlanLambda.grantInvoke(reviseTrainingPlanLambda);
+        reviseTrainingPlanLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CallWithBearerToken'],
+            resources: ['*'],
+        }));
+        reviseTrainingPlanLambda.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['bedrock-mantle:CreateInference'],
+            resources: [`arn:aws:bedrock-mantle:${this.region}:${this.account}:project/default`],
+        }));
+
+        // The generator starts a preferences revision after a goal change. The revise worker has a
+        // fixed name so the generator can reference it by string; referencing the function itself
+        // would make the two Lambdas depend on each other and CloudFormation would reject it.
+        generateTrainingPlanLambda.addEnvironment('REVISE_TRAINING_PLAN_FUNCTION_NAME', reviseTrainingPlanName);
+        generateTrainingPlanLambda.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['lambda:InvokeFunction'],
+            resources: [`arn:aws:lambda:${this.region}:${this.account}:function:${reviseTrainingPlanName}`],
+        }));
+
         // Request-facing handler — fast (no Grok call), just validates input, flips the
         // plan status to "generating", and fires the worker above asynchronously. GET/PATCH
         // also query the activity cache to merge in auto-detected run completions, hence
@@ -375,11 +415,13 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             environment: {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
                 GENERATE_TRAINING_PLAN_FUNCTION_ARN: generateTrainingPlanLambda.functionArn,
+                REVISE_TRAINING_PLAN_FUNCTION_ARN: reviseTrainingPlanLambda.functionArn,
             },
         });
 
         activityCacheTable.grantReadWriteData(trainingPlanLambda);
         generateTrainingPlanLambda.grantInvoke(trainingPlanLambda);
+        reviseTrainingPlanLambda.grantInvoke(trainingPlanLambda);
 
         const combineActivitiesLambda = new lambdaNodeJs.NodejsFunction(this, 'CombineActivitiesHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -488,12 +530,17 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         const trainingSummaryResource = statsResource.addResource('training-summary');
         trainingSummaryResource.addMethod('GET', new apigateway.LambdaIntegration(getTrainingSummaryLambda));
 
-        // Create the /training-plan endpoint (GET current plan, POST to (re)generate)
+        // /training-plan (GET list, POST create), /training-plan/{planId} (GET, POST regenerate,
+        // PATCH mark a session done, DELETE) and /training-plan/{planId}/chat (POST a revision request)
         const trainingPlanResource = apiResource.addResource('training-plan');
         const trainingPlanIntegration = new apigateway.LambdaIntegration(trainingPlanLambda);
         trainingPlanResource.addMethod('GET', trainingPlanIntegration);
         trainingPlanResource.addMethod('POST', trainingPlanIntegration);
-        trainingPlanResource.addMethod('PATCH', trainingPlanIntegration);
+        const trainingPlanIdResource = trainingPlanResource.addResource('{planId}');
+        for (const method of ['GET', 'POST', 'PATCH', 'DELETE']) {
+            trainingPlanIdResource.addMethod(method, trainingPlanIntegration);
+        }
+        trainingPlanIdResource.addResource('chat').addMethod('POST', trainingPlanIntegration);
 
         // Auto-generated secret used to validate Strava webhook subscription requests
         const webhookVerifyTokenSecret = new secretsmanager.Secret(this, 'StravaWebhookVerifyToken', {

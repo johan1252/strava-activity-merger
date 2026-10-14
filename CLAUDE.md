@@ -71,6 +71,7 @@ Activities are cached per athlete with three item types:
 - **SYNC_META**: `PK = ATHLETE#{athleteId}`, `SK = SYNC_META`. Tracks `lastSyncStartedAt`, `lastSyncCompletedAt`, and `fullSyncDone`.
 - **ACTIVITYLOOKUP**: `PK = ACTIVITYLOOKUP#{activityId}`, `SK = META`. Reverse index written alongside each activity so the webhook handler can resolve an `activityId` → full DynamoDB keys without knowing `start_date`.
 - **TRAINING_SUMMARY**: `PK = ATHLETE#{athleteId}`, `SK = TRAINING_SUMMARY`. Caches the AI-generated training summary (`summary`, `generatedAt`); `getTrainingSummary` regenerates only once the cached copy is older than 24h.
+- **TRAINING_PLAN**: `PK = ATHLETE#{athleteId}`, `SK = TRAINING_PLAN#{planId}`. One item per training plan (up to 5 per athlete): the race goal (`request`), the generated `plan`, `status`, and the revision `chat`. Plans made before multiple plans existed sit at `SK = TRAINING_PLAN` and are served as plan id `main`. API: `GET/POST /api/training-plan`, `GET/POST/PATCH/DELETE /api/training-plan/{planId}`, `POST /api/training-plan/{planId}/chat`; generation and chat revisions run in the async `generateTrainingPlan` and `reviseTrainingPlan` Lambdas.
 
 Five GSIs enable efficient server-side filtering by sport type, distance range, and pace range. The cache service is in `backend/lib/services/activityCache.ts`.
 

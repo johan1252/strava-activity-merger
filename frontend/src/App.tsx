@@ -113,7 +113,7 @@ const Home: React.FC = () => {
                             >
                                 Log Out
                             </button>
-                            <div className="activities-header-row" style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '5px' }}>
+                            <div className="activities-header-row" style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: 0 }}>
                                 <div className="activities-header-spacer" style={{ flex: 1 }} /> {/* Center tabs */}
                                 <div className="activities-header-tabs" style={{ display: 'flex', gap: '8px' }}>
                                     <button

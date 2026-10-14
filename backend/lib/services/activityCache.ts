@@ -4,11 +4,12 @@ import {
     GetCommand,
     PutCommand,
     UpdateCommand,
+    DeleteCommand,
     BatchWriteCommand,
     QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
 import type { StravaActivity, CachedActivity, ActivityFilters, SyncMeta } from '../types/activity';
-import type { TrainingPlanItem, TrainingPlanRequest, TrainingPlan } from '../types/trainingPlan';
+import type { TrainingPlanItem, TrainingPlanRequest, TrainingPlan, TrainingPlanChatMessage, PendingGoalChange } from '../types/trainingPlan';
 
 const TABLE_NAME = process.env.ACTIVITY_CACHE_TABLE_NAME!;
 const STALE_SYNC_THRESHOLD_SECONDS = 30 * 60;
@@ -193,24 +194,69 @@ export async function saveTrainingSummary(athleteId: number, summary: string): P
     }));
 }
 
-// --- Training plan (one active plan per athlete, generated asynchronously) ---
+// --- Training plans (several per athlete, each generated asynchronously) ---
 
-export async function getTrainingPlanItem(athleteId: number): Promise<TrainingPlanItem | null> {
+// Plans made before multiple plans existed live at SK 'TRAINING_PLAN' with no id in the key;
+// they keep working as the plan with this id rather than being migrated.
+const LEGACY_PLAN_ID = 'main';
+const PLAN_SK_PREFIX = 'TRAINING_PLAN';
+const MAX_CHAT_MESSAGES = 40;
+
+function planSK(planId: string): string {
+    return planId === LEGACY_PLAN_ID ? PLAN_SK_PREFIX : `${PLAN_SK_PREFIX}#${planId}`;
+}
+
+function planIdFromSK(sk: string): string {
+    return sk === PLAN_SK_PREFIX ? LEGACY_PLAN_ID : sk.slice(PLAN_SK_PREFIX.length + 1);
+}
+
+function planKey(athleteId: number, planId: string) {
+    return { PK: athletePK(athleteId), SK: planSK(planId) };
+}
+
+// A plan deleted while a worker is still running must stay deleted — an UpdateCommand
+// on a missing item would otherwise recreate it with only the worker's fields.
+async function updateExistingPlan(input: ConstructorParameters<typeof UpdateCommand>[0]): Promise<void> {
+    try {
+        await client.send(new UpdateCommand({ ...input, ConditionExpression: 'attribute_exists(PK)' }));
+    } catch (error) {
+        if ((error as Error).name === 'ConditionalCheckFailedException') return;
+        throw error;
+    }
+}
+
+export async function listTrainingPlanItems(athleteId: number): Promise<{ id: string; item: TrainingPlanItem }[]> {
+    const result = await client.send(new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: { ':pk': athletePK(athleteId), ':prefix': PLAN_SK_PREFIX },
+    }));
+    return (result.Items ?? []).map(i => ({ id: planIdFromSK(i.SK as string), item: i as unknown as TrainingPlanItem }));
+}
+
+export async function getTrainingPlanItem(athleteId: number, planId: string): Promise<TrainingPlanItem | null> {
     const result = await client.send(new GetCommand({
         TableName: TABLE_NAME,
-        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        Key: planKey(athleteId, planId),
     }));
     if (!result.Item) return null;
     return result.Item as unknown as TrainingPlanItem;
 }
 
+export async function deleteTrainingPlan(athleteId: number, planId: string): Promise<void> {
+    await client.send(new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: planKey(athleteId, planId),
+    }));
+}
+
 // Marks a new generation as in-progress without touching any previously
 // generated `plan` — so a stale-but-valid plan stays visible while a new one
 // generates, and isn't lost if the new generation fails.
-export async function startTrainingPlanGeneration(athleteId: number, request: TrainingPlanRequest): Promise<void> {
+export async function startTrainingPlanGeneration(athleteId: number, planId: string, request: TrainingPlanRequest): Promise<void> {
     await client.send(new UpdateCommand({
         TableName: TABLE_NAME,
-        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        Key: planKey(athleteId, planId),
         UpdateExpression: 'SET #status = :generating, #request = :request, requestedAt = :now REMOVE errorMessage',
         ExpressionAttributeNames: { '#status': 'status', '#request': 'request' },
         ExpressionAttributeValues: {
@@ -221,18 +267,126 @@ export async function startTrainingPlanGeneration(athleteId: number, request: Tr
     }));
 }
 
-export async function completeTrainingPlanGeneration(athleteId: number, plan: TrainingPlan): Promise<void> {
-    await client.send(new UpdateCommand({
+// `stayGenerating` keeps the plan in 'generating' (with a fresh timer) when a preferences
+// revision follows straight away, so the UI doesn't show a half-finished plan as done.
+export async function completeTrainingPlanGeneration(
+    athleteId: number,
+    planId: string,
+    plan: TrainingPlan,
+    stayGenerating = false,
+): Promise<void> {
+    const now = Math.floor(Date.now() / 1000);
+    await updateExistingPlan({
         TableName: TABLE_NAME,
-        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
-        UpdateExpression: 'SET #status = :complete, #plan = :plan, generatedAt = :now REMOVE errorMessage',
+        Key: planKey(athleteId, planId),
+        UpdateExpression: 'SET #status = :status, #plan = :plan, generatedAt = :now, requestedAt = :requestedAt REMOVE errorMessage',
         ExpressionAttributeNames: { '#status': 'status', '#plan': 'plan' },
+        ExpressionAttributeValues: {
+            ':status': stayGenerating ? 'generating' : 'complete',
+            ':plan': plan,
+            ':now': now,
+            ':requestedAt': now,
+        },
+    });
+}
+
+// Appends the athlete's message and flips the plan to 'generating' in one write. The
+// condition rejects a second message while a revision is already running, returning
+// false so the caller can answer 409 rather than queueing two overlapping revisions.
+export async function startTrainingPlanRevision(athleteId: number, planId: string, message: string): Promise<boolean> {
+    const now = Math.floor(Date.now() / 1000);
+    const userMessage: TrainingPlanChatMessage = { role: 'user', content: message, at: now };
+    try {
+        await client.send(new UpdateCommand({
+            TableName: TABLE_NAME,
+            Key: planKey(athleteId, planId),
+            UpdateExpression: 'SET #status = :generating, requestedAt = :now, chat = list_append(if_not_exists(chat, :empty), :message) REMOVE errorMessage',
+            ConditionExpression: 'attribute_exists(#plan) AND #status <> :generating',
+            ExpressionAttributeNames: { '#status': 'status', '#plan': 'plan' },
+            ExpressionAttributeValues: {
+                ':generating': 'generating',
+                ':now': now,
+                ':empty': [],
+                ':message': [userMessage],
+            },
+        }));
+        return true;
+    } catch (error) {
+        if ((error as Error).name === 'ConditionalCheckFailedException') return false;
+        throw error;
+    }
+}
+
+// Saves the revised plan and the full chat (including the assistant's reply), trimmed to
+// the latest messages, and records whether the plan now carries weekdays.
+export async function completeTrainingPlanRevision(
+    athleteId: number,
+    planId: string,
+    plan: TrainingPlan,
+    chat: TrainingPlanChatMessage[],
+    includeDays: boolean,
+    pendingGoalChange: PendingGoalChange | null,
+    preferences: string[],
+): Promise<void> {
+    await updateExistingPlan({
+        TableName: TABLE_NAME,
+        Key: planKey(athleteId, planId),
+        UpdateExpression: `SET #status = :complete, #plan = :plan, chat = :chat, #request.includeDays = :includeDays, preferences = :preferences, generatedAt = :now${pendingGoalChange ? ', pendingGoalChange = :pending' : ''} REMOVE errorMessage${pendingGoalChange ? '' : ', pendingGoalChange'}`,
+        ExpressionAttributeNames: { '#status': 'status', '#plan': 'plan', '#request': 'request' },
         ExpressionAttributeValues: {
             ':complete': 'complete',
             ':plan': plan,
+            ':includeDays': includeDays,
+            ':preferences': preferences,
+            ':chat': chat.slice(-MAX_CHAT_MESSAGES),
             ':now': Math.floor(Date.now() / 1000),
+            ...(pendingGoalChange ? { ':pending': pendingGoalChange } : {}),
         },
-    }));
+    });
+}
+
+// The athlete confirmed a goal change in chat: store the new goal and the confirmation
+// reply, drop the pending proposal, and mark the plan as generating. The caller then
+// starts the generator, which replaces the plan once it finishes.
+export async function startGoalChangeRegeneration(
+    athleteId: number,
+    planId: string,
+    request: TrainingPlanRequest,
+    chat: TrainingPlanChatMessage[],
+): Promise<void> {
+    await updateExistingPlan({
+        TableName: TABLE_NAME,
+        Key: planKey(athleteId, planId),
+        UpdateExpression: 'SET #status = :generating, #request = :request, requestedAt = :now, chat = :chat REMOVE errorMessage, pendingGoalChange',
+        ExpressionAttributeNames: { '#status': 'status', '#request': 'request' },
+        ExpressionAttributeValues: {
+            ':generating': 'generating',
+            ':request': request,
+            ':now': Math.floor(Date.now() / 1000),
+            ':chat': chat.slice(-MAX_CHAT_MESSAGES),
+        },
+    });
+}
+
+// A failed revision leaves the existing plan valid, so the status goes back to
+// 'complete' and the failure shows up as an assistant message in the chat.
+export async function failTrainingPlanRevision(
+    athleteId: number,
+    planId: string,
+    chat: TrainingPlanChatMessage[],
+    errorMessage: string,
+): Promise<void> {
+    const assistantMessage: TrainingPlanChatMessage = { role: 'assistant', content: errorMessage, at: Math.floor(Date.now() / 1000) };
+    await updateExistingPlan({
+        TableName: TABLE_NAME,
+        Key: planKey(athleteId, planId),
+        UpdateExpression: 'SET #status = :complete, chat = :chat REMOVE errorMessage',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':complete': 'complete',
+            ':chat': [...chat, assistantMessage].slice(-MAX_CHAT_MESSAGES),
+        },
+    });
 }
 
 // Replaces the whole manualCompletions array (computed by the caller from the run's
@@ -243,30 +397,31 @@ export async function completeTrainingPlanGeneration(athleteId: number, plan: Tr
 // integers before calling.
 export async function setRunManualCompletions(
     athleteId: number,
+    planId: string,
     weekIndex: number,
     runIndex: number,
     manualCompletions: (boolean | null)[],
 ): Promise<void> {
-    await client.send(new UpdateCommand({
+    await updateExistingPlan({
         TableName: TABLE_NAME,
-        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        Key: planKey(athleteId, planId),
         UpdateExpression: `SET #plan.weeks[${weekIndex}].runs[${runIndex}].manualCompletions = :manualCompletions`,
         ExpressionAttributeNames: { '#plan': 'plan' },
         ExpressionAttributeValues: { ':manualCompletions': manualCompletions },
-    }));
+    });
 }
 
-export async function failTrainingPlanGeneration(athleteId: number, errorMessage: string): Promise<void> {
-    await client.send(new UpdateCommand({
+export async function failTrainingPlanGeneration(athleteId: number, planId: string, errorMessage: string): Promise<void> {
+    await updateExistingPlan({
         TableName: TABLE_NAME,
-        Key: { PK: athletePK(athleteId), SK: 'TRAINING_PLAN' },
+        Key: planKey(athleteId, planId),
         UpdateExpression: 'SET #status = :failed, errorMessage = :errorMessage',
         ExpressionAttributeNames: { '#status': 'status' },
         ExpressionAttributeValues: {
             ':failed': 'failed',
             ':errorMessage': errorMessage,
         },
-    }));
+    });
 }
 
 // Sends a BatchWrite and retries any UnprocessedItems (DynamoDB returns these
