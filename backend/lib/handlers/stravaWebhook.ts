@@ -35,6 +35,7 @@ interface WebhookEvent {
         title?: string;
         type?: string;
         visibility?: string;
+        authorized?: string; // 'false' on an athlete event when they revoke access
     };
 }
 
@@ -86,6 +87,12 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     const { aspect_type, object_type, object_id: activityId, owner_id: athleteId, updates } = payload;
     logger.appendKeys({ activityId, athleteId, aspect_type });
 
+    if (object_type === 'athlete' && aspect_type === 'update' && updates?.authorized === 'false') {
+        // Not swallowed like the activity paths: a lost deauthorization would leave data we must delete
+        await queueDataDeletion(athleteId);
+        return { statusCode: 200, body: 'OK' };
+    }
+
     if (object_type !== 'activity') {
         logger.info('Ignoring non-activity event');
         return { statusCode: 200, body: 'OK' };
@@ -124,6 +131,16 @@ async function handleEvent(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     }
 
     return { statusCode: 200, body: 'OK' };
+}
+
+// The worker confirms with Strava that access was really revoked, then deletes the athlete's data
+async function queueDataDeletion(athleteId: number): Promise<void> {
+    await lambdaClient.send(new InvokeCommand({
+        FunctionName: process.env.DELETE_ATHLETE_DATA_FUNCTION_ARN,
+        InvocationType: 'Event',
+        Payload: Buffer.from(JSON.stringify({ athleteId })),
+    }));
+    logger.info('Athlete deauthorized — queued data deletion');
 }
 
 // Strava expects a 200 within about 2 seconds, so the fetch and upsert run in a separate Lambda
