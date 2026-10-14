@@ -10,6 +10,7 @@ import {
     failTrainingPlanGeneration,
 } from '../services/activityCache';
 import { computeVolumeTrend, trainingPlanWeekDateRange } from '../services/statsAggregation';
+import { USAGE_LABELS, consumeDailyUsage, DAILY_LIMITS } from '../services/usageLimits';
 import { NO_GOAL_CHANGE_MESSAGE, REPLAY_FAILURE_MESSAGE, claimsGoalChange, cleanPreferences, decideGoalChange, mergeRevisedWeeks, planHasDays } from '../services/trainingPlanRevision';
 import { RACE_DISTANCES } from '../services/trainingPlanRequest';
 import {
@@ -273,6 +274,13 @@ const reviseTrainingPlan = async (event: ReviseTrainingPlanEvent): Promise<void>
             item.pendingGoalChange,
             now,
         );
+
+        if (outcome.kind === 'confirm' && !(await consumeDailyUsage(athleteId, 'build'))) {
+            const reply = `I can't rebuild your plan right now: you've reached today's limit of ${DAILY_LIMITS.build} ${USAGE_LABELS.build}. It resets at midnight UTC, so try again tomorrow.`;
+            await completeTrainingPlanRevision(athleteId, planId, plan, send(reply), currentIncludeDays, null, savedPreferences);
+            logger.info('Goal change refused — daily build limit reached');
+            return;
+        }
 
         if (outcome.kind === 'confirm') {
             const rebuilding = send(`Okay — rebuilding your plan: ${describeGoal(outcome.request)}. This takes up to a minute.`);

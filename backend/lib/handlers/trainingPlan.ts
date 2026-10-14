@@ -16,6 +16,7 @@ import {
 import { trainingPlanWeekDateRange, computeAutoCompletedRunMatches } from '../services/statsAggregation';
 import { resolveAthleteId } from '../utils/resolveAthlete';
 import { todayDateString, validateRequest } from '../services/trainingPlanRequest';
+import { consumeDailyUsage, limitMessage, refundDailyUsageUnit } from '../services/usageLimits';
 import type { TrainingPlan, TrainingPlanItem, TrainingPlanRunCompletion } from '../types/trainingPlan';
 import type { CachedActivity } from '../types/activity';
 
@@ -169,6 +170,10 @@ async function startGeneration(athleteId: number, planId: string, rawBody: strin
     if (!rawBody) throw new Error('Missing request body');
     const request = validateRequest(JSON.parse(rawBody));
 
+    if (!(await consumeDailyUsage(athleteId, 'build'))) {
+        return jsonResponse(429, { message: limitMessage('build'), code: 'daily_limit' });
+    }
+
     await startTrainingPlanGeneration(athleteId, planId, request);
     await lambdaClient.send(new InvokeCommand({
         FunctionName: process.env.GENERATE_TRAINING_PLAN_FUNCTION_ARN,
@@ -217,8 +222,15 @@ async function handleChatMessage(athleteId: number, planId: string, rawBody: str
         return jsonResponse(400, { message: `message must be 1-${MAX_CHAT_MESSAGE_LENGTH} characters` });
     }
 
+    if (!(await consumeDailyUsage(athleteId, 'chat'))) {
+        return jsonResponse(429, { message: limitMessage('chat'), code: 'daily_limit' });
+    }
+
     const started = await startTrainingPlanRevision(athleteId, planId, message);
-    if (!started) return jsonResponse(409, { message: 'Your plan is still updating — wait for it to finish' });
+    if (!started) {
+        await refundDailyUsageUnit(athleteId, 'chat');
+        return jsonResponse(409, { message: 'Your plan is still updating — wait for it to finish' });
+    }
 
     await lambdaClient.send(new InvokeCommand({
         FunctionName: process.env.REVISE_TRAINING_PLAN_FUNCTION_ARN,

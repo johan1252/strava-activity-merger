@@ -424,6 +424,56 @@ export async function failTrainingPlanGeneration(athleteId: number, planId: stri
     });
 }
 
+// --- Daily usage counters (per-athlete limits on model calls) ---
+
+function usageKey(athleteId: number, kind: string, dateKey: string) {
+    return { PK: athletePK(athleteId), SK: `USAGE#${kind}#${dateKey}` };
+}
+
+// Adds one to today's counter unless it has already reached `limit`. The condition makes the
+// check and the increment one atomic step, so two quick requests can't both pass at limit - 1.
+// `expiresAt` (epoch seconds) is the TTL after which DynamoDB deletes the counter.
+export async function incrementDailyUsage(
+    athleteId: number,
+    kind: string,
+    dateKey: string,
+    limit: number,
+    expiresAt: number,
+): Promise<{ allowed: boolean; used: number }> {
+    try {
+        const result = await client.send(new UpdateCommand({
+            TableName: TABLE_NAME,
+            Key: usageKey(athleteId, kind, dateKey),
+            UpdateExpression: 'SET #count = if_not_exists(#count, :zero) + :one, #ttl = :expiresAt',
+            ConditionExpression: 'attribute_not_exists(#count) OR #count < :limit',
+            ExpressionAttributeNames: { '#count': 'count', '#ttl': 'ttl' },
+            ExpressionAttributeValues: { ':zero': 0, ':one': 1, ':limit': limit, ':expiresAt': expiresAt },
+            ReturnValues: 'UPDATED_NEW',
+        }));
+        return { allowed: true, used: Number(result.Attributes?.count ?? 1) };
+    } catch (error) {
+        if ((error as Error).name === 'ConditionalCheckFailedException') return { allowed: false, used: limit };
+        throw error;
+    }
+}
+
+// Gives back a unit that was taken for a request that then did no work (for example a rejected duplicate).
+export async function refundDailyUsage(athleteId: number, kind: string, dateKey: string): Promise<void> {
+    try {
+        await client.send(new UpdateCommand({
+            TableName: TABLE_NAME,
+            Key: usageKey(athleteId, kind, dateKey),
+            UpdateExpression: 'SET #count = #count - :one',
+            ConditionExpression: '#count > :zero',
+            ExpressionAttributeNames: { '#count': 'count' },
+            ExpressionAttributeValues: { ':one': 1, ':zero': 0 },
+        }));
+    } catch (error) {
+        if ((error as Error).name === 'ConditionalCheckFailedException') return;
+        throw error;
+    }
+}
+
 // Sends a BatchWrite and retries any UnprocessedItems (DynamoDB returns these
 // when throttled). Gives up after 3 retries to avoid infinite loops.
 async function batchWriteWithRetry(items: Record<string, unknown>[]): Promise<void> {

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchWithAuth } from '../utils/api';
+import { ApiError, fetchWithAuth } from '../utils/api';
 import LoadingIndicator from './LoadingIndicator';
 import TrainingPlanList from './TrainingPlanList';
 import { Banner, SYNC_STATUS_MESSAGE, SyncStatus, cardStyle, formatDuration, formatFullDate } from './trainingShared';
@@ -653,7 +653,9 @@ const TrainingPlanView: React.FC<TrainingPlanViewProps> = ({ planId, onBack, onC
             });
         } catch (err) {
             console.error('Error sending plan chat message:', err);
-            setChatError('Could not send your message. Please try again.');
+            setChatError(err instanceof ApiError && (err.status === 409 || err.status === 429)
+                ? err.message
+                : 'Could not send your message. Please try again.');
             await loadPlan();
         }
     };
@@ -687,9 +689,8 @@ const TrainingPlanView: React.FC<TrainingPlanViewProps> = ({ planId, onBack, onC
             await loadPlan();
         } catch (err) {
             console.error('Error starting training plan generation:', err);
-            const limitReached = err instanceof Error && err.message.includes('Conflict');
-            setSubmitError(limitReached
-                ? 'You already have the maximum number of training plans. Delete one to add another.'
+            setSubmitError(err instanceof ApiError && (err.status === 409 || err.status === 429)
+                ? err.message
                 : 'Failed to start generating your plan. Please try again.');
         } finally {
             setIsSubmitting(false);
