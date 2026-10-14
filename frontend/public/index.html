@@ -4,27 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="origin">
-    <title>Streven - Strava Activity Tools</title>
+    <title>Streven: Strava Activity Tools &amp; Training Plans</title>
+    <meta name="description" content="Free Strava tools: combine activities, round distance up or down, see your stats, and build a coached training plan for your next 5K, 10K, half or marathon." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#FC4C02" />
+    <link rel="canonical" href="https://streventools.com/" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="Streven" />
-    <meta property="og:title" content="Streven - Strava Activity Tools" />
-    <meta property="og:description" content="Tools for Strava athletes to combine activities, round up/down distances, and keep your stats accurate." />
-    <meta property="og:url" content="https://streventools.com" />
+    <meta property="og:title" content="Streven: Strava Activity Tools &amp; Training Plans" />
+    <meta property="og:description" content="Combine Strava activities, round distances, see your stats, and build a coached training plan for your next race." />
+    <meta property="og:url" content="https://streventools.com/" />
     <meta property="og:image" content="https://streventools.com/logo.png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="Streven logo" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Streven: Strava Activity Tools &amp; Training Plans" />
+    <meta name="twitter:description" content="Combine Strava activities, round distances, see your stats, and build a coached training plan for your next race." />
+    <meta name="twitter:image" content="https://streventools.com/logo.png" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Streven - Strava Activity Tools",
-      "url": "https://streventools.com",
-      "logo": "https://streventools.com/logo.png",
-      "description": "Tools for Strava athletes to combine activities, round up/down distances, and keep your stats accurate."
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://streventools.com/#organization",
+          "name": "Streven",
+          "url": "https://streventools.com/",
+          "logo": "https://streventools.com/logo.png"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://streventools.com/#website",
+          "url": "https://streventools.com/",
+          "name": "Streven",
+          "description": "Strava activity tools and coached training plans.",
+          "publisher": { "@id": "https://streventools.com/#organization" },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://streventools.com/#app",
+          "name": "Streven",
+          "url": "https://streventools.com/",
+          "applicationCategory": "SportsApplication",
+          "operatingSystem": "Any (web browser)",
+          "description": "Free tools for Strava athletes: combine activities, round activity distance up or down, see training stats, and build a week-by-week training plan for a 5K, 10K, half marathon or marathon that you adjust by chatting with a coach.",
+          "featureList": [
+            "Combine two Strava activities into one",
+            "Round activity distance up or down",
+            "Training stats: volume and pace trends, streaks, calendar, gear mileage and race predictions",
+            "Week-by-week training plans for 5K, 10K, half marathon and marathon goals",
+            "Chat with a coach to change run days, add swimming, cycling or weight training, or plan around a holiday",
+            "Sessions tick off automatically from your Strava activities"
+          ],
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "publisher": { "@id": "https://streventools.com/#organization" }
+        }
+      ]
     }
     </script>
 </head>
 <body>
+    <noscript>
+        <h1>Streven: Strava activity tools and training plans</h1>
+        <p>Streven is a set of free tools for Strava athletes. Combine two activities into one, round an activity's distance up or down, see your training stats, and build a week-by-week training plan for your next 5K, 10K, half marathon or marathon. Streven needs JavaScript and a Strava account to work.</p>
+        <p><a href="/faq">Read the FAQ</a> | <a href="/privacy-policy">Privacy Policy</a> | <a href="/terms-of-service">Terms of Service</a></p>
+    </noscript>
     <div id="root"></div>
 </body>
 </html>

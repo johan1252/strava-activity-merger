@@ -6,6 +6,8 @@ import { API_BASE_URL, STRAVA_CLIENT_ID } from './config';
 import ActivityList from './components/ActivityList';
 import Stats from './components/Stats';
 import Training from './components/Training';
+import NotFound from './pages/NotFound';
+import { usePageMeta } from './utils/pageMeta';
 import MobileDetect from 'mobile-detect';
 import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -41,6 +43,12 @@ const handleAuthorizeClick = () => {
 };
 
 const Home: React.FC = () => {
+    usePageMeta({
+        title: 'Streven: Strava Activity Tools & Training Plans',
+        description: 'Free Strava tools: combine activities, round distance up or down, see your stats, and build a coached training plan for your next 5K, 10K, half or marathon.',
+        path: '/',
+    });
+
     const [athlete, setAthlete] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -173,7 +181,10 @@ const Home: React.FC = () => {
                         </div>
                     ) : (
                         <section style={{ marginTop: '30px' }}>
-                            <h2>Getting Started</h2>
+                            <h1 style={{ margin: '0 auto 8px', maxWidth: '640px', padding: '0 16px', fontSize: '1.8rem' }}>Free Strava tools for runners and cyclists</h1>
+                            <p style={{ maxWidth: '560px', margin: '0 auto 16px', padding: '0 16px', color: '#555', lineHeight: 1.6 }}>
+                                Fix activities that stopped too soon or came up a few metres short, see how your training is trending, and build a week-by-week plan for your next race that you can change just by chatting.
+                            </p>
                             <button
                                 style={{
                                     padding: '10px 20px',
@@ -195,22 +206,37 @@ const Home: React.FC = () => {
                                     style={{ width: '200px', height: 'auto' }}
                                 />
                             </button>
-                            <section style={{ marginTop: '30px', marginBottom: '30px', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', background: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '24px' }}>
-                                <h3 style={{ color: '#FC4C02', marginBottom: '16px' }}>Features</h3>
-                                <ul style={{ fontSize: '1.0rem', lineHeight: '1.7', paddingLeft: '20px' }}>
-                                    <li>
-                                        <strong>Combine Strava Activities</strong><br />
+                            <section style={{ marginTop: '30px', marginBottom: '30px', textAlign: 'left', maxWidth: '640px', marginLeft: 'auto', marginRight: 'auto', background: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '24px' }}>
+                                <h2 style={{ color: '#FC4C02', marginTop: 0, marginBottom: '16px', fontSize: '1.4rem' }}>Features</h2>
+                                <ul style={{ fontSize: '1.0rem', lineHeight: '1.7', paddingLeft: '20px', margin: 0 }}>
+                                    <li style={{ marginBottom: '12px' }}>
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Training plans for your next race</h3>
+                                        Pick a 5K, 10K, half marathon or marathon, a race date and a target time. Streven builds a week-by-week plan from your Strava history, with a realism score and a difficulty score so you know what you're signing up for. Keep up to five plans, and your sessions tick off automatically as matching Strava activities come in.
+                                    </li>
+                                    <li style={{ marginBottom: '12px' }}>
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Change your plan by chatting</h3>
+                                        Tell the coach what you want in plain words: "I only want to run 3 times a week", "add a swim on Tuesdays", "add a weights session each week", "show the day of the week for each session" or "I'm on holiday in November, only 1-2 runs". It also moves your race date or target time (after you confirm) and remembers your preferences when the plan is rebuilt.
+                                    </li>
+                                    <li style={{ marginBottom: '12px' }}>
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Training stats</h3>
+                                        See your weekly distance and pace trends, streaks, a calendar of your activity, gear mileage, race time predictions and a short written summary of your training.
+                                    </li>
+                                    <li style={{ marginBottom: '12px' }}>
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Combine Strava Activities</h3>
                                         Accidentally stopped your activity too soon, or had a long break before continuing? This tool allows you to select two different Strava activities and will combine them for you, so your stats and records stay accurate.
                                     </li>
-                                    <li>
-                                        <strong>Round Up Activity Distance</strong><br />
+                                    <li style={{ marginBottom: '12px' }}>
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Round Up Activity Distance</h3>
                                         Ran a 10km race and Strava shows 9.98km? This tool allows you to recreate an activity while "rounding up" the distance, so your stats and records stay accurate. For example, if you ran 9.98km, it will create a new activity with exactly 10.0km.
                                     </li>
                                     <li>
-                                        <strong>Round Down Activity Distance</strong><br />
+                                        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Round Down Activity Distance</h3>
                                         Accidentally stopped your activity too late, or Strava added a 0.1km Strava tax? This tool allows you to recreate an activity while "rounding down" the distance, so your stats and records stay accurate. For example, if you ran 10.3km, it will create a new activity with exactly 10.0km.
                                     </li>
                                 </ul>
+                                <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: 0 }}>
+                                    Training plans are written by an AI model and are suggestions, not medical or professional coaching advice. <a href="/faq" style={{ color: '#FC4C02' }}>Read the FAQ</a> for details.
+                                </p>
                             </section>
                         </section>
                     ))}
@@ -311,6 +337,13 @@ const StravaLoading: React.FC<{ message?: string }> = ({ message = 'Authorizing 
 );
 
 const StravaCallback: React.FC = () => {
+    usePageMeta({
+        title: 'Connecting to Strava | Streven',
+        description: 'Connecting your Strava account to Streven.',
+        path: '/strava-callback',
+        noindex: true,
+    });
+
     const location = useLocation();
     const [error, setError] = useState<string | null>(null);
 
@@ -387,6 +420,7 @@ const App: React.FC = () => {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </Router>
     );

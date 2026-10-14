@@ -1,9 +1,13 @@
 {
   "name": "Streven",
   "short_name": "Streven",
-  "description": "Tools for Strava athletes to combine activities and round distances",
+  "description": "Strava tools to combine activities, round distances and build a coached training plan",
   "icons": [
-    { "src": "logo.png", "sizes": "1024x1024", "type": "image/png" }
+    {
+      "src": "logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
   ],
   "start_url": "/",
   "display": "standalone",

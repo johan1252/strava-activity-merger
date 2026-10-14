@@ -163,7 +163,7 @@ const panelHeader = (onClose?: () => void) => (
         <div>
             <div style={{ fontWeight: 700, fontSize: '1rem' }}>Adjust your plan</div>
             <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '2px' }}>
-                Tell your coach what to change. Weeks that have started stay as they are.
+                Tell your coach what to change. Past weeks stay as they are.
             </div>
         </div>
         {onClose && (
