@@ -39,7 +39,7 @@ const refreshToken = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
 
 
         const payload = await strava.oauth.refreshToken(refreshToken)
-        logger.info({ message: "payload", payload });
+        logger.info({ message: "Token refreshed", expiresAt: payload.expires_at });
 
         try {
             const athleteId = await resolveAthleteId(payload.access_token);
