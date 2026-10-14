@@ -1,10 +1,12 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import OpenAI, { BedrockOpenAI } from 'openai';
-import { getTokenProvider } from '@aws/bedrock-token-generator';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import OpenAI from 'openai';
 import {
     queryActivities,
     completeTrainingPlanGeneration,
     failTrainingPlanGeneration,
+    failTrainingPlanRevision,
+    getTrainingPlanItem,
 } from '../services/activityCache';
 import {
     computeVolumeTrend,
@@ -12,34 +14,25 @@ import {
     computeRacePredictions,
     computeLongestRun,
 } from '../services/statsAggregation';
-import type { GenerateTrainingPlanEvent, TrainingPlan, TrainingPlanWeek, TrainingPlanRun } from '../types/trainingPlan';
+import { REPLAY_FAILURE_MESSAGE, stripDays } from '../services/trainingPlanRevision';
+import { BEDROCK_MODEL_ID, createBedrockClient, formatDuration, parseAndValidatePlan } from '../services/trainingPlanModel';
+import { WEEK_DAYS } from '../types/trainingPlan';
+import type { GenerateTrainingPlanEvent } from '../types/trainingPlan';
 
 const logger = new Logger({ serviceName: 'generateTrainingPlan' });
+const lambdaClient = new LambdaClient({});
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-// Same model/client pattern as getTrainingSummary.ts — see that file for the fuller
-// rationale (Bedrock Mantle bearer-token auth minted from this Lambda's own execution
-// role via @aws/bedrock-token-generator, no API key/secret to manage).
-const BEDROCK_MODEL_ID = 'xai.grok-4.3';
-const provideBedrockToken = getTokenProvider();
-
-const MAX_WEEKS = 60;
-
-function formatDuration(totalSeconds: number): string {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.round((totalSeconds % 3600) / 60);
-    return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}m` : `${minutes}m`;
-}
 
 const runItemSchema = {
     type: 'object',
     additionalProperties: false,
-    required: ['count', 'label', 'distanceKm', 'notes'],
+    required: ['count', 'label', 'distanceKm', 'notes', 'days'],
     properties: {
         count: { type: 'integer' },
         label: { type: 'string' },
         distanceKm: { type: 'number' },
         notes: { type: 'string' },
+        days: { type: 'array', items: { type: 'string', enum: [...WEEK_DAYS] } },
     },
 };
 
@@ -75,6 +68,7 @@ Design a training plan from now until race day, broken into weeks. Each week nee
 - label: a short name, e.g. "Easy run", "Long run", "Tempo run", "Interval run"
 - distanceKm: the distance of a single instance of this run
 - notes: a short extra detail when relevant (e.g. "with 4-5km at race pace"), or an empty string when there's nothing more to add
+- days: when includeDays is true in the context, the weekday of each instance of this run, one entry per instance (so the array length equals count), chosen from Monday to Sunday. Never put two runs on the same day. Space the runs out so the hardest sessions (tempo, intervals, long run) are not on back-to-back days, and put the long run on a weekend day. When includeDays is false, return an empty array.
 
 For example, a week's runs might be:
 1. Easy run — 5km
@@ -100,9 +94,25 @@ If the context says hasBaseline is false (no recent effort at or near this dista
 
 Respond with JSON matching the required schema — nothing else.`;
 
+// After a goal change the new plan is run-only; the revision worker puts the athlete's saved
+// preferences (cross-training, run days, weekdays) back. The plan is still valid if this fails.
+async function startPreferenceReplay(athleteId: number, planId: string): Promise<void> {
+    try {
+        await lambdaClient.send(new InvokeCommand({
+            FunctionName: process.env.REVISE_TRAINING_PLAN_FUNCTION_NAME,
+            InvocationType: 'Event',
+            Payload: Buffer.from(JSON.stringify({ athleteId, planId, applyPreferences: true })),
+        }));
+    } catch (error) {
+        logger.error({ message: 'Could not start the preferences revision', error });
+        const item = await getTrainingPlanItem(athleteId, planId);
+        await failTrainingPlanRevision(athleteId, planId, item?.chat ?? [], REPLAY_FAILURE_MESSAGE);
+    }
+}
+
 const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<void> => {
-    const { athleteId, request } = event;
-    logger.appendKeys({ athleteId });
+    const { athleteId, planId, request, applyPreferences } = event;
+    logger.appendKeys({ athleteId, planId });
     logger.info('Generating training plan', { request });
 
     try {
@@ -153,6 +163,7 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
             } : null,
             paceComparison,
             preferredRunDaysPerWeek: request.daysPerWeek ?? null,
+            includeDays: request.includeDays ?? false,
             // Run-only — difficultyScore is meant to weigh running volume specifically,
             // not a mix of other sports that don't stress the same running fitness.
             last3MonthsWeeklyRunVolumeKm: computeVolumeTrend(activities.filter(a => a.sport_type === 'Run'), '3m').map(w => ({
@@ -166,7 +177,7 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
             })),
         };
 
-        const client = new BedrockOpenAI({ bedrockTokenProvider: provideBedrockToken, awsRegion: process.env.AWS_REGION });
+        const client = createBedrockClient();
 
         const response = await client.chat.completions.create({
             model: BEDROCK_MODEL_ID,
@@ -193,6 +204,7 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         });
 
         const plan = parseAndValidatePlan(rawContent);
+        if (!request.includeDays) plan.weeks = stripDays(plan.weeks);
 
         // Deterministic safety net for the one truly unambiguous case: the athlete's
         // pace already meets the target AND they've recently covered most of the race
@@ -208,8 +220,9 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
             plan.realismScore = Math.max(plan.realismScore, 90);
         }
 
-        await completeTrainingPlanGeneration(athleteId, plan);
+        await completeTrainingPlanGeneration(athleteId, planId, plan, !!applyPreferences);
         logger.info('Training plan generation complete', { weekCount: plan.weeks.length });
+        if (applyPreferences) await startPreferenceReplay(athleteId, planId);
     } catch (error) {
         if (error instanceof OpenAI.AuthenticationError) {
             logger.error({ message: 'Bedrock authentication failed — check bedrock-mantle:* grants and Bedrock console model access', error });
@@ -220,66 +233,9 @@ const generateTrainingPlan = async (event: GenerateTrainingPlanEvent): Promise<v
         } else {
             logger.error({ message: 'Error generating training plan', error });
         }
-        await failTrainingPlanGeneration(athleteId, 'Failed to generate a training plan. Please try again.');
+        await failTrainingPlanGeneration(athleteId, planId, 'Failed to generate a training plan. Please try again.');
     }
 };
-
-function clampScore(value: unknown): number {
-    const n = typeof value === 'number' && Number.isFinite(value) ? value : 0;
-    return Math.max(0, Math.min(100, Math.round(n)));
-}
-
-// Grok's structured-output mode enforces required fields/enums reliably, but not numeric
-// bounds or array length — so those are re-checked here rather than trusted from the schema.
-function parseAndValidatePlan(rawContent: string): TrainingPlan {
-    const parsed = JSON.parse(rawContent);
-
-    if (!Array.isArray(parsed.weeks) || parsed.weeks.length === 0 || parsed.weeks.length > MAX_WEEKS) {
-        throw new Error(`Plan has an invalid week count: ${parsed.weeks?.length}`);
-    }
-
-    const weeks: TrainingPlanWeek[] = parsed.weeks.map((w: Record<string, unknown>, i: number) => {
-        const totalDistanceKm = Number(w.totalDistanceKm);
-        if (!Number.isFinite(totalDistanceKm)) {
-            throw new Error(`Week ${i + 1} has a non-numeric totalDistanceKm`);
-        }
-        if (!Array.isArray(w.runs)) {
-            throw new Error(`Week ${i + 1} is missing a runs array`);
-        }
-
-        const runs: TrainingPlanRun[] = w.runs.map((r: Record<string, unknown>, j: number) => {
-            const distanceKm = Number(r.distanceKm);
-            if (!Number.isFinite(distanceKm)) {
-                throw new Error(`Week ${i + 1}, run ${j + 1} has a non-numeric distanceKm`);
-            }
-            const count = Number.isFinite(Number(r.count)) && Number(r.count) > 0 ? Math.round(Number(r.count)) : 1;
-            return {
-                count,
-                label: typeof r.label === 'string' && r.label ? r.label : 'Run',
-                distanceKm,
-                notes: typeof r.notes === 'string' ? r.notes : '',
-                manualCompletions: Array(count).fill(null),
-            };
-        });
-
-        return {
-            weekNumber: Number.isFinite(Number(w.weekNumber)) ? Number(w.weekNumber) : i + 1,
-            totalDistanceKm,
-            focus: (['Base', 'Build', 'Peak', 'Taper', 'Race Week'].includes(w.focus as string)
-                ? w.focus
-                : 'Base') as TrainingPlanWeek['focus'],
-            runs,
-        };
-    });
-
-    return {
-        weeks,
-        realismScore: clampScore(parsed.realismScore),
-        realismRationale: typeof parsed.realismRationale === 'string' ? parsed.realismRationale : '',
-        difficultyScore: clampScore(parsed.difficultyScore),
-        difficultyRationale: typeof parsed.difficultyRationale === 'string' ? parsed.difficultyRationale : '',
-    };
-}
 
 const handler = generateTrainingPlan;
 

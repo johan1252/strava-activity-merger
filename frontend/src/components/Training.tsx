@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
 import LoadingIndicator from './LoadingIndicator';
+import TrainingPlanList from './TrainingPlanList';
+import { Banner, SYNC_STATUS_MESSAGE, SyncStatus, cardStyle, formatDuration, formatFullDate } from './trainingShared';
+import TrainingPlanChat, { TrainingPlanChatMessage } from './TrainingPlanChat';
 
 type RaceDistance = '5K' | '10K' | 'Half Marathon' | 'Marathon';
 
@@ -26,6 +30,7 @@ interface TrainingPlanRequest {
     raceDate: string;
     targetTimeSeconds: number;
     daysPerWeek?: number;
+    includeDays?: boolean;
 }
 
 interface TrainingPlanRunCompletion {
@@ -37,7 +42,10 @@ interface TrainingPlanRunCompletion {
 interface TrainingPlanRun {
     count: number;
     label: string;
+    activityType?: string; // absent on older plans — means 'Run'
     distanceKm: number;
+    durationMinutes?: number;
+    days?: string[]; // one weekday name per instance; absent on older plans
     notes: string;
     completions: TrainingPlanRunCompletion[];
 }
@@ -58,6 +66,7 @@ interface TrainingPlan {
 }
 
 interface TrainingPlanItem {
+    id?: string;
     status: 'generating' | 'complete' | 'failed';
     request: TrainingPlanRequest;
     requestedAt: number;
@@ -65,6 +74,7 @@ interface TrainingPlanItem {
     generatedAt?: number;
     errorMessage?: string;
     isPast?: boolean;
+    chat?: TrainingPlanChatMessage[];
 }
 
 function formatDistanceKm(distanceKm: number): string {
@@ -74,10 +84,48 @@ function formatDistanceKm(distanceKm: number): string {
 // Singular wording regardless of count — the individually-checkable sub-bullets
 // ("Run 1", "Run 2", ...) already convey the repetition, so no more "Two tempo runs"
 // pluralization of the label here, just an "each" after the distance for count > 1.
+function isRunSession(run: TrainingPlanRun): boolean {
+    return (run.activityType ?? 'Run') === 'Run';
+}
+
+function formatSize(run: TrainingPlanRun): string {
+    return [
+        run.durationMinutes ? `${run.durationMinutes} min` : '',
+        run.distanceKm > 0 ? formatDistanceKm(run.distanceKm) : '',
+    ].filter(Boolean).join(', ');
+}
+
 function formatRun(run: TrainingPlanRun): string {
-    const distance = formatDistanceKm(run.distanceKm);
-    const distanceLabel = run.count > 1 ? `${distance} each` : distance;
-    return `${run.label} — ${distanceLabel}${run.notes ? `, ${run.notes}` : ''}`;
+    const size = formatSize(run);
+    const sizeLabel = run.count > 1 ? `${size} each` : size;
+    return `${run.label} — ${sizeLabel}${run.notes ? `, ${run.notes}` : ''}`;
+}
+
+const WEEKDAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+interface DaySession {
+    runIndex: number;
+    instanceIndex: number;
+    day?: string;
+    label: string;
+}
+
+// One entry per instance, ordered Monday to Sunday (instances without a day go last),
+// e.g. "Monday — Swim — 5km". Used instead of the grouped list when days are shown.
+function sessionsByDay(runs: TrainingPlanRun[]): DaySession[] {
+    const sessions = runs.flatMap((run, runIndex) =>
+        Array.from({ length: run.count }, (_, instanceIndex) => {
+            const day = run.days?.[instanceIndex];
+            const detail = `${run.label} — ${formatSize(run)}${run.notes ? `, ${run.notes}` : ''}`;
+            return { runIndex, instanceIndex, day, label: day ? `${day} — ${detail}` : detail };
+        }),
+    );
+    const order = (d?: string) => (d ? WEEKDAY_ORDER.indexOf(d) : WEEKDAY_ORDER.length);
+    return sessions.sort((a, b) => order(a.day) - order(b.day));
+}
+
+function instanceLabel(run: TrainingPlanRun, instanceIndex: number): string {
+    return `${isRunSession(run) ? 'Run' : run.label} ${instanceIndex + 1}`;
 }
 
 function countCompletions(runs: TrainingPlanRun[]): { done: number; total: number } {
@@ -88,15 +136,6 @@ function countCompletions(runs: TrainingPlanRun[]): { done: number; total: numbe
         }),
         { done: 0, total: 0 },
     );
-}
-
-function formatDuration(totalSeconds: number): string {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = Math.round(totalSeconds % 60);
-    const mm = hours > 0 ? String(minutes).padStart(2, '0') : String(minutes);
-    const ss = String(seconds).padStart(2, '0');
-    return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
 function hmsToSeconds(h: number, m: number, s: number): number {
@@ -160,19 +199,6 @@ function formatWeekRange(startDateStr: string): string {
     const end = new Date(`${endDateStr}T00:00:00Z`).toLocaleDateString(undefined, opts);
     return `${start} – ${end}`;
 }
-
-function formatFullDate(dateStr: string): string {
-    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
-    return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString(undefined, opts);
-}
-
-const cardStyle: React.CSSProperties = {
-    background: '#fff',
-    borderRadius: '10px',
-    padding: '16px',
-    marginBottom: '16px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-};
 
 const selectStyle: React.CSSProperties = {
     border: '1px solid #ddd',
@@ -248,6 +274,82 @@ function formatCompletionDate(dateStr: string): string {
     return `${ordinal(d.getUTCDate())} ${month}`;
 }
 
+function hashText(text: string): string {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) | 0;
+    return String(hash);
+}
+
+// The score cards open the first time a plan's scores are seen and stay collapsed on later
+// visits. They open again when the scores or their explanations change (a revised or rebuilt plan).
+const PlanScores: React.FC<{ planId: string | null; plan: TrainingPlan }> = ({ planId, plan }) => {
+    const storageKey = `trainingPlanScoresSeen:${planId}`;
+    const stamp = hashText(`${plan.realismScore}|${plan.realismRationale}|${plan.difficultyScore}|${plan.difficultyRationale}`);
+    const [expanded, setExpanded] = useState(() => {
+        try {
+            return localStorage.getItem(storageKey) !== stamp;
+        } catch {
+            return true;
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(storageKey, stamp);
+        } catch {
+            // Storage can be unavailable (private mode); the cards then open on every visit
+        }
+    }, [storageKey, stamp]);
+
+    const toggleStyle: React.CSSProperties = {
+        background: 'none',
+        border: 'none',
+        color: '#888',
+        fontWeight: 600,
+        fontSize: '0.85rem',
+        cursor: 'pointer',
+        padding: 0,
+    };
+
+    if (!expanded) {
+        return (
+            <button
+                type="button"
+                onClick={() => setExpanded(true)}
+                style={{ ...cardStyle, ...toggleStyle, display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', marginBottom: '16px', color: '#555' }}
+            >
+                <span style={{ color: '#888', marginRight: '6px' }}>▸</span>
+                Realism <strong style={{ color: '#333' }}>{plan.realismScore}</strong>
+                <span style={{ margin: '0 8px', color: '#ccc' }}>·</span>
+                Difficulty <strong style={{ color: '#333' }}>{plan.difficultyScore}</strong>
+                <span style={{ float: 'right', color: '#888', fontWeight: 400 }}>Show details</span>
+            </button>
+        );
+    }
+
+    return (
+        <div style={{ marginBottom: '16px' }}>
+            <button type="button" onClick={() => setExpanded(false)} style={{ ...toggleStyle, marginBottom: '8px' }}>
+                ▾ Hide realism and difficulty
+            </button>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <ScoreCard
+                    label="Realism"
+                    score={plan.realismScore}
+                    rationale={plan.realismRationale}
+                    scale={['Unrealistic', 'Uncertain', 'Likely', 'Highly Realistic']}
+                />
+                <ScoreCard
+                    label="Difficulty"
+                    score={plan.difficultyScore}
+                    rationale={plan.difficultyRationale}
+                    scale={['Easy', 'Moderate', 'Hard', 'Very Hard']}
+                />
+            </div>
+        </div>
+    );
+};
+
 const STRAVA_ACTIVITY_URL = 'https://www.strava.com/activities/';
 
 const RunCheckbox: React.FC<{ completion: TrainingPlanRunCompletion; onChange: (checked: boolean) => void; label: string }> = ({ completion, onChange, label }) => (
@@ -290,6 +392,7 @@ const WeekCard: React.FC<{
     // expand one to check past runs — the click just flips a one-time override.
     const [expandedOverride, setExpandedOverride] = useState<boolean | null>(null);
     const expanded = expandedOverride ?? !isPast;
+    const dayView = week.runs.some(r => r.days && r.days.length > 0);
 
     return (
         <div style={{ ...cardStyle, marginBottom: '10px' }}>
@@ -328,10 +431,19 @@ const WeekCard: React.FC<{
             {expanded && (
                 <>
                     <div style={{ color: '#555', fontSize: '0.9rem', marginBottom: '6px' }}>
-                        {week.totalDistanceKm.toFixed(0)} km total
+                        {week.totalDistanceKm.toFixed(0)} km {week.runs.some(r => !isRunSession(r)) ? 'running' : 'total'}
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '20px', color: '#333', fontSize: '0.9rem', lineHeight: 1.5, listStyle: 'none' }}>
-                        {week.runs.map((run, runIndex) => (
+                        {dayView && sessionsByDay(week.runs).map(session => (
+                            <li key={`${session.runIndex}-${session.instanceIndex}`} style={{ marginBottom: '4px' }}>
+                                <RunCheckbox
+                                    completion={week.runs[session.runIndex].completions[session.instanceIndex]}
+                                    onChange={completed => onToggle(session.runIndex, session.instanceIndex, completed)}
+                                    label={session.label}
+                                />
+                            </li>
+                        ))}
+                        {!dayView && week.runs.map((run, runIndex) => (
                             <li key={runIndex} style={{ marginBottom: '4px' }}>
                                 {run.count === 1 ? (
                                     <RunCheckbox
@@ -348,7 +460,7 @@ const WeekCard: React.FC<{
                                                     <RunCheckbox
                                                         completion={run.completions[instanceIndex]}
                                                         onChange={completed => onToggle(runIndex, instanceIndex, completed)}
-                                                        label={`Run ${instanceIndex + 1}`}
+                                                        label={instanceLabel(run, instanceIndex)}
                                                     />
                                                 </li>
                                             ))}
@@ -364,35 +476,83 @@ const WeekCard: React.FC<{
     );
 };
 
-type SyncStatus = 'ready' | 'in_progress' | 'not_started';
+const CHAT_TIP_STORAGE_KEY = 'trainingPlanChatTipDismissed';
 
-const SYNC_STATUS_MESSAGE: Record<Exclude<SyncStatus, 'ready'>, string> = {
-    in_progress: "We're still importing your Strava history — check back in a few minutes to set a race goal.",
-    not_started: 'Visit the Activities tab to start importing your Strava history, then come back here to set a race goal.',
+const ChatTip: React.FC = () => {
+    const [dismissed, setDismissed] = useState(() => {
+        try {
+            return localStorage.getItem(CHAT_TIP_STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    });
+
+    if (dismissed) return null;
+
+    const dismiss = () => {
+        setDismissed(true);
+        try {
+            localStorage.setItem(CHAT_TIP_STORAGE_KEY, 'true');
+        } catch {
+            // Storage can be unavailable (private mode); the tip then returns on the next visit
+        }
+    };
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'flex-start',
+                background: '#eef6ff',
+                border: '1px solid #cfe3fa',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                marginBottom: '16px',
+                fontSize: '0.9rem',
+                color: '#355',
+            }}
+        >
+            <span aria-hidden="true" style={{ fontSize: '1.1rem', lineHeight: 1.3 }}>💡</span>
+            <div style={{ flex: 1 }}>
+                <strong>Did you know?</strong> You can use the chat to customize your plan. Ask for extra training runs,
+                swims or weight-lifting sessions, change which days you train, or change your race date or goal time.
+            </div>
+            <button
+                type="button"
+                onClick={dismiss}
+                aria-label="Dismiss tip"
+                style={{ background: 'none', border: 'none', color: '#789', fontSize: '1.1rem', lineHeight: 1, cursor: 'pointer', padding: '0 2px' }}
+            >
+                ✕
+            </button>
+        </div>
+    );
 };
 
-const Banner: React.FC<{ children: React.ReactNode; tone?: 'info' | 'error' }> = ({ children, tone = 'info' }) => (
-    <div
-        style={{
-            ...cardStyle,
-            background: tone === 'error' ? '#fdecea' : '#fff7f2',
-            border: `1px solid ${tone === 'error' ? '#f5c2c0' : '#ffd9c2'}`,
-            color: tone === 'error' ? '#a33' : '#555',
-            fontSize: '0.9rem',
-        }}
+const BackLink: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        style={{ background: 'none', border: 'none', color: '#FC4C02', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', padding: 0, marginBottom: '12px' }}
     >
-        {children}
-    </div>
+        ← All training plans
+    </button>
 );
 
-const Training: React.FC<{ athlete: any }> = () => {
+interface TrainingPlanViewProps {
+    planId: string | null; // null while setting up a new plan
+    onBack: () => void;
+    onCreated: (planId: string) => void;
+}
+
+const TrainingPlanView: React.FC<TrainingPlanViewProps> = ({ planId, onBack, onCreated }) => {
     const [item, setItem] = useState<TrainingPlanItem | null>(null);
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('ready');
-    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-    const [showForm, setShowForm] = useState(false);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(planId !== null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-
+    const [chatError, setChatError] = useState<string | null>(null);
     const [raceDistance, setRaceDistance] = useState<RaceDistance>('10K');
     const [raceDate, setRaceDate] = useState('');
     const initialTargetTime = secondsToHms(MIN_TARGET_TIME_SECONDS['10K']);
@@ -401,6 +561,7 @@ const Training: React.FC<{ athlete: any }> = () => {
     const [targetSeconds, setTargetSeconds] = useState(initialTargetTime.s);
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [daysPerWeek, setDaysPerWeek] = useState<number | undefined>(undefined);
+    const [includeDays, setIncludeDays] = useState(false);
 
     const updateTargetTime = (h: number, m: number, s: number) => {
         const clamped = clampTargetTime(h, m, s, raceDistance);
@@ -418,8 +579,9 @@ const Training: React.FC<{ athlete: any }> = () => {
     };
 
     const loadPlan = useCallback(async () => {
+        if (planId === null) return;
         try {
-            const data = await fetchWithAuth('/training-plan');
+            const data = await fetchWithAuth(`/training-plan/${planId}`);
             setItem(data.item);
             setSyncStatus(data.syncStatus ?? 'ready');
         } catch (err) {
@@ -427,7 +589,7 @@ const Training: React.FC<{ athlete: any }> = () => {
         } finally {
             setIsLoadingInitial(false);
         }
-    }, []);
+    }, [planId]);
 
     useEffect(() => {
         loadPlan();
@@ -462,7 +624,7 @@ const Training: React.FC<{ athlete: any }> = () => {
         });
 
         try {
-            const data = await fetchWithAuth('/training-plan', {
+            const data = await fetchWithAuth(`/training-plan/${planId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ weekNumber, runIndex, instanceIndex, completed }),
             });
@@ -474,19 +636,26 @@ const Training: React.FC<{ athlete: any }> = () => {
         }
     };
 
-    const openForm = (prefill?: TrainingPlanRequest) => {
-        if (prefill) {
-            setRaceDistance(prefill.raceDistance);
-            setRaceDate(prefill.raceDate);
-            const hms = secondsToHms(prefill.targetTimeSeconds);
-            setTargetHours(hms.h);
-            setTargetMinutes(hms.m);
-            setTargetSeconds(hms.s);
-            setDaysPerWeek(prefill.daysPerWeek);
-            setShowAdvanced(!!prefill.daysPerWeek);
+    // Shows the athlete's message and the busy state straight away; the revised plan and
+    // the coach's reply arrive through the same polling used while a plan generates.
+    const sendChatMessage = async (message: string) => {
+        setChatError(null);
+        setItem(prev => prev ? {
+            ...prev,
+            status: 'generating',
+            chat: [...(prev.chat ?? []), { role: 'user', content: message, at: Math.floor(Date.now() / 1000) }],
+        } : prev);
+
+        try {
+            await fetchWithAuth(`/training-plan/${planId}/chat`, {
+                method: 'POST',
+                body: JSON.stringify({ message }),
+            });
+        } catch (err) {
+            console.error('Error sending plan chat message:', err);
+            setChatError('Could not send your message. Please try again.');
+            await loadPlan();
         }
-        setSubmitError(null);
-        setShowForm(true);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -502,20 +671,26 @@ const Training: React.FC<{ athlete: any }> = () => {
 
         setIsSubmitting(true);
         try {
-            const data = await fetchWithAuth('/training-plan', {
+            const data = await fetchWithAuth(planId ? `/training-plan/${planId}` : '/training-plan', {
                 method: 'POST',
-                body: JSON.stringify({ raceDistance, raceDate, targetTimeSeconds, daysPerWeek }),
+                body: JSON.stringify({ raceDistance, raceDate, targetTimeSeconds, daysPerWeek, includeDays }),
             });
             if (data.status === 'not_synced') {
                 setSyncStatus(data.syncStatus ?? 'in_progress');
                 setSubmitError(null);
                 return;
             }
-            setShowForm(false);
+            if (planId === null) {
+                onCreated(data.id);
+                return;
+            }
             await loadPlan();
         } catch (err) {
             console.error('Error starting training plan generation:', err);
-            setSubmitError('Failed to start generating your plan. Please try again.');
+            const limitReached = err instanceof Error && err.message.includes('Conflict');
+            setSubmitError(limitReached
+                ? 'You already have the maximum number of training plans. Delete one to add another.'
+                : 'Failed to start generating your plan. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -523,7 +698,8 @@ const Training: React.FC<{ athlete: any }> = () => {
 
     if (isLoadingInitial) {
         return (
-            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '4px 16px 16px', textAlign: 'left' }}>
+                <BackLink onClick={onBack} />
                 <LoadingIndicator message="Loading your training plan..." />
             </div>
         );
@@ -535,19 +711,23 @@ const Training: React.FC<{ athlete: any }> = () => {
 
     if (isGenerating && !hasPlan) {
         return (
-            <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '4px 16px 16px', textAlign: 'left' }}>
+                <BackLink onClick={onBack} />
                 <LoadingIndicator message="Designing your training plan... this can take up to a minute." />
             </div>
         );
     }
 
     const notSynced = syncStatus !== 'ready';
-    const displayForm = !notSynced && (showForm || (!hasPlan && !isGenerating));
+    const displayForm = !notSynced && !hasPlan && !isGenerating;
+    const showPlan = !displayForm && hasPlan;
 
     return (
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', textAlign: 'left' }}>
+        <div style={{ maxWidth: showPlan ? '1100px' : '700px', margin: '0 auto', padding: '4px 16px 16px', textAlign: 'left' }}>
+            <BackLink onClick={onBack} />
             {notSynced && <Banner>{SYNC_STATUS_MESSAGE[syncStatus as Exclude<SyncStatus, 'ready'>]}</Banner>}
-            {isGenerating && hasPlan && <Banner>Updating your plan with your new goal...</Banner>}
+            {/* A chat message in flight shows its own "Thinking…" bubble; the banner is for rebuilds */}
+            {isGenerating && hasPlan && item?.chat?.[item.chat.length - 1]?.role !== 'user' && <Banner>Rebuilding your plan...</Banner>}
             {isFailed && (
                 <Banner tone="error">
                     {item?.errorMessage || 'Something went wrong generating your plan.'}
@@ -668,7 +848,7 @@ const Training: React.FC<{ athlete: any }> = () => {
                             {showAdvanced ? '▾' : '▸'} Advanced
                         </button>
                         {showAdvanced && (
-                            <div style={{ marginTop: '10px' }}>
+                            <div style={{ marginTop: '10px', marginLeft: '4px', paddingLeft: '14px', borderLeft: '2px solid #eee' }}>
                                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', fontWeight: 600, marginBottom: '6px' }}>
                                     Preferred running days per week
                                 </label>
@@ -680,6 +860,16 @@ const Training: React.FC<{ athlete: any }> = () => {
                                     <option value="">No preference</option>
                                     {DAYS_PER_WEEK_OPTIONS.map(n => <option key={n} value={n}>{n} {n === 1 ? 'Day' : 'Days'}/week</option>)}
                                 </select>
+
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '14px', cursor: 'pointer', fontSize: '0.9rem', color: '#555' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={includeDays}
+                                        onChange={e => setIncludeDays(e.target.checked)}
+                                        style={{ width: '15px', height: '15px', cursor: 'pointer' }}
+                                    />
+                                    Include days of the week in my plan
+                                </label>
                             </div>
                         )}
                     </div>
@@ -702,30 +892,21 @@ const Training: React.FC<{ athlete: any }> = () => {
                         >
                             {isSubmitting ? 'Starting...' : 'Generate Plan'}
                         </button>
-                        {hasPlan && (
-                            <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff', color: '#666', fontWeight: 600, cursor: 'pointer' }}
-                            >
-                                Cancel
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={onBack}
+                            style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff', color: '#666', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </form>
             ) : item?.plan && (
-                <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
-                            {item.request.raceDistance} — {formatFullDate(item.request.raceDate)}
-                        </h2>
-                        <button
-                            onClick={() => openForm(item.request)}
-                            style={{ background: 'none', border: '1px solid #ddd', borderRadius: '8px', padding: '6px 12px', color: '#666', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}
-                        >
-                            Edit Goal
-                        </button>
-                    </div>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 480px', minWidth: 0 }}>
+                    <h2 style={{ margin: '0 0 8px', fontSize: '1.2rem' }}>
+                        {item.request.raceDistance} — {formatFullDate(item.request.raceDate)}
+                    </h2>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', color: '#555', fontSize: '0.9rem', marginBottom: '16px' }}>
                         <span><strong style={{ color: '#333' }}>Plan starts:</strong> {formatFullDate(weekStartDate(item.request.raceDate, item.plan.weeks.length, 1))}</span>
                         <span><strong style={{ color: '#333' }}>Duration:</strong> {item.plan.weeks.length} weeks</span>
@@ -735,23 +916,16 @@ const Training: React.FC<{ athlete: any }> = () => {
                         </span>
                         {(() => {
                             const { done, total } = countCompletions(item.plan.weeks.flatMap(w => w.runs));
-                            return <span><strong style={{ color: '#333' }}>Progress:</strong> {done}/{total} runs done</span>;
+                            return <span><strong style={{ color: '#333' }}>Progress:</strong> {done}/{total} sessions done</span>;
                         })()}
                     </div>
-                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                        <ScoreCard
-                            label="Realism"
-                            score={item.plan.realismScore}
-                            rationale={item.plan.realismRationale}
-                            scale={['Unrealistic', 'Uncertain', 'Likely', 'Highly Realistic']}
-                        />
-                        <ScoreCard
-                            label="Difficulty"
-                            score={item.plan.difficultyScore}
-                            rationale={item.plan.difficultyRationale}
-                            scale={['Easy', 'Moderate', 'Hard', 'Very Hard']}
-                        />
-                    </div>
+                    <ChatTip />
+                    {/* Keyed on the scores so a revised plan with new scores remounts and opens again */}
+                    <PlanScores
+                        key={`${planId}-${item.plan.realismScore}-${item.plan.difficultyScore}-${item.plan.realismRationale.length}-${item.plan.difficultyRationale.length}`}
+                        planId={planId}
+                        plan={item.plan}
+                    />
                     {item.plan.weeks.map(week => {
                         const startDate = weekStartDate(item.request.raceDate, item.plan!.weeks.length, week.weekNumber);
                         const weekEndDate = addDays(startDate, 6);
@@ -766,9 +940,45 @@ const Training: React.FC<{ athlete: any }> = () => {
                             />
                         );
                     })}
-                </>
+                    </div>
+                    <TrainingPlanChat
+                        messages={item.chat ?? []}
+                        isBusy={isGenerating}
+                        error={chatError}
+                        onSend={sendChatMessage}
+                    />
+                </div>
             )}
         </div>
+    );
+};
+
+// The Training tab: a list of the athlete's plans, and one plan's page once opened. The open
+// plan lives in the URL (?plan=<id>, or ?plan=new for the setup form) so Back returns to the list.
+const Training: React.FC<{ athlete: any }> = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const selectedPlan = searchParams.get('plan');
+
+    const selectPlan = (planId: string | null, replace = false) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (planId) next.set('plan', planId);
+            else next.delete('plan');
+            return next;
+        }, { replace });
+    };
+
+    if (!selectedPlan) {
+        return <TrainingPlanList onOpen={selectPlan} onNew={() => selectPlan('new')} />;
+    }
+
+    return (
+        <TrainingPlanView
+            key={selectedPlan}
+            planId={selectedPlan === 'new' ? null : selectedPlan}
+            onBack={() => selectPlan(null)}
+            onCreated={planId => selectPlan(planId, true)}
+        />
     );
 };
 

@@ -9,7 +9,7 @@ import type {
     Timeframe,
     BucketUnit,
 } from '../types/stats';
-import type { TrainingPlanRun } from '../types/trainingPlan';
+import type { TrainingPlanRun, SessionType } from '../types/trainingPlan';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -321,14 +321,29 @@ export function trainingPlanWeekDateRange(raceDate: string, totalWeeks: number, 
     return { start, end: addDays(start, 6) };
 }
 
-// An activity counts toward a planned run if it's at least this fraction of that
-// run's distance — leaves room for GPS/rounding slop without letting a much shorter
-// activity satisfy a longer objective.
+// An activity counts toward a planned session if it's at least this fraction of that
+// session's distance (or duration, for time-based sessions) — leaves room for
+// GPS/rounding slop without letting a much shorter activity satisfy a longer objective.
 const RUN_MATCH_TOLERANCE = 0.95;
+const TIME_MATCH_TOLERANCE = 0.8;
+
+// Strava sport types that count toward each planned session type.
+const SESSION_SPORT_TYPES: Record<SessionType, string[]> = {
+    Run: ['Run'],
+    Swim: ['Swim'],
+    Ride: ['Ride', 'VirtualRide', 'MountainBikeRide', 'GravelRide', 'EBikeRide'],
+    Weights: ['WeightTraining', 'Workout', 'Crossfit'],
+    Yoga: ['Yoga', 'Pilates'],
+    Walk: ['Walk', 'Hike'],
+};
+
+type MatchMetric = 'distance' | 'time';
 
 interface RunObjective {
     runIndex: number;
-    distanceMeters: number;
+    type: SessionType;
+    metric: MatchMetric;
+    target: number; // meters or seconds, already scaled by the match tolerance
 }
 
 export interface AutoMatchedRun {
@@ -337,11 +352,23 @@ export interface AutoMatchedRun {
     date: string; // 'YYYY-MM-DD', the activity's local date
 }
 
-// Greedy allocation: process plan objectives largest-to-smallest; each takes the
-// smallest available activity that still satisfies it (leaves bigger activities free
-// for bigger objectives). A single activity can satisfy at most one objective. Returned
-// aligned by run index — each entry is the (unordered) list of activities matched to
-// that run, one per auto-completed instance.
+function objectiveFor(run: TrainingPlanRun, runIndex: number): RunObjective {
+    const type = run.activityType ?? 'Run';
+    if (type !== 'Run' && run.durationMinutes && run.durationMinutes > 0) {
+        return { runIndex, type, metric: 'time', target: run.durationMinutes * 60 * TIME_MATCH_TOLERANCE };
+    }
+    return { runIndex, type, metric: 'distance', target: run.distanceKm * 1000 * RUN_MATCH_TOLERANCE };
+}
+
+function metricValue(activity: CachedActivity, metric: MatchMetric): number {
+    return metric === 'distance' ? activity.distance : ((activity.moving_time ?? activity.elapsed_time) as number) ?? 0;
+}
+
+// Greedy allocation per session type and metric: process plan objectives largest-to-
+// smallest; each takes the smallest available activity that still satisfies it (leaves
+// bigger activities free for bigger objectives). A single activity can satisfy at most
+// one objective. Returned aligned by run index — each entry is the (unordered) list of
+// activities matched to that run, one per auto-completed instance.
 export function computeAutoCompletedRunMatches(
     weekRuns: TrainingPlanRun[],
     weekStartDateStr: string,
@@ -353,29 +380,39 @@ export function computeAutoCompletedRunMatches(
     const objectives: RunObjective[] = [];
     weekRuns.forEach((run, runIndex) => {
         for (let i = 0; i < run.count; i++) {
-            objectives.push({ runIndex, distanceMeters: run.distanceKm * 1000 });
+            objectives.push(objectiveFor(run, runIndex));
         }
     });
-    objectives.sort((a, b) => b.distanceMeters - a.distanceMeters);
 
-    const pool = activities
-        .filter(a => a.sport_type === 'Run')
-        .filter(a => {
-            const date = localDate(a);
-            return date >= weekStartDateStr && date <= weekEndDateStr;
-        })
-        .sort((a, b) => a.distance - b.distance);
+    const inWeek = activities.filter(a => {
+        const date = localDate(a);
+        return date >= weekStartDateStr && date <= weekEndDateStr;
+    });
+    const used = new Set<number>();
 
+    const groups = new Map<string, RunObjective[]>();
     for (const objective of objectives) {
-        const threshold = objective.distanceMeters * RUN_MATCH_TOLERANCE;
-        const matchIndex = pool.findIndex(a => a.distance >= threshold);
-        if (matchIndex === -1) continue;
-        const [activity] = pool.splice(matchIndex, 1);
-        matches[objective.runIndex].push({
-            activityId: activity.id,
-            activityName: activity.name,
-            date: localDate(activity),
-        });
+        const key = `${objective.type}:${objective.metric}`;
+        groups.set(key, [...(groups.get(key) ?? []), objective]);
+    }
+
+    for (const groupObjectives of groups.values()) {
+        const { type, metric } = groupObjectives[0];
+        const pool = inWeek
+            .filter(a => SESSION_SPORT_TYPES[type].includes(a.sport_type) && !used.has(a.id))
+            .sort((a, b) => metricValue(a, metric) - metricValue(b, metric));
+
+        for (const objective of groupObjectives.sort((a, b) => b.target - a.target)) {
+            const matchIndex = pool.findIndex(a => metricValue(a, metric) >= objective.target);
+            if (matchIndex === -1) continue;
+            const [activity] = pool.splice(matchIndex, 1);
+            used.add(activity.id);
+            matches[objective.runIndex].push({
+                activityId: activity.id,
+                activityName: activity.name,
+                date: localDate(activity),
+            });
+        }
     }
 
     return matches;
