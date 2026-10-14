@@ -199,6 +199,8 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
             billing: dynamodb.Billing.onDemand(),
+            // Daily usage counters carry a `ttl` attribute; nothing else in the table does
+            timeToLiveAttribute: 'ttl',
             removalPolicy: cdk.RemovalPolicy.RETAIN,
             globalSecondaryIndexes: [
                 {

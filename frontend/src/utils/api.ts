@@ -40,6 +40,18 @@ const checkAndRefreshToken = async () => {
     return parsedToken;
 };
 
+// Carries the HTTP status and the server's own message, so callers can show things like
+// "You've reached today's limit" instead of a generic failure.
+export class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+    }
+}
+
 export const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
     const token = await checkAndRefreshToken();
     if (!token) {
@@ -67,7 +79,9 @@ export const fetchWithAuth = async (endpoint: string, options: RequestInit = {})
     );
 
     if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        const body = await response.json().catch(() => null);
+        const serverMessage = response.status === 409 || response.status === 429 ? body?.message : undefined;
+        throw new ApiError(serverMessage ?? `API request failed: ${response.statusText}`, response.status);
     }
 
     return response.json();

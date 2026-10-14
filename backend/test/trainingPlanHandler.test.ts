@@ -9,6 +9,8 @@ const mockCache = {
     startTrainingPlanRevision: jest.fn(),
     getSyncMeta: jest.fn(),
     queryActivities: jest.fn(),
+    incrementDailyUsage: jest.fn(),
+    refundDailyUsage: jest.fn(),
 };
 
 jest.mock('@aws-sdk/client-lambda', () => ({
@@ -52,6 +54,7 @@ beforeEach(() => {
     mockCache.queryActivities.mockResolvedValue([]);
     mockCache.listTrainingPlanItems.mockResolvedValue([]);
     mockCache.getTrainingPlanItem.mockResolvedValue(null);
+    mockCache.incrementDailyUsage.mockResolvedValue({ allowed: true, used: 1 });
 });
 
 describe('training plan routes', () => {
@@ -147,5 +150,69 @@ describe('training plan routes', () => {
         expect(response.statusCode).toBe(202);
         expect(mockCache.startTrainingPlanRevision).toHaveBeenCalledWith(42, 'abc', 'Add a swim');
         expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({ FunctionName: 'revise-arn' }));
+    });
+});
+
+describe('daily model limits', () => {
+    const limitReached = () => mockCache.incrementDailyUsage.mockResolvedValue({ allowed: false, used: 50 });
+    const chatEvent = () => event('POST', '/training-plan/{planId}/chat', { planId: 'abc' }, { message: 'Add a swim' });
+
+    beforeEach(() => {
+        mockCache.getTrainingPlanItem.mockResolvedValue(storedItem({ plan: { weeks: [] } }));
+        mockCache.startTrainingPlanRevision.mockResolvedValue(true);
+    });
+
+    it("counts a chat message against the athlete's daily chat limit", async () => {
+        await handler(chatEvent());
+
+        expect(mockCache.incrementDailyUsage).toHaveBeenCalledWith(42, 'chat', new Date().toISOString().slice(0, 10), 50, expect.any(Number));
+    });
+
+    it('refuses a chat message once the daily limit is reached, without calling the model', async () => {
+        limitReached();
+
+        const response = await handler(chatEvent());
+
+        expect(response.statusCode).toBe(429);
+        expect(JSON.parse(response.body)).toEqual(expect.objectContaining({ code: 'daily_limit', message: expect.stringContaining('50 chat messages') }));
+        expect(mockCache.startTrainingPlanRevision).not.toHaveBeenCalled();
+        expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it('gives the unit back when a duplicate message is rejected', async () => {
+        mockCache.startTrainingPlanRevision.mockResolvedValue(false);
+
+        const response = await handler(chatEvent());
+
+        expect(response.statusCode).toBe(409);
+        expect(mockCache.refundDailyUsage).toHaveBeenCalledWith(42, 'chat', new Date().toISOString().slice(0, 10));
+    });
+
+    it('refuses a new plan once the daily build limit is reached', async () => {
+        limitReached();
+
+        const response = await handler(event('POST', '/training-plan', null, planBody()));
+
+        expect(response.statusCode).toBe(429);
+        expect(mockCache.incrementDailyUsage).toHaveBeenCalledWith(42, 'build', expect.any(String), 10, expect.any(Number));
+        expect(mockCache.startTrainingPlanGeneration).not.toHaveBeenCalled();
+        expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it('counts a rebuild of an existing plan as a build', async () => {
+        limitReached();
+
+        const response = await handler(event('POST', '/training-plan/{planId}', { planId: 'abc' }, planBody()));
+
+        expect(response.statusCode).toBe(429);
+        expect(mockCache.startTrainingPlanGeneration).not.toHaveBeenCalled();
+    });
+
+    it('does not count requests that fail validation', async () => {
+        mockCache.getTrainingPlanItem.mockResolvedValue(storedItem());
+
+        await handler(event('POST', '/training-plan/{planId}', { planId: 'abc' }, { raceDistance: 'nope' }));
+
+        expect(mockCache.incrementDailyUsage).not.toHaveBeenCalled();
     });
 });
