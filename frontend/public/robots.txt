@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /strava-callback
+
+Sitemap: https://streventools.com/sitemap.xml
