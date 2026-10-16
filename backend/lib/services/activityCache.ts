@@ -424,6 +424,47 @@ export async function failTrainingPlanGeneration(athleteId: number, planId: stri
     });
 }
 
+// --- Deleting an athlete's data ---
+
+// What can be rebuilt from Strava: the activity copy, its sync marker and the AI summary.
+const REBUILDABLE_SK_PREFIXES = ['ACTIVITY#', 'SYNC_META', 'TRAINING_SUMMARY'];
+
+// Deletes the athlete's items and the activity lookup items that point back at them.
+// With `cacheOnly`, plans, tokens and usage counters are kept and only the rebuildable items go.
+// Returns how many items were deleted.
+export async function deleteAthleteItems(athleteId: number, cacheOnly: boolean): Promise<number> {
+    const requests: Record<string, unknown>[] = [];
+    let startKey: Record<string, unknown> | undefined;
+
+    do {
+        const page = await client.send(new QueryCommand({
+            TableName: TABLE_NAME,
+            KeyConditionExpression: 'PK = :pk',
+            ExpressionAttributeValues: { ':pk': athletePK(athleteId) },
+            ProjectionExpression: 'PK, SK, #activityId',
+            ExpressionAttributeNames: { '#activityId': 'id' },
+            ExclusiveStartKey: startKey,
+        }));
+
+        for (const item of page.Items ?? []) {
+            const sk = item.SK as string;
+            if (cacheOnly && !REBUILDABLE_SK_PREFIXES.some(prefix => sk.startsWith(prefix))) continue;
+
+            requests.push({ DeleteRequest: { Key: { PK: item.PK, SK: sk } } });
+            if (sk.startsWith('ACTIVITY#') && item.id !== undefined) {
+                requests.push({ DeleteRequest: { Key: { PK: lookupPK(Number(item.id)), SK: 'META' } } });
+            }
+        }
+        startKey = page.LastEvaluatedKey;
+    } while (startKey);
+
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < requests.length; i += BATCH_SIZE) {
+        await batchWriteWithRetry(requests.slice(i, i + BATCH_SIZE));
+    }
+    return requests.length;
+}
+
 // --- Daily usage counters (per-athlete limits on model calls) ---
 
 function usageKey(athleteId: number, kind: string, dateKey: string) {

@@ -576,6 +576,29 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
         activityCacheTable.grantReadWriteData(upsertWebhookActivityLambda);
         athleteTokenKey.grantEncryptDecrypt(upsertWebhookActivityLambda);
 
+        // Deletes an athlete's data after they revoke Streven's access in Strava (invoked async by the webhook).
+        // It first asks Strava whether access was really revoked, because webhook events are unsigned.
+        const deleteAthleteDataLambda = new lambdaNodeJs.NodejsFunction(this, 'DeleteAthleteDataHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            memorySize: 512,
+            entry: './lib/handlers/deleteAthleteData.ts',
+            timeout: cdk.Duration.seconds(300),
+            retryAttempts: 2,
+            environment: {
+                ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
+                ATHLETE_TOKEN_KMS_KEY_ID: athleteTokenKey.keyId,
+                STREVEN_TMP_BUCKET_NAME: this.strevenTmpBucket.bucketName,
+                STRAVA_CLIENT_ID: requireEnv('STRAVA_CLIENT_ID'),
+                STRAVA_CLIENT_SECRET: requireEnv('STRAVA_CLIENT_SECRET'),
+                STRAVA_REDIRECT_URI: requireEnv('STRAVA_REDIRECT_URI'),
+            },
+        });
+
+        activityCacheTable.grantReadWriteData(deleteAthleteDataLambda);
+        athleteTokenKey.grantEncryptDecrypt(deleteAthleteDataLambda);
+        this.strevenTmpBucket.grantRead(deleteAthleteDataLambda);
+        this.strevenTmpBucket.grantDelete(deleteAthleteDataLambda);
+
         // Strava webhook handler — receives real-time activity create/update/delete events
         const stravaWebhookLambda = new lambdaNodeJs.NodejsFunction(this, 'StravaWebhookHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
@@ -586,12 +609,14 @@ export class CdkAccessTokenApiStack extends cdk.Stack {
                 ACTIVITY_CACHE_TABLE_NAME: activityCacheTable.tableName,
                 STRAVA_WEBHOOK_VERIFY_TOKEN_SECRET_ARN: webhookVerifyTokenSecret.secretArn,
                 UPSERT_ACTIVITY_FUNCTION_ARN: upsertWebhookActivityLambda.functionArn,
+                DELETE_ATHLETE_DATA_FUNCTION_ARN: deleteAthleteDataLambda.functionArn,
             },
         });
 
         activityCacheTable.grantReadWriteData(stravaWebhookLambda);
         webhookVerifyTokenSecret.grantRead(stravaWebhookLambda);
         upsertWebhookActivityLambda.grantInvoke(stravaWebhookLambda);
+        deleteAthleteDataLambda.grantInvoke(stravaWebhookLambda);
 
         // Create the /webhook/strava endpoint (GET for validation, POST for events)
         const webhookResource = apiResource.addResource('webhook');
